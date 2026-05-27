@@ -1,14 +1,22 @@
 ---
 name: idea-to-product
-description: "将想法从概念推进到可交付产品的完整工作流：深度调研、产品设计、Grill 评审、版本化构建、学习反馈"
-version: 3.0.0
-author: Hermes Agent
+description: >-
+  将想法从概念推进到可交付产品：自主模式、phase-increment、三里程碑门禁、分域验收。
+  由 product-orchestrator 路由调用。
+version: 4.0.0
+author: ttmens
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [workflow, product-development, ideation, research, design, grill, implementation, release]
-    related_skills: [spike, writing-plans, subagent-driven-development, requesting-code-review, github-pr-workflow, plan]
+    tags: [workflow, product-development, ideation, research, design, grill, implementation, release, autonomous]
+    related_skills:
+      - product-orchestrator
+      - writing-plans
+      - subagent-driven-development
+      - docs-hygiene
+      - design-system-md
+      - ui-acceptance-review
 ---
 
 # Idea-to-Product 工作流
@@ -28,6 +36,36 @@ metadata:
 - 版本化构建 —— 每个版本独立可交付，不追求一次完美
 - 每次迭代都要让用户看到可交互的东西
 - 学习反馈闭环 —— 每个周期结束后提取学习成果，更新经验和技能
+
+## 自主模式（默认开启）
+
+1. 启动时读取或创建 `docs/workflow_state.yaml`（模板：`assets/workflow_state.template.yaml`）
+2. 每步完成更新 checkpoint；下一会话从 `current_phase` 续跑
+3. **仅在 G1/G2/G3 停等用户**；其余阶段自动推进
+4. 阻塞时：记录 blocker → 2 种备选 → 仍失败才汇报
+
+## 运行模式
+
+| 模式 | 适用 | 行为 |
+|------|------|------|
+| **greenfield** | 从零新建 | Extract → Research → … → Learn |
+| **phase-increment** | 棕地/已有产品 | 读 SSOT + DECISIONS → 定义 target_phase → 只跑该 Phase |
+
+棕地默认：输出 `docs/plans/YYYY-MM-DD-phase-X.md`（模板 `assets/phase-plan.template.md`）。
+
+## 三里程碑门禁
+
+| Gate | 产出 | 停点 |
+|------|------|------|
+| **G1** | `docs/research.md` 双轴调研（模板 `assets/research-two-axis.template.md`） | awaiting_user |
+| **G2** | `docs/design.md` + ASCII 线框 + `docs/DESIGN.md` 草案 | awaiting_user |
+| **G3** | `docs/ui-acceptance-report.md` + pre/post 快照 | awaiting_user |
+
+含 UI 改动的 Phase：Ship 前跑 `ui_acceptance.py --full`；每个 Phase 至少跑 `--quick`。
+
+## 分域验收
+
+每个 Phase 使用 `assets/acceptance-matrix.template.md`：**functional / ux / ops** 三域不可省略 UX。
 
 ## 什么时候用
 
@@ -89,7 +127,7 @@ metadata:
 
 ### 转入 Phase 2
 
-问用户："要不要先做一轮深度调研，看看业界怎么做的？还是你对方案已经有明确想法，直接开始设计？"
+**自动进入 Research**（棕地项目若 SSOT 已清晰可跳过至 plan，须在 workflow_state 记录理由）。
 
 ---
 
@@ -148,7 +186,7 @@ README.md → 项目定位和核心能力
 
 ### 转入 Phase 3
 
-展示调研结果，提出设计方案方向。问用户："按这个方向设计可以吗？"
+展示调研结果，写入 research.md，**设置 G1 → awaiting_user**，等待用户确认后继续 Design。
 
 ---
 
@@ -297,7 +335,7 @@ path/to/output/
 
 ### 转入 Phase 6
 
-问用户："计划 OK 吗？开始执行？"
+计划写入 `docs/plans/` 后 **自动进入 Build**（加载 subagent-driven-development）。
 
 ---
 
@@ -450,17 +488,13 @@ memory(action='add', target='memory', content='新发现的最佳实践...')
 
 ## 快速开始
 
-用户说"做 X"或"搞一个 Y"时：
+优先加载 **product-orchestrator**。用户说"做 X"时：
 
-1. **判断类型**（绿野/棕地/轻量修复）
-2. **提取想法**（Phase 1）
-3. 问："走哪个路径？"
-   - **完整周期** — 路径 A
-   - **调研 + 设计** — 路径 D
-   - **调研 + 设计 + Grill** — 最常用
-   - **直接实现** — 跳过调研和设计
-
-4. 按路径推进
+1. 判断类型（绿野/棕地/轻量修复）
+2. 棕地 → phase-increment；绿野 → greenfield
+3. 初始化 workflow_state.yaml
+4. 跑 docs-hygiene
+5. 按 current_phase 推进，仅在 G1/G2/G3 停
 
 ## 跳过阶段指南
 
@@ -495,14 +529,21 @@ memory(action='add', target='memory', content='新发现的最佳实践...')
 
 | Phase | 加载 Skill | 关键输出 |
 |-------|-----------|----------|
-| 1. 想法提取 | (无) | discovery.md |
-| 2. 深度调研 | (无，用 web/search 工具) | research.md |
-| 3. 产品设计 | (无) | design.md |
-| 4. Grill 评审 | (无) | grill-结果 |
-| 5. 版本计划 | `writing-plans` | 实现计划 |
+| 1. 想法提取 | product-orchestrator | discovery.md |
+| 2. 深度调研 | web/search + 双轴模板 | research.md → **G1** |
+| 3. 产品设计 | design-system-md | design.md + DESIGN.md 草案 |
+| 4. Grill 评审 | (内置清单) | grill-结果 → **G2** |
+| 5. 版本计划 | `writing-plans` | docs/plans/*.md |
 | 6. 执行 | `subagent-driven-development` | 可工作的产品 |
-| 7. 验证交付 | `requesting-code-review` | 已验证的交付物 |
-| 8. 学习反馈 | (无) | retro.md + 自进化动作 |
+| 7. 验证交付 | `ui-acceptance-review` + self_check | ui-acceptance-report → **G3** |
+| 8. 学习反馈 | docs-hygiene + obsidian（可选） | retro.md + DECISIONS.md |
+
+### Learn 阶段（Phase 8 补充）
+
+- 保存 `docs/retro/YYYY-MM-DD-<slug>.md`
+- **必须**同步架构决策到 `docs/DECISIONS.md`
+- stock-copilot 可选写入 `output/evolution/`
+- 可选：obsidian-deepen-review 生成周报；obsidian-todo-manager 同步任务
 
 ## 记住
 
