@@ -1,0 +1,157 @@
+name: ttmens-skills
+version: 2.0.0
+tagline: "一个人用 AI，从想法到上线 — 带门禁脚本与产物契约"
+platforms: [cursor, hermes, opencode]
+
+pipeline:
+  entry: pm-idea-to-mvp
+  stages: [brief, align, research, analysis, spec, mvp, ship, operate, grow, retro]
+
+roles:
+  pipeline: { label: "流水线", path: pipelines }
+  product: { label: "产品", path: domains/product }
+  design: { label: "设计", path: domains/design }
+  engineering: { label: "工程", path: domains/engineering }
+  agents: { label: "Agent 编排", path: domains/agents }
+  qa: { label: "质量", path: domains/qa }
+
+profiles:
+  obsidian:
+    label: "Obsidian 笔记"
+    path: profiles/obsidian
+    skills: [obsidian-todo-manager, obsidian-deepen-review, obsidian-note-summarizer]
+  deep-research:
+    label: "深度行业调研"
+    path: profiles/deep-research
+    skills: [industry-benchmark]
+  hermes:
+    label: "Hermes 编排"
+    path: profiles
+    skills: [plan, opencode]
+
+skills:
+  native:
+    - id: pm-idea-to-mvp
+      path: pipelines/pm-idea-to-mvp
+      role: pipeline
+      what: "唯一主流水线，G1/G2/G3 门禁"
+      use_when: "从想法做到上线、继续 pm-{slug}"
+      stages: [all]
+      platforms: [cursor, hermes, opencode]
+    - id: grill-me
+      path: domains/product/grill-me
+      role: product
+      what: "逐问对齐，澄清想法"
+      use_when: "新想法、无 CONTEXT.md"
+      stages: [align]
+      platforms: [cursor, hermes, opencode]
+    - id: grill-with-docs
+      path: domains/product/grill-with-docs
+      role: product
+      what: "基于文档的对齐与术语漂移检测"
+      use_when: "已有 CONTEXT.md，续跑对齐"
+      stages: [align]
+      platforms: [cursor, hermes, opencode]
+    - id: docs-hygiene
+      path: domains/product/docs-hygiene
+      role: product
+      what: "SSOT 文档漂移检测与修复"
+      use_when: "阶段开始/结束、棕地项目"
+      stages: [analysis, mvp, ship]
+      platforms: [cursor, hermes, opencode]
+    - id: c4-architecture
+      path: domains/product/c4-architecture
+      role: product
+      what: "C4 架构图与 ADR"
+      use_when: "方案论证阶段"
+      stages: [analysis]
+      platforms: [cursor, hermes, opencode]
+    - id: openspec
+      path: domains/product/openspec
+      role: product
+      what: "规格驱动：proposal/design/tasks"
+      use_when: "分析后写实现规格"
+      stages: [analysis, spec]
+      platforms: [cursor, hermes, opencode]
+    - id: user-journey
+      path: domains/product/user-journey
+      role: product
+      what: "用户旅程驱动页面与 IA"
+      use_when: "spec 阶段写 03b-user-journey.md"
+      stages: [spec]
+      platforms: [cursor, hermes, opencode]
+    - id: open-design
+      path: domains/product/open-design
+      role: product
+      what: "可点击静态原型 + 可选 sketch 变体"
+      use_when: "PRD 前需要可交互原型"
+      stages: [spec]
+      platforms: [cursor, hermes, opencode]
+    - id: ui-ux-pro-max
+      path: domains/product/ui-ux-pro-max
+      role: product
+      what: "从 PRD 生成 DESIGN.md tokens"
+      use_when: "MVP 实现前定视觉 SSOT"
+      stages: [spec, mvp]
+      platforms: [cursor, hermes, opencode]
+    - id: design-system-md
+      path: domains/design/design-system-md
+      role: design
+      what: "维护 docs/DESIGN.md"
+      use_when: "项目级设计 SSOT"
+      stages: [spec, mvp]
+      platforms: [cursor, hermes, opencode]
+    - id: ui-acceptance-review
+      path: domains/design/ui-acceptance-review
+      role: design
+      what: "UX 评审 + 脚本 rubric + polish 三合一"
+      use_when: "MVP/ship、Gate G3"
+      stages: [mvp, ship]
+      platforms: [cursor, hermes, opencode]
+    - id: writing-plans
+      path: domains/agents/writing-plans
+      role: agents
+      what: "拆 bite-sized 实现任务"
+      use_when: "openspec tasks 落地前"
+      stages: [mvp]
+      platforms: [cursor, hermes, opencode]
+    - id: subagent-driven-development
+      path: domains/agents/subagent-driven-development
+      role: agents
+      what: "逐 Task 子代理实现与审查"
+      use_when: "MVP 编码主循环"
+      stages: [mvp]
+      platforms: [cursor, hermes, opencode]
+    - id: test-driven-development
+      path: domains/engineering/test-driven-development
+      role: engineering
+      what: "RED-GREEN-REFACTOR（obra 衍生）"
+      use_when: "实现业务逻辑"
+      stages: [mvp]
+      platforms: [cursor, hermes, opencode]
+    - id: requesting-code-review
+      path: domains/engineering/requesting-code-review
+      role: engineering
+      what: "提交前安全与质量门"
+      use_when: "commit 前"
+      stages: [mvp, ship]
+      platforms: [cursor, hermes, opencode]
+    - id: dogfood
+      path: domains/qa/dogfood
+      role: qa
+      what: "探索式 Web QA"
+      use_when: "MVP 走查核心路径"
+      stages: [mvp, ship]
+      platforms: [cursor, hermes, opencode]
+    - id: pm-git-publish
+      path: domains/product/pm-git-publish
+      role: product
+      what: "GitHub Pages 阶段报告"
+      use_when: "每阶段结束（Hermes）"
+      stages: [retro]
+      platforms: [cursor, hermes, opencode]
+
+counts:
+  native: 17
+  borrowed: 23
+  total: 40

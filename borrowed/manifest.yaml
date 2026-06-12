@@ -1,0 +1,130 @@
+# Core borrowed skills (23) — copied from vendor/ at install time
+sources:
+  phuryn:
+    path: vendor/phuryn-pm-skills
+    repo: https://github.com/phuryn/pm-skills
+    version: v2.0.0
+    license: MIT
+  anthropic:
+    path: vendor/knowledge-work-plugins
+    repo: https://github.com/anthropics/knowledge-work-plugins
+    version: main
+    license: Apache-2.0
+
+skills:
+  - id: identify-assumptions-new
+    source: phuryn/pm-product-discovery/skills/identify-assumptions-new
+    install_as: pm-identify-assumptions-new
+    stage: align
+    platforms: [cursor, hermes, opencode]
+  - id: opportunity-solution-tree
+    source: phuryn/pm-product-discovery/skills/opportunity-solution-tree
+    install_as: pm-opportunity-solution-tree
+    stage: research
+    platforms: [cursor, hermes, opencode]
+  - id: competitor-analysis
+    source: phuryn/pm-market-research/skills/competitor-analysis
+    install_as: pm-competitor-analysis
+    stage: research
+    platforms: [cursor, hermes, opencode]
+  - id: market-sizing
+    source: phuryn/pm-market-research/skills/market-sizing
+    install_as: pm-market-sizing
+    stage: research
+    platforms: [cursor, hermes, opencode]
+  - id: product-strategy
+    source: phuryn/pm-product-strategy/skills/product-strategy
+    install_as: pm-product-strategy
+    stage: analysis
+    platforms: [cursor, hermes, opencode]
+  - id: strategy-red-team
+    source: phuryn/pm-execution/skills/strategy-red-team
+    install_as: pm-strategy-red-team
+    stage: analysis
+    platforms: [cursor, hermes, opencode]
+  - id: create-prd
+    source: phuryn/pm-execution/skills/create-prd
+    install_as: pm-create-prd
+    stage: spec
+    platforms: [cursor, hermes, opencode]
+  - id: user-stories
+    source: phuryn/pm-execution/skills/user-stories
+    install_as: pm-user-stories
+    stage: spec
+    platforms: [cursor, hermes, opencode]
+  - id: pre-mortem
+    source: phuryn/pm-execution/skills/pre-mortem
+    install_as: pm-pre-mortem
+    stage: spec
+    platforms: [cursor, hermes, opencode]
+  - id: shipping-artifacts
+    source: phuryn/pm-ai-shipping/skills/shipping-artifacts
+    install_as: pm-shipping-artifacts
+    stage: ship
+    platforms: [cursor, hermes, opencode]
+  - id: intended-vs-implemented
+    source: phuryn/pm-ai-shipping/skills/intended-vs-implemented
+    install_as: pm-intended-vs-implemented
+    stage: ship
+    platforms: [cursor, hermes, opencode]
+  - id: north-star-metric
+    source: phuryn/pm-marketing-growth/skills/north-star-metric
+    install_as: pm-north-star-metric
+    stage: grow
+    platforms: [cursor, hermes, opencode]
+  - id: gtm-strategy
+    source: phuryn/pm-go-to-market/skills/gtm-strategy
+    install_as: pm-gtm-strategy
+    stage: grow
+    platforms: [cursor, hermes, opencode]
+  - id: sql-queries
+    source: phuryn/pm-data-analytics/skills/sql-queries
+    install_as: pm-sql-queries
+    stage: operate
+    platforms: [cursor, hermes, opencode]
+  - id: retro
+    source: phuryn/pm-execution/skills/retro
+    install_as: pm-retro
+    stage: retro
+    platforms: [cursor, hermes, opencode]
+  - id: release-notes
+    source: phuryn/pm-execution/skills/release-notes
+    install_as: pm-release-notes
+    stage: retro
+    platforms: [cursor, hermes, opencode]
+  - id: security-audit-static
+    source: phuryn/pm-ai-shipping/commands/security-audit-static.md
+    install_as: pm-security-audit-static
+    stage: ship
+    platforms: [cursor, hermes, opencode]
+    type: command
+  - id: system-design
+    source: anthropic/engineering/skills/system-design
+    install_as: kw-system-design
+    stage: analysis
+    platforms: [cursor, hermes, opencode]
+  - id: code-review
+    source: anthropic/engineering/skills/code-review
+    install_as: kw-code-review
+    stage: mvp
+    platforms: [cursor, hermes, opencode]
+  - id: testing-strategy
+    source: anthropic/engineering/skills/testing-strategy
+    install_as: kw-testing-strategy
+    stage: mvp
+    platforms: [cursor, hermes, opencode]
+  - id: deploy-checklist
+    source: anthropic/engineering/skills/deploy-checklist
+    install_as: kw-deploy-checklist
+    stage: ship
+    platforms: [cursor, hermes, opencode]
+  - id: incident-response
+    source: anthropic/engineering/skills/incident-response
+    install_as: kw-incident-response
+    stage: operate
+    platforms: [cursor, hermes, opencode]
+  - id: runbook
+    source: anthropic/operations/skills/runbook
+    install_as: kw-runbook
+    stage: operate
+    platforms: [cursor, hermes, opencode]

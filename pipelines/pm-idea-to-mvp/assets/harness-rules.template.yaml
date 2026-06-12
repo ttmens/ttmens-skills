@@ -1,0 +1,71 @@
+# Harness Rules v6.0 — Risk-based decision automation
+# Inspired by Loop Engineering (Martin Fowler's 'On the Loop' pattern)
+version: '6.0.0'
+
+project:
+  slug: ''  # filled by decompose
+  tech_stack: python  # python | node | mixed
+  language: zh-CN
+
+# Runtime verification commands
+runtime:
+  test_cmd: 'pytest -q --tb=short'
+  build_cmd: 'python -m py_compile **/*.py'
+  lint_cmd: 'python -m flake8 --max-line-length=120'
+  health_url: ''  # set after MVP
+  workdir: '04-mvp'
+
+# Decision risk levels → determines human involvement
+decisions:
+  research_supplement:
+    risk: low
+    description: 'Adding more sources, updating competitor table'
+    action: auto_verify
+  tech_choice:
+    risk: medium
+    description: 'Choosing framework, database, hosting'
+    action: write_adr_and_notify
+  architecture_change:
+    risk: medium
+    description: 'Changing C4 containers, adding layers'
+    action: write_adr_and_notify
+  refactor:
+    risk: low
+    description: 'Code restructuring without behavior change'
+    action: auto_verify
+  deploy:
+    risk: high
+    description: 'Production deployment, DNS changes'
+    action: human_checkpoint
+  data_migration:
+    risk: high
+    description: 'Schema changes, data transforms'
+    action: human_checkpoint
+  scope_change:
+    risk: medium
+    description: 'Adding/removing user stories from PRD'
+    action: write_adr_and_notify
+
+# Which stages require human approval (overrides decision-level rules)
+human_checkpoints:
+  - ship  # deploy is always human-approved by default
+
+# Inner loop config for MVP stage
+inner_loop:
+  max_iterations: 3
+  feedback_signals:
+    - test_results
+    - build_status
+    - lint_clean
+  backtracking:
+    - from: mvp
+      to: spec
+      condition: 'design_flaw_detected'
+    - from: mvp
+      to: mvp
+      condition: 'test_failure'  # retry within MVP
+
+# Self-improvement rules (applied in Retro)
+harness_evolution:
+  auto_apply_risk: low  # harness changes rated 'low' auto-apply
+  require_approval_risk: [medium, high]

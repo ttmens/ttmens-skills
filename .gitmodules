@@ -1,0 +1,6 @@
+[submodule "vendor/phuryn-pm-skills"]
+	path = vendor/phuryn-pm-skills
+	url = https://github.com/phuryn/pm-skills.git
+[submodule "vendor/knowledge-work-plugins"]
+	path = vendor/knowledge-work-plugins
+	url = https://github.com/anthropics/knowledge-work-plugins.git

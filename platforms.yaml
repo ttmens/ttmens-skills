@@ -1,0 +1,20 @@
+# Agent platform install targets for ttmens-skills
+platforms:
+  cursor:
+    global_dir: "~/.cursor/skills"
+    project_dir: ".cursor/skills"
+    entry_file: "AGENTS.md"
+    supports: [skills, hooks, project_scope]
+    install_mode: copy
+  hermes:
+    global_dir: "~/.hermes/skills"
+    entry_skill: "pm-idea-to-mvp"
+    supports: [skills, kanban, opencode_delegate, plans]
+    install_mode: copy
+    orchestration: kanban
+  opencode:
+    global_dir: "~/.config/opencode/skills"
+    project_dir: ".opencode/skills"
+    entry_file: "AGENTS.md"
+    supports: [skills, opencode_run]
+    install_mode: copy
