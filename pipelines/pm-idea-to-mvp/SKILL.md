@@ -385,14 +385,17 @@ v6 引入 `PROGRESS.md` 作为项目级任务追踪文件，取代仅靠 Kanban 
 ### 进度追踪命令
 
 ```bash
-# 自动更新 PROGRESS.md（每阶段完成后调用）
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --update --project-root {PROJECT_ROOT}
+# 初始化 PROGRESS.md（从 openspec/tasks.md 提取任务）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} init
 
-# 从 Kanban 同步状态到 PROGRESS.md
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --sync-kanban --project-root {PROJECT_ROOT}
+# 更新任务状态
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} update --task 3 --status done
 
-# 记录内循环迭代
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --loop-iteration 2 --result pass --project-root {PROJECT_ROOT}
+# 显示当前进度摘要
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} show
+
+# 获取恢复点（最后未完成的任务）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} resume
 ```
 
 ### Session Resume 协议
@@ -433,13 +436,16 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/validate-gates.py --runtim
 # 目标验证
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage <current> --project-root {PROJECT_ROOT}
 
-# 进度追踪
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --update --project-root {PROJECT_ROOT}
+# 进度追踪（子命令模式）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} init    # 初始化
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} update --task <id> --status <status>  # 更新任务
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} show    # 显示进度
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --project-root {PROJECT_ROOT} resume  # 恢复点
 
 # 阶段完成（含目标验证）
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage <stage> --verify-goals
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage <stage> --project-root {PROJECT_ROOT} --verify-goals
 
-# 通用文档检查
+# 通用文档检查（位于 SKILLS_ROOT/scripts/ 而非 pipeline scripts/）
 python {SKILLS_ROOT}/scripts/check_docs_ssot.py --project-root {PROJECT_ROOT}
 python {SKILLS_ROOT}/scripts/ui_acceptance.py --project-root {PROJECT_ROOT} --mode quick
 ```
@@ -743,7 +749,7 @@ v6 升级：
 - 使用 Kanban 分解（见上文 task graph）；profile 分派各阶段。
 - 人工协作：基于 `harness-rules.yaml` 风险分级（On-the-loop 模式）。
 - MVP 内循环：`writing-plans` → `ui-ux-pro-max` → `test-driven-development` → `subagent-driven-development` → `ui-acceptance-review` → `opencode`（可选）→ goal-check 验证 → adjust/retry。
-- 每阶段完成后：`validate-gates.py --runtime` → `goal-check.py` → `progress-tracker.py --update`。
+- 每阶段完成后：`validate-gates.py --runtime --run {PROJECT_ROOT} --write` → `goal-check.py --stage <current> --project-root {PROJECT_ROOT}` → `progress-tracker.py --project-root {PROJECT_ROOT} show`。
 
 ### 棕地 / 轻量模式
 

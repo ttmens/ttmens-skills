@@ -282,6 +282,10 @@ def main():
         "--json", action="store_true", default=True,
         help="Output JSON (default: true)"
     )
+    parser.add_argument(
+        "--runtime-only", action="store_true",
+        help="Only verify runtime goals (check_type: command_pass)"
+    )
 
     args = parser.parse_args()
     project_root = Path(args.project_root).resolve()
@@ -318,6 +322,11 @@ def main():
         sys.exit(1)
 
     goals = data.get("goals", [])
+    
+    # Filter goals if --runtime-only
+    if args.runtime_only:
+        goals = [g for g in goals if g.get("type") == "command_pass" or g.get("check_type") == "runtime"]
+    
     report["summary"]["total"] = len(goals)
 
     # Evaluate each goal
