@@ -172,6 +172,8 @@ pm-{slug}/
     UX-REVIEW.md          # ui-acceptance-review (journey)
     README.md
   05-retro.md
+  06-growth.md              # 增长策略（Stage 8）
+  07-ops-notes.md           # 运维笔记（Stage 7）
   06-refine-retro.md      # Refine sprint only
   harness-improvements.md # v6: Retro 产出的 harness 改进提案
   evolution-notes.md
@@ -382,7 +384,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage mvp 
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage mvp --runtime-only --project-root {PROJECT_ROOT}
 
 # 验证特定目标
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --goal mvp-tests-pass --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage mvp --goal mvp-tests-pass --project-root {PROJECT_ROOT}
 ```
 
 ### 目标权重
@@ -493,9 +495,18 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --proj
 # 阶段完成（含目标验证）
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage <stage> --project-root {PROJECT_ROOT} --verify-goals
 
+# 全流水线验证（v6.2 新增）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/validate-gates.py --all-stages --run {PROJECT_ROOT} --write
+
+# 消费反馈（v6.2.1 新增，retro 阶段必须运行）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/consume-feedback.py --project-root {PROJECT_ROOT} --write --append-retro
+
+# 项目初始化（v6.2.1 新增）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/init-project.py --project-root {PROJECT_ROOT} --slug {slug}
+
 # 通用文档检查（位于 SKILLS_ROOT/scripts/ 而非 pipeline scripts/）
 python {SKILLS_ROOT}/scripts/check_docs_ssot.py --project-root {PROJECT_ROOT}
-python {SKILLS_ROOT}/scripts/ui_acceptance.py --project-root {PROJECT_ROOT} --mode quick
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --project-root {PROJECT_ROOT} --quick
 ```
 
 Gate failure → `kanban_block` + Feishu notify; do not promote next stage.
@@ -784,6 +795,10 @@ v6 升级：
 
 ## Platform notes
 
+### Pipeline Self-Audit
+
+When resuming work on an existing pm-{slug} project or diagnosing pipeline execution quality, use the self-audit methodology: `references/pipeline-self-audit.md`. It provides a 3-layer audit (artifact inventory → automated validation → quality assessment) with ready-to-run diagnostic commands and common findings table.
+
 ### Cursor / OpenCode
 
 - 读取本 SKILL.md，按阶段表顺序执行；无 Kanban。
@@ -804,6 +819,7 @@ v6 升级：
 - 无 Kanban 时：见 `references/greenfield-light.md`，用 `docs/workflow_state.yaml` 断点续跑。
 - 阶段边界运行 `docs-hygiene`。
 - v6 新增：可从 `PROGRESS.md` 恢复，无需依赖 `workflow_state.yaml`。
+- **棕地审计**：对已有项目执行 v6.2 合规检查，见 `references/brownfield-audit.md`（含诊断命令、产物清单、常见陷阱）。
 
 ## Feishu trigger
 

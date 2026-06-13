@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "6.2.0"
 
 
 def load_harness(project_root: Path) -> dict:

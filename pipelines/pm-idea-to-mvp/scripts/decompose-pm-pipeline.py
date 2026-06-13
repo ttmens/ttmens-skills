@@ -27,7 +27,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 
-PIPELINE_VERSION = "6.0.0"
+PIPELINE_VERSION = "6.2.0"
 
 # Stage definitions with assignees and dependencies
 STAGES = [

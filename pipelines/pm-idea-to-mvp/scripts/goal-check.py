@@ -21,7 +21,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root
 
-PIPELINE_VERSION = "6.0.0"
+PIPELINE_VERSION = "6.2.0"
 
 
 def load_yaml_simple(path: Path) -> dict:
@@ -347,6 +347,10 @@ def main():
         "--runtime-only", action="store_true",
         help="Only verify runtime goals (check_type: command_pass)"
     )
+    parser.add_argument(
+        "--goal", dest="goal_id", default=None,
+        help="Verify a specific goal by ID (e.g., --goal mvp-tests-pass)"
+    )
 
     args = parser.parse_args()
     project_root = Path(args.project_root).resolve()
@@ -366,6 +370,9 @@ def main():
         "summary": {"total": 0, "passed": 0, "failed": 0},
         "all_passed": False
     }
+
+    # v6.2: Filter by specific goal ID if --goal specified
+    goal_id_filter = getattr(args, "goal_id", None)
 
     if not goals_path.exists():
         report["error"] = f"Goals file not found: {goals_path}"

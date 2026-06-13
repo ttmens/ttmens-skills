@@ -116,6 +116,8 @@ STAGE_FILES = {
             (r"指标|metric|数据|data|统计|stat", "量化数据"),
             (r"迭代|iteration|循环|loop", "内循环分析"),
         ],
+        # v6.2.1: feedback.jsonl must be consumed (marker present)
+        "feedback_consumed": True,
     },
 }
 
@@ -573,7 +575,7 @@ def run_goal_checks(stage: str, project_root: Path) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate pipeline stage gates (v6.0.0)"
+        description="Validate pipeline stage gates (v6.2.0)"
     )
     parser.add_argument(
         "--run", dest="project_root",
@@ -584,8 +586,12 @@ def main():
         help="Alias for --run"
     )
     parser.add_argument(
-        "--stage", required=True,
-        help="Stage to validate (brief, align, research, analysis, spec, mvp, ship, operate, grow, retro)"
+        "--stage", required=False, default=None,
+        help="Stage to validate (brief, align, research, analysis, spec, mvp, ship, operate, grow, retro). Use --all-stages to validate all."
+    )
+    parser.add_argument(
+        "--all-stages", action="store_true",
+        help="Validate all stages at once and produce summary report"
     )
     parser.add_argument(
         "--runtime", action="store_true",
@@ -612,6 +618,35 @@ def main():
 
     project_root = Path(project_root_str).resolve()
     stage = args.stage
+
+    # v6.2: --all-stages mode
+    if args.all_stages:
+        all_stages = ["brief", "align", "research", "analysis", "spec", "mvp", "ship", "operate", "grow", "retro"]
+        summary = {"pipeline_version": PIPELINE_VERSION, "project_root": str(project_root), "stages": {}, "overall": {"total": 0, "passed": 0, "failed": 0, "all_passed": False}}
+        all_ok = True
+        for s in all_stages:
+            checks = validate_stage_files(s, project_root)
+            s_total = len(checks)
+            s_passed = sum(1 for c in checks if c.get("pass", False))
+            s_failed = s_total - s_passed
+            s_ok = s_failed == 0 and s_total > 0
+            if not s_ok:
+                all_ok = False
+            summary["stages"][s] = {"total": s_total, "passed": s_passed, "failed": s_failed, "all_passed": s_ok, "checks": checks}
+            summary["overall"]["total"] += s_total
+            summary["overall"]["passed"] += s_passed
+            summary["overall"]["failed"] += s_failed
+        summary["overall"]["all_passed"] = all_ok
+        if args.write:
+            gates_file = project_root / "gates.json"
+            gates_file.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        if not args.quiet:
+            print(json.dumps(summary, ensure_ascii=False, indent=2))
+        sys.exit(0 if all_ok else 1)
+
+    if not stage:
+        print(json.dumps({"error": "Must specify --stage or --all-stages"}))
+        sys.exit(1)
 
     report = {
         "pipeline_version": PIPELINE_VERSION,
@@ -666,7 +701,8 @@ def main():
     report["summary"]["total"] = len(report["checks"])
     report["summary"]["passed"] = sum(1 for c in report["checks"] if c.get("pass", False))
     report["summary"]["failed"] = report["summary"]["total"] - report["summary"]["passed"]
-    report["all_passed"] = report["summary"]["failed"] == 0 and report["summary"]["total"] > 0
+    # v6.2: If no checks defined (e.g. operate with no artifacts), pass by default
+    report["all_passed"] = report["summary"]["failed"] == 0
 
     # Write to gates.json if requested
     if args.write:

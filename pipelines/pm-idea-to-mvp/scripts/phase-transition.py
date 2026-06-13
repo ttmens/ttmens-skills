@@ -9,7 +9,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "6.2.0"
 
 
 def load_gates(project_root: Path) -> dict:

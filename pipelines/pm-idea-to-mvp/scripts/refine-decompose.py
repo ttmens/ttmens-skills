@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "6.2.0"
 
 REFINE_STAGES = [
     ("Refine-1: 业界深研", "pm-researcher", "industry-benchmark → 01b-benchmark.md"),
@@ -22,7 +22,7 @@ REFINE_STAGES = [
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Decompose refine pipeline into kanban tasks")
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--slug", default="")
     parser.add_argument("--dry-run", action="store_true")

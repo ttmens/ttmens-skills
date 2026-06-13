@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "6.2.0"
 
 
 def kanban_comment(task_id: str, message: str) -> dict:
