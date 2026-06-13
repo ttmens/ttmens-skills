@@ -21,8 +21,8 @@ license: MIT
 ## Step 1: Run checker
 
 ```bash
-python3 scripts/check_docs_ssot.py --project-root /path/to/project
-python3 scripts/check_docs_ssot.py --project-root . --fix
+python {SKILLS_ROOT}/scripts/check_docs_ssot.py --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/scripts/check_docs_ssot.py --project-root {PROJECT_ROOT} --fix
 ```
 
 ## Rules enforced
@@ -30,7 +30,7 @@ python3 scripts/check_docs_ssot.py --project-root . --fix
 | 规则 | 检测 | 修复 |
 |------|------|------|
 | 单一 CURRENT-STATUS | 多个 `*-CURRENT-STATUS*.md` 并存 | 归档旧版到 `design/archive/` |
-| DESIGN SSOT | `docs/DESIGN.md` 缺失或与 theme.css 变量严重偏离 | 提示运行 design-system-md |
+| DESIGN SSOT | `docs/DESIGN.md` 或 `04-mvp/DESIGN.md` 缺失或与 CSS 变量严重偏离 | 提示运行 ui-ux-pro-max § Maintenance |
 | src↔docs sync | `src/site/theme.css` hash ≠ `docs/assets/theme.css` | `--fix` 复制 sync |
 | 废弃文档 | UI-UX-Style 未指向 DESIGN.md | 加 deprecation banner |
 | DECISIONS | 架构文件变更但 DECISIONS 未更新 | warning |

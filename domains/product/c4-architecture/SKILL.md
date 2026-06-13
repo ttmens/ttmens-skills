@@ -1,7 +1,7 @@
 ---
 name: c4-architecture
-description: "Express product architecture with Simon Brown C4 model (Context/Container/Component)."
-version: 1.0.0
+description: "C4 architecture (Context/Container/Component) + multi-option PK debate mode for analysis."
+version: 1.1.0
 author: PM Pipeline
 license: MIT
 platforms: [linux, macos, windows]
@@ -86,3 +86,21 @@ Pick the most complex container (usually API/backend) and decompose into compone
 - ≥3 containers in container doc
 - ≥1 component breakdown
 - `openspec/design.md` contains `architecture/c4-` links
+
+## Architecture PK mode (multi-option debate)
+
+Run during **analysis**, after draft `02-analysis.md`, when ≥2 viable architecture directions exist.
+
+### Protocol
+
+1. Assign **Option A / B / C** roles: each writes `debates/analysis-option-{A|B|C}.md` with mini-ADR (context, decision, consequences).
+2. **Judge** reads all options + `01-research.md`; writes `debates/analysis-synthesis.md` with recommended option, rejected options + why, top 3 risks + mitigations.
+3. Update `02-analysis.md` recommendation section and `architecture/c4-*.md` to match the winner.
+
+### Gate
+
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage analysis --project-root {PROJECT_ROOT}
+```
+
+Require ≥2 `debates/analysis-option-*.md` files + `debates/analysis-synthesis.md` before analysis complete.

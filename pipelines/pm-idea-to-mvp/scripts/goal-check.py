@@ -199,6 +199,55 @@ def check_min_table_rows(target: str, min_count: int, project_root: Path) -> dic
     }
 
 
+def check_forbidden(target: str, pattern: str, project_root: Path) -> dict:
+    """Fail if forbidden pattern appears in file."""
+    file_path = project_root / target
+    if not file_path.exists():
+        return {"pass": True, "detail": f"File not found (forbidden skipped): {target}"}
+    content = file_path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(pattern, content, re.IGNORECASE)
+    return {
+        "pass": not bool(match),
+        "detail": f"Forbidden pattern {'FOUND' if match else 'absent'} in {target}",
+    }
+
+
+def check_min_matches(target: str, pattern: str, min_count: int, project_root: Path) -> dict:
+    """Count regex matches in file."""
+    file_path = project_root / target
+    if not file_path.exists():
+        return {"pass": False, "detail": f"File not found: {target}"}
+    content = file_path.read_text(encoding="utf-8", errors="replace")
+    matches = re.findall(pattern, content, re.IGNORECASE)
+    count = len(matches)
+    return {
+        "pass": count >= min_count,
+        "detail": f"Matches: {count} (min: {min_count}) in {target}",
+        "count": count,
+    }
+
+
+def check_debate_resolved(debates_dir: str, stage_prefix: str, project_root: Path) -> dict:
+    """Verify debate rounds exist and synthesis has no open questions."""
+    base = project_root / debates_dir
+    if not base.exists():
+        return {"pass": False, "detail": f"Debates dir missing: {debates_dir}"}
+    rounds = sorted(base.glob(f"{stage_prefix}-*.md"))
+    if len(rounds) < 2:
+        return {"pass": False, "detail": f"Need ≥2 debate files for {stage_prefix}, found {len(rounds)}"}
+    synthesis = base / f"{stage_prefix}-synthesis.md"
+    if synthesis.exists():
+        text = synthesis.read_text(encoding="utf-8", errors="replace")
+        open_q = re.findall(r"OPEN\s*[?:]|待决|未解决|TBD", text, re.IGNORECASE)
+        if open_q:
+            return {"pass": False, "detail": f"Open questions in synthesis: {len(open_q)}"}
+    return {"pass": True, "detail": f"Debate resolved for {stage_prefix} ({len(rounds)} rounds)"}
+
+
+def args_stage_prefix(goal: dict) -> str:
+    return goal.get("stage_prefix") or goal.get("stage", "align")
+
+
 def evaluate_goal(goal: dict, project_root: Path) -> dict:
     """Evaluate a single goal condition."""
     goal_id = goal.get("id", "?")
@@ -227,6 +276,18 @@ def evaluate_goal(goal: dict, project_root: Path) -> dict:
         check = check_min_lines(goal["target"], goal.get("min", 10), project_root)
     elif goal_type == "min_table_rows":
         check = check_min_table_rows(goal["target"], goal.get("min", 3), project_root)
+    elif goal_type == "forbidden":
+        check = check_forbidden(goal["target"], goal["pattern"], project_root)
+    elif goal_type == "min_matches":
+        check = check_min_matches(
+            goal["target"], goal["pattern"], goal.get("min", goal.get("min_matches", 1)), project_root
+        )
+    elif goal_type == "debate_resolved":
+        check = check_debate_resolved(
+            goal.get("debates_dir", "debates"),
+            goal.get("stage_prefix", args_stage_prefix(goal)),
+            project_root,
+        )
     elif goal_type == "composite_and":
         # All sub-conditions must pass
         sub_results = []
@@ -332,12 +393,18 @@ def main():
     # Evaluate each goal
     for goal in goals:
         result = evaluate_goal(goal, project_root)
+        optional = goal.get("optional", False)
+        if optional and not result["passed"]:
+            result["passed"] = True
+            result["detail"] += " (optional, skipped)"
         report["goals"].append(result)
         if result["passed"]:
             report["summary"]["passed"] += 1
         else:
             report["summary"]["failed"] += 1
 
+    report["summary"]["failed"] = sum(1 for g in report["goals"] if not g["passed"])
+    report["summary"]["passed"] = report["summary"]["total"] - report["summary"]["failed"]
     report["all_passed"] = report["summary"]["failed"] == 0 and report["summary"]["total"] > 0
 
     print(json.dumps(report, ensure_ascii=False, indent=2))

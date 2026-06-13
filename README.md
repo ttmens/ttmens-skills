@@ -1,149 +1,326 @@
 # ttmens-skills
 
-> 一个人用 AI，从想法到上线。带门禁脚本、产物路径、可执行验收报告。
+> **一个人用 AI，从想法到上线。**  
+> 不是「更多 prompt」，而是 **可验证的 Loop Engineering 流水线**——每个阶段有产物路径、门禁脚本、辩论 gate 与 GitHub Pages 报告。
 
-phuryn 教你**怎么做 PM 决策**；superpowers / addy 教你**怎么写可靠代码**；**ttmens-skills 教你一个人把想法做到上线**——带 `gates.json`、C4、`openspec/`、UI rubric 脚本与 GitHub Pages 阶段报告。
+phuryn 教你怎么做 PM 决策；superpowers / addy 教你怎么写可靠代码；**ttmens-skills 把两者缝成一条能跑到上线的链**——带 `gates.json`、C4、`openspec/`、`ui_acceptance.py` rubric，以及 pm-{slug} 目录契约。
 
 <!-- AUTO:COUNTS -->
-- Core: **17** native + **23** borrowed = **40** skills
+- Core: **17** native + **20** borrowed = **37** skills
 <!-- /AUTO:COUNTS -->
 
-**Platforms:** Cursor | Hermes | OpenCode
+**Platforms:** Cursor · Hermes · OpenCode · **Pipeline:** `pm-idea-to-mvp` v6.1
 
 ---
 
-## 60 秒开始
+## 设计思想（读这一节就懂「为什么这样建」）
+
+### 1. 产物优先，脚本为真（Artifact-first, Script as SSOT）
+
+Agent 可以写很多 markdown，但**只有脚本能证明阶段真的完成了**。
+
+- **L0 可执行层**（门禁、goal、内循环）是单一真相源  
+- **L1 流水线文档**（`pm-idea-to-mvp/SKILL.md`）告诉 agent「当前阶段该产出什么、调什么脚本」  
+- **L2 技能**是操作手册，不是替代品——阶段结束必须跑 `stage-complete.py`
+
+> 理念：**Trust, but verify.** 人类 On-the-loop，机器 Off-the-loop 跑验证。
+
+### 2. 双循环：Why Loop × How Loop
+
+借鉴 Martin Fowler 的双循环框架，把「方向对不对」和「做得快不快」分开：
+
+| 循环 | 阶段 | 回答的问题 |
+|------|------|------------|
+| **Why Loop**（战略） | align → research → analysis → retro | 这个想法值得做吗？假设还成立吗？ |
+| **How Loop**（执行） | spec → mvp（内循环）→ ship → operate | 怎么最小成本验证？怎么稳定交付？ |
+
+两环通过 `feedback.jsonl`、`evolution-notes.md`、`harness-improvements.md` 闭合——retro 的教训会回流到 harness 与下一 sprint。
+
+### 3. On-the-loop，不是 In-the-loop
+
+默认 **ship** 才阻塞等人（可由 `harness-rules.yaml` 按风险调整）。align / spec 的 G1/G2 辩论 gate 由脚本验证，人类**异步审阅**产物即可。
+
+- **Low risk**（文档修正、research 补充）→ agent 自主 + harness 验证  
+- **High risk**（部署、迁移、安全）→ 保留人工 checkpoint  
+
+### 4. 少而精的技能层
+
+37 个 core skill 是有意裁剪的结果（v3.1 从 44 瘦身）：
+
+- 重叠能力**合并进父技能**（G1 辩论 → `grill-me`；架构 PK → `c4-architecture`；DESIGN 维护 → `ui-ux-pro-max`）  
+- /vendor 深度**按需 profile 安装**（G2 红队 → `--profile debate`）  
+- **Hermes Kanban profile** 是调度壳，不计入 skill 数量  
+
+### 5. 一个想法 = 一个仓库
+
+每个 pm-{slug} 是独立 GitHub 仓库 + Pages 报告。流水线不是「聊天话题」，是**可续跑、可审计、可展示**的项目实例。
+
+---
+
+## 60 秒开始（给人）
 
 ```bash
 git clone https://github.com/ttmens/ttmens-skills.git
 cd ttmens-skills
 git submodule update --init --recursive
-./install.sh --core --all          # Windows: .\install.ps1 -Target All
+./install.sh --core --profile debate --all   # Windows: .\install.ps1 -Target All
 ```
 
-在你的项目根目录放 `AGENTS.md`（可复制本仓库模板），然后对 Agent 说：
+项目根目录放 `AGENTS.md`（可复制 [`templates/cursor/AGENTS.md`](templates/cursor/AGENTS.md)），对 Agent 说：
 
 > **从想法做到上线**
 
-Agent 会加载 **`pm-idea-to-mvp`** v5.1，按阶段产出 `CONTEXT.md` → `03-prd.md` → `04-mvp/` → `RUNBOOK.md`。
+产出链：`00-brief.md` → `CONTEXT.md` → `03-prd.md` → `04-mvp/` → `RUNBOOK.md` → Pages 报告。
 
 ---
 
-## 说这句话，就会发生什么
+## Agent 入口（给 Agent 读）
 
-| 你想… | 说… | 流水线阶段 |
-|-------|-----|------------|
+<!-- AGENT:START — 加载流水线时优先解析本节 -->
+
+| 键 | 值 |
+|----|-----|
+| **默认技能** | `pm-idea-to-mvp` v6.1 |
+| **SSOT 流水线** | [`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md) |
+| **Stage → Skill 映射** | [`pipelines/pm-idea-to-mvp/stage-skills.yaml`](pipelines/pm-idea-to-mvp/stage-skills.yaml) |
+| **技能清单** | [`marketplace.yaml`](marketplace.yaml) + [`borrowed/manifest.yaml`](borrowed/manifest.yaml) |
+| **环境变量** | `{PROJECT_ROOT}` = pm-{slug} 根；`{SKILLS_ROOT}` = 技能库根（解析见 onboarding） |
+| **安装与自检** | [`docs/AGENT_ONBOARDING.md`](docs/AGENT_ONBOARDING.md) |
+
+### 触发语
+
+| 意图 | 用户可能说 | 动作 |
+|------|------------|------|
+| 新想法 0→1 | 从想法做到上线、帮我做 MVP | 从 `brief` 或 `align` 开始，加载 `pm-idea-to-mvp` |
+| 续跑 | 继续 pm-{slug} | 读 `{PROJECT_ROOT}/docs/workflow_state.yaml` 或 `gates.json` |
+| 棕地 | 优化现有产品 | `--scenario brownfield`；读 `brownfield-bootstrap` |
+| 单阶段 | 进入 spec / mvp 阶段 | 只加载该 stage 技能（见 stage-skills.yaml） |
+
+### 阶段边界（强制）
+
+每个 stage 结束前**必须**：
+
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+  --project-root {PROJECT_ROOT} --stage <stage> --verify-goals
+```
+
+非零 exit → 阶段未完成，不得进入下一阶段。
+
+MVP 内循环使用：
+
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py \
+  --project-root {PROJECT_ROOT}
+```
+
+### 三道质量门
+
+| Gate | Stage | 脚本验证 | 人文含义 |
+|------|-------|----------|----------|
+| **G1** | align | `goal-check.py --stage align`（含 `debate_resolved`） | 假设被挑战过，不是自嗨 |
+| **G2** | spec | `goal-check.py --stage spec`（含 PRD 辩论） | PRD 经红队审查 |
+| **G3** | mvp/ship | 测试 + lint + build + `ui_acceptance.py --full` | 能跑、能看、能部署 |
+
+G1 辩论协议：`grill-me` / `grill-with-docs` § G1 Debate Protocol  
+G2 红队面板：`prd-red-team-panel`（依赖 `--profile debate` 的 phuryn 技能）
+
+### 语言
+
+面向用户的产物（brief、PRD、retro、UI 文案）→ **简体中文**。代码与 YAML 键名可英文。
+
+**首次使用 / 未安装技能**：先读 [`docs/AGENT_ONBOARDING.md`](docs/AGENT_ONBOARDING.md)（分平台安装、`{SKILLS_ROOT}` 解析、自检）。
+
+<!-- AGENT:END -->
+
+---
+
+## 能力全景
+
+### 架构分层
+
+```mermaid
+flowchart TB
+  subgraph L0 [L0_Scripts_Truth]
+    SC[stage-complete.py]
+    GC[goal-check.py]
+    IL[inner-loop-driver.py]
+  end
+  subgraph L1 [L1_Pipeline]
+    PM[pm-idea-to-mvp]
+    SS[stage-skills.yaml]
+  end
+  subgraph L2 [L2_Native_17]
+    Skills[grill / c4 / openspec / ui-ux / mvp-loop ...]
+  end
+  subgraph L3 [L3_Borrowed_20]
+    Phuryn[pm-*]
+    KW[kw-*]
+  end
+  subgraph L4 [L4_Profiles]
+    Debate[debate]
+    Kanban[hermes-kanban]
+    Obs[obsidian]
+  end
+  PM --> Skills
+  Skills --> SC
+  SC --> GC
+  L3 --> Skills
+  L4 -.-> Skills
+```
+
+### 10 个 Stage → 4 个 Phase（给人看的地图）
+
+```mermaid
+flowchart LR
+  subgraph Discover["Discover 验证方向"]
+    brief[brief]
+    align[align G1]
+    research[research]
+  end
+  subgraph Define["Define 定方案"]
+    analysis[analysis]
+    spec[spec G2]
+  end
+  subgraph Deliver["Deliver 做出来"]
+    mvp[mvp G3]
+    ship[ship]
+  end
+  subgraph Operate["Operate 跑起来"]
+    operate[operate]
+    grow[grow]
+    retro[retro]
+  end
+  brief --> align --> research --> analysis --> spec --> mvp --> ship --> operate --> grow --> retro
+```
+
+| Phase | Stages | 关键产物 | 门禁 |
+|-------|--------|----------|------|
+| **Discover** | brief, align, research | `CONTEXT.md`, `01-research.md`, `debates/align-*` | **G1** |
+| **Define** | analysis, spec | `02-analysis.md`, `architecture/c4-*`, `03-prd.md`, `02b-prototype/` | **G2** |
+| **Deliver** | mvp, ship | `04-mvp/`, `UX-REVIEW.md`, `RUNBOOK.md`, `ui-acceptance-report` | **G3** |
+| **Operate** | operate, grow, retro | `06-growth.md`, `05-retro.md`, Pages | — |
+
+完整 stage 表（含 borrowed 列）：[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)
+
+### 场景（Scenario）
+
+| ID | 入口 | 跳过 | 用途 |
+|----|------|------|------|
+| `greenfield` | brief | — | 默认 0→1 |
+| `brownfield` | analysis | brief, align, research | 优化现有产品；见 `brownfield-bootstrap` |
+| `refine` | mvp | 至 spec | 深化循环 + `deep-research` profile |
+| `optimize` | analysis | brief, align, research | 轻量棕地 |
+
+配置：[`scenarios.yaml`](scenarios.yaml)
+
+---
+
+## 技能能力矩阵
+
+### Native 17（ttmens 差异化）
+
+| 技能 | Stage | 能力 |
+|------|-------|------|
+| **pm-idea-to-mvp** | all | 唯一主流水线；编排 G1/G2/G3 |
+| **grill-me** | align | 逐问对齐 + **G1 假设辩论**（Advocate/Skeptic） |
+| **grill-with-docs** | align | 文档 grounded 对齐 + G1 辩论 |
+| **docs-hygiene** | analysis,mvp,ship | SSOT 漂移检测与修复 |
+| **c4-architecture** | analysis | C4 L1–L3 + **架构 PK 辩论** |
+| **openspec** | analysis,spec | proposal / design / tasks 规格驱动 |
+| **user-journey** | spec | 旅程 → 页面 IA |
+| **open-design** | spec | 可点击静态原型 |
+| **ui-ux-pro-max** | spec,mvp | DESIGN.md tokens + **漂移维护** |
+| **prd-red-team-panel** | spec | **G2 红队面板**（需 debate profile） |
+| **writing-plans** | mvp | bite-sized 实现任务 |
+| **subagent-driven-development** | mvp | 逐 Task 子代理实现 |
+| **test-driven-development** | mvp | RED-GREEN-REFACTOR |
+| **requesting-code-review** | mvp,ship | 提交前质量门 |
+| **dogfood** | mvp,ship | 探索式 Web QA |
+| **ui-acceptance-review** | mvp,ship | journey / quick / full / polish；**G3** |
+| **pm-git-publish** | retro | GitHub Pages 阶段报告 |
+
+### Borrowed 20（vendor 深度）
+
+安装时从 `vendor/` 复制。完整列表：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md)
+
+| Stage | 技能 |
+|-------|------|
+| align | `pm-identify-assumptions-new` |
+| research | `pm-opportunity-solution-tree`, `pm-competitor-analysis`, `pm-market-sizing` |
+| analysis | `pm-product-strategy`, `kw-system-design` |
+| spec | `pm-create-prd`, `pm-user-stories` |
+| mvp | `kw-testing-strategy` |
+| ship | `pm-shipping-artifacts`, `pm-intended-vs-implemented`, `kw-deploy-checklist`, `pm-security-audit-static` |
+| operate | `kw-incident-response`, `kw-runbook`, `pm-sql-queries` |
+| grow | `pm-north-star-metric`, `pm-gtm-strategy` |
+| retro | `pm-retro`, `pm-release-notes` |
+
+归因：[borrowed/ATTRIBUTION.md](borrowed/ATTRIBUTION.md)
+
+### Optional Profiles（不计入 37 core）
+
+| Profile | 内容 | 何时装 |
+|---------|------|--------|
+| **debate** | `pm-strategy-red-team`, `pm-pre-mortem` | spec 红队面板、brownfield |
+| **hermes-kanban** | pm-aligner … pm-growth（8 个） | Hermes Kanban 分阶段 dispatch |
+| **hermes** | plan, opencode | Hermes 计划模式 / OpenCode worker |
+| **obsidian** | 笔记三件套 | 调研与任务管理 |
+| **deep-research** | industry-benchmark | refine 场景 |
+
+---
+
+## 可执行能力（脚本与连接器）
+
+### 流水线脚本（L0）
+
+| 脚本 | 作用 |
+|------|------|
+| `decompose-pm-pipeline.py` | 确定性拆任务 + 生成 `goals/*.yaml` |
+| `stage-complete.py` | 阶段完成编排（gates + eval + goal + 推送） |
+| `goal-check.py` | 目标原语：文件、内容、命令、**debate_resolved** |
+| `validate-gates.py` | artifact + runtime 双层门禁 |
+| `eval-stage.py` | 阶段 rubric 评分（含中文锚点） |
+| `inner-loop-driver.py` | MVP Plan→Code→Test→Observe 内循环 |
+| `harness-runner.py` | 风险分级自动化 + apply-safe 进化 |
+| `progress-tracker.py` | `PROGRESS.md` 任务级追踪 |
+| `kanban-sync.py` | Hermes Kanban 状态同步 |
+| `phase-transition.py` | 设计缺陷 detected → 阶段回流 |
+| `refine-decompose.py` | Refine 场景专用拆任务 |
+
+路径：`pipelines/pm-idea-to-mvp/scripts/`
+
+### 项目级脚本
+
+| 脚本 | 作用 |
+|------|------|
+| `scripts/ui_acceptance.py` | UI rubric（quick/full，G3） |
+| `scripts/check_docs_ssot.py` | DESIGN / 文档 SSOT |
+| `scripts/publish_repo.py` | GitHub 仓库 bootstrap |
+| `scripts/feishu_notify.py` | 阶段完成通知 |
+| `scripts/deploy-verify.py` | 部署就绪检查 |
+| `scripts/merge-retro-knowledge.py` | retro 知识回流 |
+
+### 连接器
+
+- **GitHub Pages** — 每阶段 HTML 报告（`pm-git-publish`）  
+- **Feishu** — `stage-complete` 推送摘要  
+- **Hermes Kanban** — profile 分派 + `kanban-sync`  
+
+---
+
+## 说这句话，会发生什么（给人）
+
+| 你想… | 说… | 阶段 |
+|-------|-----|------|
 | 验证想法 | 帮我对齐这个想法 | align (**G1**) |
 | 做竞品调研 | 进入 research 阶段 | research |
 | 写 PRD + 原型 | 进入 spec 阶段 | spec (**G2**) |
 | 按规格实现 MVP | 进入 mvp 阶段 | mvp (**G3**) |
 | 上线前检查 | ship-check | ship |
-| 继续已有项目 | 继续 pm-{slug} | 读 `docs/workflow_state.yaml` |
+| 继续已有项目 | 继续 pm-{slug} | 读 workflow_state |
 
-更多跨平台 prompt 链：[command-recipes.md](pipelines/pm-idea-to-mvp/references/command-recipes.md)
-
----
-
-## 一条流水线，四个阶段
-
-10 个 stage 折叠为读者视角的 4 phase：
-
-```mermaid
-flowchart LR
-    subgraph Discover["Discover"]
-        brief[brief]
-        align[align G1]
-        research[research]
-    end
-    subgraph Define["Define"]
-        analysis[analysis]
-        spec[spec G2]
-    end
-    subgraph Deliver["Deliver"]
-        mvp[mvp G3]
-        ship[ship]
-    end
-    subgraph Operate["Operate & Grow"]
-        operate[operate]
-        grow[grow]
-        retro[retro]
-    end
-    brief --> align --> research --> analysis --> spec --> mvp --> ship --> operate --> grow --> retro
-```
-
-| Phase | Stages | 关键产出 | 门禁 |
-|-------|--------|----------|------|
-| **Discover** | brief, align, research | `CONTEXT.md`, `01-research.md` | **G1** align |
-| **Define** | analysis, spec | `02-analysis.md`, `03-prd.md`, `02b-prototype/` | **G2** spec |
-| **Deliver** | mvp, ship | `04-mvp/`, `RUNBOOK.md`, `ui-acceptance-report` | **G3** mvp |
-| **Operate** | operate, grow, retro | `06-growth.md`, `05-retro.md`, Pages 报告 | — |
-
-入口技能：[pipelines/pm-idea-to-mvp/SKILL.md](pipelines/pm-idea-to-mvp/SKILL.md) · Agent 规则：[AGENTS.md](AGENTS.md)
-
----
-
-## 核心技能 17 个
-
-| 技能 | 做什么 | 何时用 |
-|------|--------|--------|
-| **pm-idea-to-mvp** | 唯一主流水线，G1/G2/G3 | 从想法做到上线 |
-| **grill-me** | 逐问对齐想法 | 新想法、无 CONTEXT.md |
-| **grill-with-docs** | 基于文档对齐 + 术语漂移 | 已有 CONTEXT.md |
-| **docs-hygiene** | SSOT 文档漂移检测 | 阶段边界、棕地项目 |
-| **c4-architecture** | C4 架构图与 ADR | analysis 阶段 |
-| **openspec** | proposal / design / tasks 规格 | 分析后写实现规格 |
-| **user-journey** | 旅程驱动页面与 IA | 写 `03b-user-journey.md` |
-| **open-design** | 可点击静态原型（含可选变体） | PRD 前需要原型 |
-| **ui-ux-pro-max** | 从 PRD 生成 DESIGN tokens | MVP 实现前 |
-| **design-system-md** | 维护 `docs/DESIGN.md` | 项目级设计 SSOT |
-| **ui-acceptance-review** | journey / quick / full / polish 四模式 | MVP 与 ship、**G3** |
-| **writing-plans** | 拆 bite-sized 任务 | openspec tasks 落地前 |
-| **subagent-driven-development** | 子代理逐 Task 实现 | MVP 编码主循环 |
-| **test-driven-development** | RED-GREEN-REFACTOR | 实现业务逻辑 |
-| **requesting-code-review** | 提交前质量门 | commit 前 |
-| **dogfood** | 探索式 Web QA | MVP 走查 |
-| **pm-git-publish** | GitHub Pages 阶段报告 | retro / 每阶段结束 |
-
----
-
-## 借用的 PM / 工程技能 23 个
-
-安装时从 `vendor/` 复制，归因见 [borrowed/ATTRIBUTION.md](borrowed/ATTRIBUTION.md)。
-
-| 来源 | 代表技能 | 流水线阶段 |
-|------|----------|------------|
-| [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | `pm-create-prd`, `pm-competitor-analysis`, `pm-retro` | align → retro |
-| [knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | `kw-system-design`, `kw-code-review`, `kw-deploy-checklist` | analysis → operate |
-
-完整路径与 stage 索引：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md)
-
----
-
-## 可选扩展包
-
-```bash
-./install.sh --profile obsidian --all       # Obsidian 笔记三件套
-./install.sh --profile deep-research --all  # industry-benchmark 深研
-./install.sh --profile hermes --all         # plan + opencode（Hermes 编排）
-```
-
-| Profile | 技能 | 场景 |
-|---------|------|------|
-| **obsidian** | todo-manager, deepen-review, note-summarizer | 笔记驱动调研与任务 |
-| **deep-research** | industry-benchmark | 行业对标深研 |
-| **hermes** | plan, opencode | Kanban 分派 + `opencode run` |
-
----
-
-## 和其他仓库怎么搭配
-
-| 仓库 | 角色 | 建议 |
-|------|------|------|
-| [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | PM 方法论 | 本库已借核心 16 项；无需重复安装 |
-| [obra/superpowers](https://github.com/obra/superpowers) | TDD / 子代理 / 计划 | 可叠加；本库 `writing-plans` 等已含 slim 版 |
-| [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | 工程生命周期 | 互补；本库侧重**产物路径 + 脚本门禁** |
-
-差异化：**可执行流水线** + **`ui_acceptance.py` / `check_docs_ssot.py`** + **pm-{slug} 目录契约** + **三平台安装**。
+跨平台 prompt 替代 slash command：[command-recipes.md](pipelines/pm-idea-to-mvp/references/command-recipes.md)
 
 ---
 
@@ -151,43 +328,62 @@ flowchart LR
 
 | 场景 | 命令 |
 |------|------|
-| 默认（推荐） | `./install.sh --core --all` |
-| 仅 native | `./install.sh --core --cursor` |
-| 仅 borrowed | `./install.sh --borrowed-only --all` |
-| 项目级安装 | `./install.sh --core --all --project /path/to/app` |
+| **推荐（含 G2 依赖）** | `./install.sh --core --profile debate --all` |
+| Cursor + hooks | `./install.sh --core --platform cursor --project /path/to/app` |
+| Hermes Kanban | `./install.sh --core --platform hermes --profile hermes-kanban` |
+| OpenCode | `./install.sh --core --platform opencode --project /path/to/app` |
+| 单阶段轻量 | `./install.sh --lite --stage mvp --all` |
+| 棕地 | `./install.sh --core --profile debate --scenario brownfield` |
 
-| Platform | 全局路径 | 项目路径 | 文档 |
-|----------|----------|----------|------|
-| Cursor | `~/.cursor/skills/` | `.cursor/skills/` | [cursor.md](docs/platforms/cursor.md) |
-| Hermes | `~/.hermes/skills/` | — | [hermes.md](docs/platforms/hermes.md) |
-| OpenCode | `~/.config/opencode/skills/` | `.opencode/skills/` | [opencode.md](docs/platforms/opencode.md) |
+| Platform | 全局 | 项目内 |
+|----------|------|--------|
+| Cursor | `~/.cursor/skills/` | `.cursor/skills/` |
+| Hermes | `~/.hermes/skills/` | — |
+| OpenCode | `~/.config/opencode/skills/` | `.opencode/skills/` |
 
-Windows: `.\install.ps1 -Target All`（默认 `--core`）
+平台细节：[docs/platforms/cursor.md](docs/platforms/cursor.md) · [hermes.md](docs/platforms/hermes.md) · [opencode.md](docs/platforms/opencode.md)
+
+Windows: `.\install.ps1 -Target All`
 
 ---
 
-## 门禁与脚本
+## 和其他生态的关系
 
-| Gate | 产出 |
-|------|------|
-| G1 | align：`CONTEXT.md` |
-| G2 | spec：`03-prd.md` + 原型 |
-| G3 | mvp：`docs/ui-acceptance-report.md` |
+| 仓库 | 教什么 | ttmens-skills 怎么用 |
+|------|--------|----------------------|
+| [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | PM 决策框架 | core 借 14 + debate profile 2 |
+| [obra/superpowers](https://github.com/obra/superpowers) | TDD / 子代理 / 计划 | 本库含 slim 版 native 技能 |
+| [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | 工程 / 运维 | kw-* 覆盖 analysis→operate |
+
+**差异化**：不是又一个 skill 合集，而是 **stage → artifact → skill → gate → script** 单向 SSOT 的 Loop Engineering 平台。
+
+---
+
+## 仓库布局
+
+目录职责与「新文件放哪里」决策树：[docs/REPO_LAYOUT.md](docs/REPO_LAYOUT.md)
+
+---
+
+## 维护与验证
 
 ```bash
-python scripts/check_docs_ssot.py --project-root .
-python scripts/ui_acceptance.py --project-root . --mode quick
-python validate_skills.py
-python scripts/sync_readme.py --check
+python scripts/validate_skills.py       # marketplace + stage-skills + layout
+python tests/test_pipeline_scripts.py  # 流水线脚本冒烟
+python scripts/sync_readme.py --check  # SKILLS_CATALOG 同步
 ```
 
----
+| 文件 | 角色 |
+|------|------|
+| [`marketplace.yaml`](marketplace.yaml) | 技能注册表 v3.1 |
+| [`borrowed/manifest.yaml`](borrowed/manifest.yaml) | core borrowed 20 |
+| [`borrowed/manifest-debate.yaml`](borrowed/manifest-debate.yaml) | G2 panel 依赖 |
+| [`docs/AGENT_ONBOARDING.md`](docs/AGENT_ONBOARDING.md) | Agent 分平台安装与自检 |
+| [`docs/REPO_LAYOUT.md`](docs/REPO_LAYOUT.md) | 目录职责与脚本 SSOT 规则 |
+| [`docs/SKILLS_CATALOG.md`](docs/SKILLS_CATALOG.md) | 全量索引（`sync_readme.py --write` 生成） |
+| [`deprecated/`](deprecated/) | 已合并/归档技能（勿安装） |
 
-## 维护者
-
-- 技能全量目录（路径 / stage / platform）：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md) — `python scripts/sync_readme.py --write`
-- SSOT 配置：`marketplace.yaml`, `borrowed/manifest.yaml`, `platforms.yaml`
-- 已删除技能归档：`deprecated/`
+Agent 规则摘要：[AGENTS.md](AGENTS.md) · Agent 安装指南：[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)
 
 ## License
 

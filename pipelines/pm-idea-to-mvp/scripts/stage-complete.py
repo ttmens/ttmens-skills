@@ -245,12 +245,28 @@ def run_git_push(project_root: Path) -> dict:
 def build_run_report(stage: str, project_root: Path) -> dict:
     """Build a run report for the stage completion."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    skills_root = resolve_skills_root()
+    pub = skills_root / "scripts" / "publish_repo.py"
+    pages = None
+    if pub.exists():
+        r = subprocess.run(
+            [sys.executable, str(pub), "--project-root", str(project_root)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if r.returncode == 0:
+            try:
+                pages = json.loads(r.stdout)
+            except json.JSONDecodeError:
+                pages = {"raw": r.stdout[:200]}
     return {
         "pipeline_version": PIPELINE_VERSION,
         "stage": stage,
         "project_root": str(project_root),
         "timestamp": now,
         "status": "completed",
+        "pages": pages,
     }
 
 
@@ -327,6 +343,11 @@ def main():
         )
         report["steps"].append({"step": "progress_update", **progress_result})
 
+    # Step 1b: Harness runner (risk decisions)
+    harness_args = ["--project-root", str(project_root), "--stage", stage]
+    harness_result = run_script("harness-runner.py", harness_args, project_root)
+    report["steps"].append({"step": "harness_runner", **harness_result})
+
     # Step 2: Validate gates
     gate_args = ["--stage", stage, "--run", str(project_root), "--write"]
     if args.runtime:
@@ -384,6 +405,39 @@ def main():
         })
 
     # Final status
+    # Final status + platform actions
+    kanban_action = "complete" if all_checks_passed and not needs_checkpoint else "block" if needs_checkpoint else "defer"
+    report["kanban_action"] = kanban_action
+
+    if args.task_id and all_checks_passed:
+        if needs_checkpoint:
+            sync_result = run_script(
+                "kanban-sync.py",
+                ["--task-id", args.task_id, "--project-root", str(project_root),
+                 "--action", "block", "--reason", report.get("human_checkpoint_reason", "human checkpoint")],
+                project_root,
+            )
+        else:
+            sync_result = run_script(
+                "kanban-sync.py",
+                ["--task-id", args.task_id, "--project-root", str(project_root), "--action", "complete"],
+                project_root,
+            )
+        report["steps"].append({"step": "kanban_sync", **sync_result})
+
+    cursor_status = project_root / ".cursor" / "stage-status.json"
+    cursor_status.parent.mkdir(parents=True, exist_ok=True)
+    cursor_status.write_text(
+        json.dumps({
+            "stage": stage,
+            "all_passed": all_checks_passed,
+            "needs_human_checkpoint": needs_checkpoint,
+            "kanban_action": kanban_action,
+            "pipeline_version": PIPELINE_VERSION,
+        }, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
     if needs_checkpoint and all_checks_passed:
         report["action_required"] = "human_checkpoint"
         report["message"] = f"Stage '{stage}' passed all checks. Awaiting human approval."

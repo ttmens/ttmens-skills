@@ -247,23 +247,38 @@ def validate_stage_files(stage: str, project_root: Path) -> list[dict]:
     return checks
 
 
+def resolve_runtime_config(harness: dict, project_root: Path) -> tuple[dict, Path]:
+    """Merge runtime + project sections; return config and working directory."""
+    runtime = harness.get("runtime", {}) or {}
+    project = harness.get("project", {}) or {}
+    merged = {
+        "test_cmd": runtime.get("test_cmd") or project.get("test_cmd", ""),
+        "build_cmd": runtime.get("build_cmd") or project.get("build_cmd", ""),
+        "lint_cmd": runtime.get("lint_cmd") or project.get("lint_cmd", ""),
+        "health_url": runtime.get("health_url") or project.get("health_url", ""),
+        "workdir": runtime.get("workdir") or project.get("workdir") or ".",
+    }
+    workdir = merged["workdir"]
+    cwd = project_root / workdir if workdir and workdir != "." else project_root
+    return merged, cwd
+
+
 def run_runtime_checks(stage: str, project_root: Path, harness: dict) -> list[dict]:
     """Execute runtime checks from harness-rules.yaml."""
     checks = []
-    project_config = harness.get("project", {})
-
-    if not project_config:
+    if not harness.get("project") and not harness.get("runtime"):
         checks.append({
             "check": "harness_config",
             "pass": False,
-            "detail": "No project config in harness-rules.yaml",
+            "detail": "No project/runtime config in harness-rules.yaml",
         })
         return checks
 
-    tech_stack = project_config.get("tech_stack", "")
-    test_cmd = project_config.get("test_cmd", "")
-    build_cmd = project_config.get("build_cmd", "")
-    health_url = project_config.get("health_url", "")
+    cfg, cwd = resolve_runtime_config(harness, project_root)
+    test_cmd = cfg.get("test_cmd", "")
+    build_cmd = cfg.get("build_cmd", "")
+    lint_cmd = cfg.get("lint_cmd", "")
+    health_url = cfg.get("health_url", "")
 
     # Test command
     if test_cmd:
@@ -271,7 +286,7 @@ def run_runtime_checks(stage: str, project_root: Path, harness: dict) -> list[di
             result = subprocess.run(
                 test_cmd,
                 shell=True,
-                cwd=str(project_root),
+                cwd=str(cwd),
                 capture_output=True,
                 text=True,
                 timeout=180,
@@ -298,13 +313,39 @@ def run_runtime_checks(stage: str, project_root: Path, harness: dict) -> list[di
                 "detail": str(e),
             })
 
+    # Lint command
+    if lint_cmd:
+        try:
+            result = subprocess.run(
+                lint_cmd,
+                shell=True,
+                cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            checks.append({
+                "check": "lint_command",
+                "command": lint_cmd,
+                "pass": result.returncode == 0,
+                "exit_code": result.returncode,
+                "output_snippet": (result.stdout or result.stderr or "")[:500],
+            })
+        except Exception as e:
+            checks.append({
+                "check": "lint_command",
+                "command": lint_cmd,
+                "pass": False,
+                "detail": str(e),
+            })
+
     # Build command
     if build_cmd:
         try:
             result = subprocess.run(
                 build_cmd,
                 shell=True,
-                cwd=str(project_root),
+                cwd=str(cwd),
                 capture_output=True,
                 text=True,
                 timeout=120,

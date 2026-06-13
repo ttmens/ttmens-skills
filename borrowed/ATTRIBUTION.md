@@ -23,5 +23,5 @@ cd vendor/phuryn-pm-skills && git fetch && git checkout v2.0.0
 cd ../knowledge-work-plugins && git pull
 cd ../..
 ./install.sh --borrowed-only --all
-python validate_skills.py
+python scripts/validate_skills.py
 ```

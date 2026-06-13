@@ -89,6 +89,15 @@ DEFAULT_RUBRICS = {
             {"id": "SH4", "description": "Monitoring setup", "pattern": r"监控|monitor|告警|alert", "weight": 25, "target": "RUNBOOK.md"},
         ],
     },
+    "operate": {
+        "threshold": 70,
+        "criteria": [
+            {"id": "O1", "description": "Runbook has monitoring section", "pattern": r"监控|monitor|告警|alert|SLA", "weight": 30, "target": "RUNBOOK.md"},
+            {"id": "O2", "description": "Incident response steps", "pattern": r"故障|incident|on-call|响应", "weight": 25, "target": "RUNBOOK.md"},
+            {"id": "O3", "description": "Ops notes or runbook updates", "type": "file_exists", "weight": 25, "target": "RUNBOOK.md"},
+            {"id": "O4", "description": "Health check documented", "pattern": r"health|健康检查|探活", "weight": 20, "target": "RUNBOOK.md"},
+        ],
+    },
     "grow": {
         "threshold": 70,
         "criteria": [

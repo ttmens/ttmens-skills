@@ -1,0 +1,6 @@
+name: on-demand
+events:
+  - preCommit
+command: python
+args:
+  - scripts/stage-gate-hook.py

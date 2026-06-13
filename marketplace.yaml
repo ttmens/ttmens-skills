@@ -1,6 +1,6 @@
 name: ttmens-skills
-version: 2.0.0
-tagline: "一个人用 AI，从想法到上线 — 带门禁脚本与产物契约"
+version: 3.1.0
+tagline: "Loop Engineering 全能开发者平台 — 从想法到上线"
 platforms: [cursor, hermes, opencode]
 
 pipeline:
@@ -28,6 +28,15 @@ profiles:
     label: "Hermes 编排"
     path: profiles
     skills: [plan, opencode]
+  hermes-kanban:
+    label: "Hermes Kanban 阶段 Profile"
+    path: profiles/hermes-kanban
+    skills: [pm-aligner, pm-researcher, pm-analyst, pm-planner, pm-builder, pm-shipper, pm-operator, pm-growth]
+  debate:
+    label: "G2 红队面板依赖 (phuryn)"
+    path: borrowed
+    skills: [pm-strategy-red-team, pm-pre-mortem]
+    manifest: borrowed/manifest-debate.yaml
 
 skills:
   native:
@@ -41,14 +50,14 @@ skills:
     - id: grill-me
       path: domains/product/grill-me
       role: product
-      what: "逐问对齐，澄清想法"
+      what: "逐问对齐 + G1 假设辩论协议"
       use_when: "新想法、无 CONTEXT.md"
       stages: [align]
       platforms: [cursor, hermes, opencode]
     - id: grill-with-docs
       path: domains/product/grill-with-docs
       role: product
-      what: "基于文档的对齐与术语漂移检测"
+      what: "基于文档的对齐、术语漂移检测 + G1 辩论"
       use_when: "已有 CONTEXT.md，续跑对齐"
       stages: [align]
       platforms: [cursor, hermes, opencode]
@@ -62,7 +71,7 @@ skills:
     - id: c4-architecture
       path: domains/product/c4-architecture
       role: product
-      what: "C4 架构图与 ADR"
+      what: "C4 架构图、ADR + 多方案 PK 模式"
       use_when: "方案论证阶段"
       stages: [analysis]
       platforms: [cursor, hermes, opencode]
@@ -90,15 +99,8 @@ skills:
     - id: ui-ux-pro-max
       path: domains/product/ui-ux-pro-max
       role: product
-      what: "从 PRD 生成 DESIGN.md tokens"
+      what: "DESIGN.md tokens 生成与漂移维护"
       use_when: "MVP 实现前定视觉 SSOT"
-      stages: [spec, mvp]
-      platforms: [cursor, hermes, opencode]
-    - id: design-system-md
-      path: domains/design/design-system-md
-      role: design
-      what: "维护 docs/DESIGN.md"
-      use_when: "项目级设计 SSOT"
       stages: [spec, mvp]
       platforms: [cursor, hermes, opencode]
     - id: ui-acceptance-review
@@ -150,8 +152,15 @@ skills:
       use_when: "每阶段结束（Hermes）"
       stages: [retro]
       platforms: [cursor, hermes, opencode]
+    - id: prd-red-team-panel
+      path: domains/product/prd-red-team-panel
+      role: product
+      what: "G2 PRD 红队面板（需 --profile debate 安装 phuryn 依赖）"
+      use_when: "spec 阶段 PRD 完成后"
+      stages: [spec]
+      platforms: [cursor, hermes, opencode]
 
 counts:
   native: 17
-  borrowed: 23
-  total: 40
+  borrowed: 20
+  total: 37

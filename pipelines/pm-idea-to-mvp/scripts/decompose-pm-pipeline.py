@@ -135,49 +135,53 @@ STAGES = [
 """,
     },
     {
-        "id": "T5",
-        "name": "Stage 5: MVP 实现",
+        "id": "T5a",
+        "name": "Stage 5a: MVP Plan",
+        "assignee": "pm-builder",
+        "stage": "mvp-plan",
+        "parent_offset": -1,
+        "body_template": """\
+## 任务：MVP Plan
+
+**Pipeline**: pm-idea-to-mvp v{version}
+**Project Root**: {{project_root}}
+
+1. `writing-plans` + `progress-tracker.py init`
+2. 产出 `phase-plan.md`
+""",
+    },
+    {
+        "id": "T5b",
+        "name": "Stage 5b: MVP Inner Loop",
+        "assignee": "pm-builder",
+        "stage": "mvp-build",
+        "parent_offset": -1,
+        "body_template": """\
+## 任务：MVP Inner Loop (Build/Test)
+
+**Pipeline**: pm-idea-to-mvp v{version}
+**Project Root**: {{project_root}}
+
+1. 实现 `04-mvp/`（subagent / opencode）
+2. 每轮: `python {{scripts_dir}}/inner-loop-driver.py --project-root {{project_root}}`
+3. FAIL → adjust; PASS → T5c
+""",
+    },
+    {
+        "id": "T5c",
+        "name": "Stage 5c: MVP G3 Verify",
         "assignee": "pm-builder",
         "stage": "mvp",
         "parent_offset": -1,
         "body_template": """\
-## 任务：MVP 实现 (Build)
+## 任务：MVP G3 验证
 
 **Pipeline**: pm-idea-to-mvp v{version}
 **Project Root**: {{project_root}}
 **Stage**: mvp (G3)
 
-### 内循环协议 (Inner Loop Protocol)
-MVP 阶段使用内循环协议进行迭代开发：
-
-1. **Plan**: 读取 `openspec/tasks.md`，按任务顺序实现
-2. **Build**: 实现代码到 `04-mvp/` 目录
-3. **Test**: 运行测试 (`pytest -q` 或 `npm test`)
-4. **Review**: 检查代码质量和功能完整性
-5. **Loop**: 如果测试失败或功能不完整，回到 Build 步骤
-
-### 强制链
-```
-writing-plans → ui-ux-pro-max → test-driven-development →
-subagent-driven-development → ui-acceptance-review (journey) →
-requesting-code-review → dogfood
-```
-
-### 指令
-1. 要求 `openspec/tasks.md` 存在
-2. 生成 `04-mvp/DESIGN.md` via `ui-ux-pro-max`
-3. 按内循环协议实现代码
-4. 本地冒烟测试
-5. 完成后运行:
-   ```
-   python {{scripts_dir}}/stage-complete.py --stage mvp --project-root {{project_root}} --task-id {{task_id}} --runtime --verify-goals
-   ```
-
-### 内循环退出条件
-- 所有 `openspec/tasks.md` 任务标记为 done
-- 测试全部通过 (`pytest -q` exit 0)
-- `04-mvp/README.md` 存在且包含使用说明
-- PROGRESS.md 显示 100% 完成
+1. UI acceptance quick/full
+2. `python {{scripts_dir}}/stage-complete.py --stage mvp --project-root {{project_root}} --task-id {{task_id}} --runtime --verify-goals`
 """,
     },
     {
@@ -290,6 +294,7 @@ DEFAULT_GOALS = {
             {"id": "A1", "description": "CONTEXT.md exists with ≥10 lines", "type": "min_lines", "target": "CONTEXT.md", "min": 10},
             {"id": "A2", "description": "Decisions documented", "type": "min_lines", "target": "decisions.md", "min": 5},
             {"id": "A3", "description": "Contains assumptions", "type": "content_match", "target": "CONTEXT.md", "pattern": "假设|assumption|前提"},
+            {"id": "A4", "description": "Assumption debate resolved", "type": "debate_resolved", "debates_dir": "debates", "stage_prefix": "align"},
         ],
     },
     "research": {
@@ -306,6 +311,7 @@ DEFAULT_GOALS = {
             {"id": "AN1", "description": "Analysis doc ≥30 lines", "type": "min_lines", "target": "02-analysis.md", "min": 30},
             {"id": "AN2", "description": "Multiple options analyzed", "type": "content_match", "target": "02-analysis.md", "pattern": "方案|option|推荐|recommend"},
             {"id": "AN3", "description": "Risk assessment present", "type": "content_match", "target": "02-analysis.md", "pattern": "风险|risk|隐患"},
+            {"id": "AN4", "description": "Architecture PK debate resolved", "type": "debate_resolved", "debates_dir": "debates", "stage_prefix": "analysis"},
         ],
     },
     "spec": {
@@ -315,6 +321,7 @@ DEFAULT_GOALS = {
             {"id": "S2", "description": "User journey exists", "type": "file_exists", "target": "03b-user-journey.md"},
             {"id": "S3", "description": "Tasks breakdown exists", "type": "file_exists", "target": "openspec/tasks.md"},
             {"id": "S4", "description": "User stories defined", "type": "content_match", "target": "03-prd.md", "pattern": "用户故事|user stor|作为.*我想"},
+            {"id": "S5", "description": "PRD red-team debate resolved", "type": "debate_resolved", "debates_dir": "debates", "stage_prefix": "spec"},
         ],
     },
     "mvp": {
@@ -354,10 +361,15 @@ HARNESS_RULES_TEMPLATE = """\
 version: '6.0.0'
 project:
   slug: {slug}
-  tech_stack: python  # python | node | mixed
-  test_cmd: 'pytest -q'
-  build_cmd: 'python -m py_compile api/main.py'
-  health_url: 'http://localhost:8000/health'
+  tech_stack: python
+  language: zh-CN
+
+runtime:
+  test_cmd: 'pytest -q --tb=short'
+  build_cmd: 'python -m py_compile **/*.py'
+  lint_cmd: 'python -m flake8 --max-line-length=120'
+  health_url: ''
+  workdir: '04-mvp'
 
 decisions:
   tech_choice:
@@ -447,6 +459,12 @@ def setup_goals_directory(project_root: Path) -> dict:
                     lines.append(f"    command: '{goal['command']}'")
                 if "workdir" in goal:
                     lines.append(f"    workdir: '{goal['workdir']}'")
+                if "debates_dir" in goal:
+                    lines.append(f"    debates_dir: '{goal['debates_dir']}'")
+                if "stage_prefix" in goal:
+                    lines.append(f"    stage_prefix: '{goal['stage_prefix']}'")
+                if goal.get("optional"):
+                    lines.append(f"    optional: true")
             lines.append("")
             goal_file.write_text("\n".join(lines), encoding="utf-8")
             created_files.append(str(goal_file))
@@ -588,6 +606,11 @@ def main():
         help="Show what would be created without actually creating"
     )
     parser.add_argument(
+        "--scenario", default="greenfield",
+        choices=["greenfield", "brownfield", "refine", "optimize"],
+        help="Pipeline scenario (see scenarios.yaml)",
+    )
+    parser.add_argument(
         "--json", action="store_true", default=True,
         help="Output JSON (default)"
     )
@@ -630,7 +653,22 @@ def main():
     # Create kanban tasks
     task_ids = {}  # stage -> task_id mapping for parent linking
 
-    for stage_def in STAGES:
+    # Load scenario filter
+    stages_to_run = STAGES
+    scenarios_path = resolve_skills_root() / "scenarios.yaml"
+    if scenarios_path.exists():
+        try:
+            import yaml
+            with scenarios_path.open(encoding="utf-8") as f:
+                sc_cfg = yaml.safe_load(f) or {}
+            skip = set(sc_cfg.get("scenarios", {}).get(args.scenario, {}).get("skip_stages", []))
+            if skip:
+                stages_to_run = [s for s in STAGES if s["stage"] not in skip and s.get("stage", "").split("-")[0] not in skip]
+        except Exception:
+            pass
+    report["scenario"] = args.scenario
+
+    for stage_def in stages_to_run:
         context = {
             "project_root": str(project_root),
             "scripts_dir": str(scripts_dir),
@@ -644,10 +682,10 @@ def main():
         parent_id = ""
         if stage_def["parent_offset"] is not None:
             # Find parent task ID
-            stage_idx = STAGES.index(stage_def)
+            stage_idx = stages_to_run.index(stage_def)
             parent_idx = stage_idx + stage_def["parent_offset"]
-            if 0 <= parent_idx < len(STAGES):
-                parent_stage = STAGES[parent_idx]["stage"]
+            if 0 <= parent_idx < len(stages_to_run):
+                parent_stage = stages_to_run[parent_idx]["stage"]
                 parent_id = task_ids.get(parent_stage, "")
 
         stage_report = {

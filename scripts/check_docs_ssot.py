@@ -74,7 +74,7 @@ def check_duplicate_status(report: Report, docs: Path) -> None:
 def check_design_md(report: Report, docs: Path) -> None:
     design_md = docs / "DESIGN.md"
     if not design_md.is_file():
-        report.add("warning", "design-ssot", "Missing docs/DESIGN.md — run design-system-md skill")
+        report.add("warning", "design-ssot", "Missing DESIGN.md — run ui-ux-pro-max maintenance mode")
         return
     theme_src = report.project_root / "src" / "site" / "theme.css"
     if theme_src.is_file():
