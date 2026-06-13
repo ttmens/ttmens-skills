@@ -242,13 +242,26 @@ def check_tech_stack_consistency(report: Report) -> None:
             db_claims[doc] = db_found
 
     if len(db_claims) >= 2:
-        # Check if different docs claim different databases
+        # Check if different docs claim DIFFERENT databases (actual conflict)
+        # Not a conflict if all docs agree on the same set of technologies
+        claim_sets = [frozenset(dbs) for dbs in db_claims.values()]
+        unique_sets = set(claim_sets)
         all_dbs = set()
         for dbs in db_claims.values():
             all_dbs.update(dbs)
-        if len(all_dbs) > 1:
-            # This is a potential conflict
-            details = "; ".join(f"{doc}: {', '.join(dbs)}" for doc, dbs in db_claims.items())
+
+        # Only flag if docs have meaningfully different claims
+        # (e.g., one says only postgresql, another says only sqlite)
+        # Not a conflict if all docs mention the same techs (even if multiple)
+        has_single_tech_docs = any(len(dbs) == 1 for dbs in db_claims.values())
+        has_different_single_techs = False
+        single_tech_docs = {doc: dbs for doc, dbs in db_claims.items() if len(dbs) == 1}
+        if len(single_tech_docs) >= 2:
+            single_sets = [frozenset(dbs) for dbs in single_tech_docs.values()]
+            has_different_single_techs = len(set(single_sets)) > 1
+
+        if has_different_single_techs:
+            details = "; ".join(f"{doc}: {', '.join(sorted(dbs))}" for doc, dbs in db_claims.items())
             report.add("error", "tech-stack-conflict",
                        f"Database technology conflict across documents: {details}. "
                        f"Ensure decisions.md is the SSOT and other docs reference it.")
