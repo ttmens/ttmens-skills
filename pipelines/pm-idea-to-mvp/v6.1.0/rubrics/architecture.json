@@ -1,0 +1,10 @@
+{
+  "stage": "architecture",
+  "description": "L1 rubric — C4 architecture artifacts",
+  "checks": [
+    {"id": "c4_context", "file": "architecture/c4-context.md", "min_chars": 200, "any_of": ["C4", "上下文", "mermaid", "flowchart"], "message": "C4 context diagram required"},
+    {"id": "c4_container", "file": "architecture/c4-container.md", "min_chars": 200, "any_of": ["容器", "container", "mermaid", "flowchart"], "message": "C4 container diagram required"},
+    {"id": "c4_component", "file": "architecture/c4-component.md", "min_chars": 150, "any_of": ["组件", "component"], "message": "C4 component breakdown required"},
+    {"id": "design_links_c4", "file": "openspec/design.md", "any_of": ["architecture/c4-", "c4-context", "c4-container"], "message": "openspec/design.md must reference C4 files"}
+  ]
+}

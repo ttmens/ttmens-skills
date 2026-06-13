@@ -1,0 +1,10 @@
+{
+  "stage": "mvp",
+  "description": "L1 rubric — MVP deliverable",
+  "checks": [
+    {"id": "readme", "file": "04-mvp/README.md", "any_of": ["run", "启动", "localhost", "python"], "message": "README must explain how to run"},
+    {"id": "design_tokens", "file": "04-mvp/DESIGN.md", "any_of": ["primary", "palette", "color", "色"], "message": "DESIGN.md with tokens"},
+    {"id": "tasks_reference", "file": "04-mvp/README.md", "any_of": ["task", "openspec", "flow", "流程"], "message": "README references MVP flows/tasks"},
+    {"id": "journey_ref", "file": "04-mvp/README.md", "any_of": ["旅程", "journey", "核心流程"], "message": "README aligns with user journey"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "stage": "prototype",
+  "description": "L1 rubric — clickable prototype",
+  "checks": [
+    {"id": "html", "file": "02b-prototype/index.html", "min_chars": 200, "message": "index.html prototype required"},
+    {"id": "design_contract", "file": "02b-prototype/DESIGN.md", "any_of": ["color", "色", "typography", "字体"], "message": "DESIGN.md contract required"}
+  ]
+}

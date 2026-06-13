@@ -1,0 +1,10 @@
+{
+  "stage": "ship",
+  "description": "L1 rubric — ship / deploy readiness",
+  "checks": [
+    {"id": "runbook_deploy", "file": "RUNBOOK.md", "any_of": ["部署", "deploy", "rollback", "回滚"], "message": "RUNBOOK must describe deploy/rollback"},
+    {"id": "runbook_env", "file": "RUNBOOK.md", "any_of": ["env", "环境", "变量", "PORT"], "message": "RUNBOOK must list env/config"},
+    {"id": "ui_acceptance", "file": "docs/ui-acceptance-report.md", "any_of": ["pass", "通过", "85", "≥85"], "message": "Full UI acceptance report with pass score"},
+    {"id": "deploy_checklist", "file": "RUNBOOK.md", "any_of": ["checklist", "清单", "pre-deploy", "上线前"], "message": "Deploy checklist section"}
+  ]
+}
