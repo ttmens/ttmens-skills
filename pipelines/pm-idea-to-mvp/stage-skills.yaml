@@ -1,0 +1,55 @@
+# Machine-readable stage → skill mapping (v6.1 SSOT).
+# validate_skills.py cross-checks this against marketplace.yaml + borrowed/manifest.yaml
+version: "6.1.0"
+
+stages:
+  brief:
+    native: []
+    borrowed: []
+  align:
+    native: [grill-me, grill-with-docs]
+    borrowed: [pm-identify-assumptions-new]
+  research:
+    native: []
+    borrowed:
+      - pm-opportunity-solution-tree
+      - pm-competitor-analysis
+      - pm-market-sizing
+  analysis:
+    native: [c4-architecture, openspec, docs-hygiene]
+    borrowed: [pm-product-strategy, kw-system-design]
+  spec:
+    native: [user-journey, open-design, ui-ux-pro-max, prd-red-team-panel]
+    borrowed: [pm-create-prd, pm-user-stories]
+  mvp:
+    native:
+      - writing-plans
+      - subagent-driven-development
+      - test-driven-development
+      - ui-acceptance-review
+      - requesting-code-review
+      - dogfood
+    borrowed: [kw-testing-strategy]
+  ship:
+    native: [ui-acceptance-review, docs-hygiene]
+    borrowed:
+      - pm-shipping-artifacts
+      - pm-intended-vs-implemented
+      - kw-deploy-checklist
+      - pm-security-audit-static
+  operate:
+    native: []
+    borrowed: [kw-incident-response, kw-runbook, pm-sql-queries]
+  grow:
+    native: []
+    borrowed: [pm-north-star-metric, pm-gtm-strategy]
+  retro:
+    native: [pm-git-publish]
+    borrowed: [pm-retro, pm-release-notes]
+
+# Always installed with --core (pipeline entry)
+pipeline_native: [pm-idea-to-mvp]
+
+# Scenario-only (not in core count); see scenarios.yaml
+scenario_skills:
+  brownfield-bootstrap: domains/product/brownfield-bootstrap

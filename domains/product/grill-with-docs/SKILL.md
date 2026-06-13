@@ -1,7 +1,7 @@
 ---
 name: grill-with-docs
-description: "Doc-grounded alignment: update CONTEXT.md and decisions.md, detect terminology drift."
-version: 1.0.0
+description: "Doc-grounded alignment + G1 assumption debate. Update CONTEXT.md, detect drift, then run debate protocol."
+version: 1.1.0
 author: PM Pipeline (adapted from mattpocock/skills)
 license: MIT
 platforms: [linux, macos, windows]
@@ -54,3 +54,7 @@ Use when `CONTEXT.md` exists or after first alignment pass. Ground interrogation
 
 - To pm-analyst when validating research conclusions against CONTEXT
 - To pm-planner when PRD terms must match glossary
+
+## G1 Debate Protocol
+
+After CONTEXT/decisions are updated, run the same **Assumption Debate** protocol as `grill-me` (see `grill-me` § G1 Debate Protocol). Required before `stage-complete --stage align`.

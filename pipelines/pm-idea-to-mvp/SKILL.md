@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v6.0: Loop Engineering integrated. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop framework, goal primitives, runtime verification, on-the-loop human collaboration."
-version: 6.0.0
+description: "Super-dev pipeline v6.1: Loop Engineering integrated. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2."
+version: 6.1.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -14,15 +14,14 @@ metadata:
       - docs-hygiene
       - pm-create-prd
       - pm-opportunity-solution-tree
-      - pm-strategy-red-team
       - c4-architecture
       - openspec
       - user-journey
       - open-design
       - ui-ux-pro-max
+      - prd-red-team-panel
       - ui-acceptance-review
       - subagent-driven-development
-      - opencode
       - kw-deploy-checklist
       - pm-shipping-artifacts
       - pm-gtm-strategy
@@ -33,7 +32,7 @@ metadata:
       - requesting-code-review
 ---
 
-# Super Developer Pipeline v6 (pm-idea-to-mvp)
+# Super Developer Pipeline v6.1 (pm-idea-to-mvp)
 
 **唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v6 引入 **Loop Engineering**：每个想法 = **一个 GitHub 仓库** + **GitHub Pages 报告** + **目标门禁流水线** + **内循环 MVP** + 可选 **Refine** 循环。
 
@@ -61,7 +60,7 @@ metadata:
 |------|-------------|------|
 | **Automations** | `validate-gates.py --runtime`, `goal-check.py`, `progress-tracker.py`, `stage-complete.py` | 门禁 + 目标验证 + 进度追踪全自动化 |
 | **Worktrees** | `{PROJECT_ROOT}/04-mvp/` 独立目录 + git worktree（可选） | MVP 实现隔离于项目仓库子目录 |
-| **Skills** | 40+ native + borrowed skills（见 stages 表） | 每阶段绑定专用 skill |
+| **Skills** | 37 core (17 native + 20 borrowed) + optional profiles（见 stages 表） | 每阶段绑定专用 skill |
 | **Connectors** | Feishu (`stage-complete.py` → `feishu_notify.py`), GitHub Pages (`pm-git-publish`), Kanban (`hermes kanban`) | 外部系统对接 |
 | **Sub-agents** | Profile-based dispatch: `pm-aligner`, `pm-researcher`, `pm-analyst`, `pm-planner`, `pm-builder` | 按阶段分派专业 agent |
 | **Memory** | `CONTEXT.md`, `feedback.jsonl`, `pipeline-knowledge/`, `PROGRESS.md`, `evolution-notes.md` | 跨会话持久化记忆 |
@@ -83,18 +82,29 @@ metadata:
 | Stage | Profile | Artifacts | Native skills | Borrowed skills | Gate (artifact + runtime) |
 |-------|---------|-----------|---------------|-----------------|--------------------------|
 | 0 brief | User | `00-brief.md` | — | — | Idea captured |
-| 1 align | `pm-aligner` | `CONTEXT.md`, `decisions.md` | `grill-me`, `grill-with-docs` | `pm-identify-assumptions-new` | **G1**: CONTEXT.md 存在 + 所有假设已标记风险等级 |
+| 1 align | `pm-aligner` | `CONTEXT.md`, `decisions.md`, `debates/align-*.md` | `grill-me`, `grill-with-docs` (含 G1 辩论协议) | `pm-identify-assumptions-new` | **G1**: CONTEXT + 假设风险 + `debate_resolved` |
 | 2 research | `pm-researcher` | `01-research.md` | — | `pm-opportunity-solution-tree`, `pm-competitor-analysis`, `pm-market-sizing` | ≥5 URLs + 来源可访问（HTTP 200 抽检） |
-| 3 analysis | `pm-analyst` | `02-analysis.md`, `architecture/c4-*.md` | `c4-architecture`, `openspec`, `docs-hygiene` | `pm-product-strategy`, `pm-strategy-red-team`, `kw-system-design` | C4 L1–L3 完整性 + ADR 与 C4 container 一致 |
-| 4 spec | `pm-planner` | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md` | `user-journey`, `open-design`, `ui-ux-pro-max` | `pm-create-prd`, `pm-user-stories`, `pm-pre-mortem` | **G2**: PRD 含 ≥3 user stories + 原型 HTML 可渲染 |
-| 5 mvp | `pm-builder` | `04-mvp/`, `UX-REVIEW.md` | `writing-plans`, `subagent-driven-development`, `test-driven-development`, `ui-acceptance-review`, `requesting-code-review`, `dogfood` | `kw-code-review`, `kw-testing-strategy` | **G3**: 全部测试通过 + lint clean + build success + health endpoint 200 |
-| 6 ship | `pm-shipper` | `RUNBOOK.md`, `docs/ui-acceptance-report.md` | `ui-acceptance-review` (full), `docs-hygiene` | `pm-shipping-artifacts`, `pm-intended-vs-implemented`, `kw-deploy-checklist`, `pm-security-audit-static` | Deploy ready + RUNBOOK 步骤可执行 |
+| 3 analysis | `pm-analyst` | `02-analysis.md`, `architecture/c4-*.md`, `debates/analysis-*.md` | `c4-architecture` (含 PK), `openspec`, `docs-hygiene` | `pm-product-strategy`, `kw-system-design` | C4 L1–L3 + PK 辩论 synthesis |
+| 4 spec | `pm-planner` | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md`, `debates/spec-*.md` | `user-journey`, `open-design`, `ui-ux-pro-max`, `prd-red-team-panel` | `pm-create-prd`, `pm-user-stories` | **G2**: PRD + 原型 + `debate_resolved` |
+| 5 mvp | `pm-builder` | `04-mvp/`, `UX-REVIEW.md` | `writing-plans`, `subagent-driven-development`, `test-driven-development`, `ui-acceptance-review`, `requesting-code-review`, `dogfood` | `kw-testing-strategy` | **G3**: 测试 + lint + build + health 200 |
+| 6 ship | `pm-shipper` | `RUNBOOK.md`, `docs/ui-acceptance-report.md` | `ui-acceptance-review` (full), `docs-hygiene` | `pm-shipping-artifacts`, `pm-intended-vs-implemented`, `kw-deploy-checklist`, `pm-security-audit-static` | Deploy ready + RUNBOOK 可执行 |
 | 7 operate | `pm-operator` | ops notes | — | `kw-incident-response`, `kw-runbook`, `pm-sql-queries` | — |
 | 8 grow | `pm-growth` | `06-growth.md` | — | `pm-north-star-metric`, `pm-gtm-strategy` | — |
-| 9 retro | `pm-builder` | `05-retro.md`, `evolution-notes.md`, `harness-improvements.md` | `pm-git-publish` | `pm-retro`, `pm-release-notes` | evolution proposals 已分类（auto-apply / backlog） |
+| 9 retro | `pm-builder` | `05-retro.md`, `evolution-notes.md`, `harness-improvements.md` | `pm-git-publish` | `pm-retro`, `pm-release-notes` | evolution proposals 已分类 |
 | report | any | `docs/index.html` | `pm-git-publish` | — | Pages dashboard |
 
-**G1/G2/G3**（吸收原 product-orchestrator）：align≈G1、spec≈G2、mvp/ship≈G3。棕地项目阶段开始前运行 `docs-hygiene`。
+**G1/G2/G3**：align≈G1（含假设辩论）、spec≈G2（含红队面板，需 `--profile debate` 安装 phuryn 依赖）、mvp/ship≈G3。
+
+### 棕地 / 场景
+
+| Scenario | 入口 | 说明 |
+|----------|------|------|
+| `greenfield` | brief | 默认 0→1 |
+| `brownfield` | analysis | 跳过 brief/align/research；见 `domains/product/brownfield-bootstrap` + `scenarios.yaml` |
+| `refine` | mvp | 深化循环；`refine-decompose.py` |
+| `optimize` | analysis | 同 brownfield，无 bootstrap 强制 |
+
+棕地项目阶段开始前运行 `docs-hygiene`。`decompose-pm-pipeline.py --scenario brownfield` 生成 skip map。
 
 v6 变化：每个 Gate 现在包含 **artifact 存在性** + **runtime 验证** 两层检查，由 `validate-gates.py --runtime` 和 `goal-check.py` 协同执行。
 
@@ -142,6 +152,10 @@ pm-{slug}/
     mvp.yaml
     ship.yaml
     retro.yaml
+  debates/                  # v6.1: align / analysis / spec debate artifacts
+    align-synthesis.md
+    analysis-synthesis.md
+    spec-synthesis.md
   docs/workflow_state.yaml  # optional, greenfield/brownfield resume
   feedback.jsonl
   06-growth.md

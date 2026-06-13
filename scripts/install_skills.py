@@ -29,7 +29,21 @@ PROFILE_PATHS = {
         "profiles/hermes-plan/plan",
         "profiles/hermes-opencode/opencode",
     ],
+    "hermes-kanban": [
+        "profiles/hermes-kanban/pm-aligner",
+        "profiles/hermes-kanban/pm-researcher",
+        "profiles/hermes-kanban/pm-analyst",
+        "profiles/hermes-kanban/pm-planner",
+        "profiles/hermes-kanban/pm-builder",
+        "profiles/hermes-kanban/pm-shipper",
+        "profiles/hermes-kanban/pm-operator",
+        "profiles/hermes-kanban/pm-growth",
+    ],
+    "debate": [],
 }
+
+STAGE_SKILLS_PATH = ROOT / "pipelines" / "pm-idea-to-mvp" / "stage-skills.yaml"
+DEBATE_MANIFEST_PATH = ROOT / "borrowed" / "manifest-debate.yaml"
 
 
 def expand_home(path: str) -> Path:
@@ -41,11 +55,25 @@ def load_yaml(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def skill_dirs_from_marketplace(marketplace: dict) -> list[tuple[str, Path]]:
+def skill_dirs_from_marketplace(marketplace: dict, *, lite_stage: str | None = None) -> list[tuple[str, Path]]:
     items: list[tuple[str, Path]] = []
+    allowed: set[str] | None = None
+    if lite_stage:
+        stage_cfg = load_yaml(STAGE_SKILLS_PATH).get("stages", {}).get(lite_stage, {})
+        allowed = set(stage_cfg.get("native", [])) | set(load_yaml(STAGE_SKILLS_PATH).get("pipeline_native", []))
     for entry in marketplace.get("skills", {}).get("native", []):
+        if allowed is not None and entry["id"] not in allowed:
+            continue
         items.append((entry["id"], ROOT / entry["path"]))
     return items
+
+
+def borrowed_for_stage(manifest: dict, stage: str) -> dict:
+    """Return manifest subset for one pipeline stage."""
+    skills = [e for e in manifest.get("skills", []) if e.get("stage") == stage]
+    out = dict(manifest)
+    out["skills"] = skills
+    return out
 
 
 def profile_skill_dirs(profile: str) -> list[tuple[str, Path]]:
@@ -146,6 +174,28 @@ def install_skill_list(skills: list[tuple[str, Path]], dest_root: Path) -> int:
     return count
 
 
+def install_platform_templates(platform: str, project: Path | None) -> None:
+    tpl = ROOT / "templates" / platform
+    if not tpl.exists():
+        return
+    if platform == "cursor" and project:
+        for item in tpl.rglob("*"):
+            if item.is_file():
+                rel = item.relative_to(tpl)
+                dest = project / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dest)
+                print(f"  template {rel} -> {dest}")
+    elif platform == "cursor":
+        print("  (cursor templates: use --project PATH to install AGENTS.md + hooks)")
+    if platform == "opencode" and project:
+        agents = tpl.parent / "cursor" / "AGENTS.md"
+        if agents.exists():
+            dest = project / "AGENTS.md"
+            shutil.copy2(agents, dest)
+            print(f"  template AGENTS.md -> {dest}")
+
+
 def run_install(
     targets: list[str],
     *,
@@ -154,32 +204,48 @@ def run_install(
     profiles: list[str],
     project: Path | None,
     dry_run: bool,
+    platform_pack: str | None,
+    lite_stage: str | None = None,
 ) -> None:
     platforms = load_yaml(ROOT / "platforms.yaml")
     marketplace = load_yaml(ROOT / "marketplace.yaml")
     manifest_path = ROOT / "borrowed" / "manifest.yaml"
     manifest = load_yaml(manifest_path) if manifest_path.exists() else {}
+    if lite_stage:
+        manifest = borrowed_for_stage(manifest, lite_stage)
 
     profile_skills: list[tuple[str, Path]] = []
     for p in profiles:
         profile_skills.extend(profile_skill_dirs(p))
 
+    if platform_pack == "hermes" and "hermes-kanban" not in profiles:
+        profile_skills.extend(profile_skill_dirs("hermes-kanban"))
+    if platform_pack == "cursor" and project:
+        install_platform_templates("cursor", project)
+
     for platform in targets:
         proj = project if platform in ("cursor", "opencode") else None
         dest = platform_dest(platform, platforms, proj)
         print(f"\n=== {platform} -> {dest} ===")
+        if lite_stage:
+            print(f"  (lite stage={lite_stage})")
         if dry_run:
             print("  (dry-run)")
             continue
         dest.mkdir(parents=True, exist_ok=True)
-        n = b = pr = 0
+        n = b = pr = bd = 0
         if install_native:
-            n = install_skill_list(skill_dirs_from_marketplace(marketplace), dest)
+            n = install_skill_list(skill_dirs_from_marketplace(marketplace, lite_stage=lite_stage), dest)
         if do_borrowed and manifest:
             b = install_borrowed(manifest, dest, [platform])
         if profile_skills:
             pr = install_skill_list(profile_skills, dest)
-        print(f"  installed native={n} borrowed={b} profile={pr}")
+        if "debate" in profiles and DEBATE_MANIFEST_PATH.exists():
+            debate_manifest = load_yaml(DEBATE_MANIFEST_PATH)
+            bd = install_borrowed(debate_manifest, dest, [platform])
+        if platform_pack == "opencode" and proj:
+            install_platform_templates("opencode", proj)
+        print(f"  installed native={n} borrowed={b} profile={pr} debate_borrowed={bd}")
 
 
 def main() -> int:
@@ -189,16 +255,46 @@ def main() -> int:
     parser.add_argument("--opencode", action="store_true")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--both", action="store_true", help="cursor + hermes (legacy)")
-    parser.add_argument("--core", action="store_true", help="17 native + 23 borrowed (default)")
+    parser.add_argument("--core", action="store_true", help="17 native + 20 borrowed (default)")
+    parser.add_argument("--lite", action="store_true", help="Install only skills for --stage (reduces context)")
+    parser.add_argument(
+        "--stage",
+        choices=[
+            "brief", "align", "research", "analysis", "spec", "mvp",
+            "ship", "operate", "grow", "retro",
+        ],
+        help="Pipeline stage for --lite install",
+    )
     parser.add_argument("--native-only", action="store_true")
     parser.add_argument("--borrowed-only", action="store_true")
-    parser.add_argument("--profile", action="append", default=[], choices=list(PROFILE_PATHS.keys()))
+    parser.add_argument(
+        "--profile",
+        action="append",
+        default=[],
+        choices=list(PROFILE_PATHS.keys()),
+    )
+    parser.add_argument(
+        "--platform",
+        choices=["cursor", "hermes", "opencode"],
+        help="Install platform-specific templates (AGENTS.md, hooks, kanban profiles)",
+    )
+    parser.add_argument("--scenario", choices=["greenfield", "brownfield", "refine", "optimize"])
     parser.add_argument("--project", type=Path, default=None)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
+    if args.lite and not args.stage:
+        parser.error("--lite requires --stage")
+
+    if args.scenario == "brownfield" and "debate" not in args.profile:
+        args.profile.append("debate")
+    if args.stage == "spec" and "debate" not in args.profile:
+        args.profile.append("debate")
+
     targets: list[str] = []
-    if args.all or args.both or args.core:
+    if args.platform:
+        targets = [args.platform]
+    elif args.all or args.both or args.core:
         targets = ["cursor", "hermes", "opencode"]
     else:
         if args.cursor:
@@ -210,20 +306,21 @@ def main() -> int:
     if not targets:
         targets = ["cursor", "hermes", "opencode"]
 
-    # Default: core pack (native + borrowed)
     install_native = not args.borrowed_only
-    install_borrowed = not args.native_only
+    do_borrowed = not args.native_only
     if not args.native_only and not args.borrowed_only:
         install_native = True
-        install_borrowed = True
+        do_borrowed = True
 
     run_install(
         targets,
         install_native=install_native,
-        do_borrowed=install_borrowed,
+        do_borrowed=do_borrowed,
         profiles=args.profile,
         project=args.project,
         dry_run=args.dry_run,
+        platform_pack=args.platform,
+        lite_stage=args.stage if args.lite else None,
     )
     return 0
 

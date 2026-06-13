@@ -1,36 +1,41 @@
 # Hermes Agent
 
+> Agent 安装与 decompose 流程：[AGENT_ONBOARDING.md](../AGENT_ONBOARDING.md)
+
 ## Install
 
 ```bash
-./install.sh --core --hermes
+./install.sh --core --platform hermes --profile hermes-kanban
 ./install.sh --profile hermes --hermes   # plan + opencode
-.\install.ps1 -Target Hermes
 ```
 
-Skills install to `~/.hermes/skills/`.
+Skills install to `~/.hermes/skills/` including **pm-aligner … pm-growth** Kanban profiles.
 
 ## Entry
 
-Default orchestration skill: `pm-idea-to-mvp` (metadata.hermes tags).
-
-## Kanban pipeline
-
-1. New idea → decompose into stages (align → research → … → retro)
-2. Profiles: `pm-aligner`, `pm-researcher`, `pm-analyst`, `pm-planner`, `pm-builder`, `pm-shipper`, `pm-operator`, `pm-growth`
-3. Human checkpoints: **align**, **spec** — `kanban_block` + Feishu notify
-4. MVP coding: `opencode run` via `opencode` skill
-
-## Commands
+Default orchestration: `pm-idea-to-mvp` v6.1 + Kanban decompose.
 
 ```bash
-hermes kanban create "Stage 1: 对齐" --assignee pm-aligner --body "..."
+python pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
+  --project-root /path/to/pm-{slug} --scenario greenfield
 hermes kanban dispatch
-hermes kanban show <task_id>
 ```
 
-See `pipelines/pm-idea-to-mvp/SKILL.md` § Platform notes (Hermes).
+## Kanban ↔ Runtime
 
-## Plans
+- MVP split: **T5a Plan → T5b Inner Loop → T5c G3 Verify**
+- `stage-complete.py` → `kanban-sync.py` block/complete
+- Refine: `refine-decompose.py --project-root ...`
 
-Install `plan` with `--profile hermes` → writes to `.hermes/plans/` (`profiles/hermes-plan/plan`).
+## Stage scripts
+
+| Script | Use |
+|--------|-----|
+| `harness-runner.py` | Risk-based decisions |
+| `inner-loop-driver.py` | MVP Plan→Test→Observe |
+| `phase-transition.py` | Backtrack mvp→spec |
+| `kanban-sync.py` | block/complete/comment |
+
+Install `plan` with `--profile hermes` → `.hermes/plans/`.
+
+See [runtime-kanban-v6.0.md](../../pipelines/pm-idea-to-mvp/references/runtime-kanban-v6.0.md).

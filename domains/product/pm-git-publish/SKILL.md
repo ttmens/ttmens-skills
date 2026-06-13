@@ -1,14 +1,14 @@
 ---
 name: pm-git-publish
 description: "Git publish for PM pipeline runs: one idea = one public GitHub repo with GitHub Pages report."
-version: 2.0.0
+version: 3.0.0
 author: PM Pipeline
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [product-management, git, github, pages, publish]
-    related_skills: [pm-idea-to-mvp, github-repo-management]
+    related_skills: [pm-idea-to-mvp]
 ---
 
 # PM Git Publish
@@ -19,23 +19,26 @@ Each product idea is a **standalone public GitHub repo** under `ttmens/pm-{slug}
 
 | Item | Value |
 |------|-------|
-| Local repo | `D:/workspace/projects/pm-{slug}/` |
+| Local repo | `{PROJECT_ROOT}/` (pm-{slug} root) |
+| Skills root | `{SKILLS_ROOT}/` (ttmens-skills or install dir) |
 | GitHub repo | `https://github.com/ttmens/pm-{slug}` |
 | Pages URL | `https://ttmens.github.io/pm-{slug}/` |
 | Index | `https://ttmens.github.io/pm-pipeline-index/` |
 
-## Orchestrator: new idea (v3)
+## Orchestrator: new idea
 
 **Do NOT rely on LLM auto_decompose** for PM pipeline tasks. Use deterministic decompose:
 
-```powershell
-python D:\workspace\pipelines\pm-idea-to-mvp\scripts\decompose-pm-pipeline.py --task-id {triage_task_id} --slug {slug}
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
+  --task-id {triage_task_id} --slug {slug} --project-root {PROJECT_ROOT}
 ```
 
-Then bootstrap repo if needed:
+Bootstrap repo if needed:
 
-```powershell
-python D:\workspace\pipelines\pm-idea-to-mvp\scripts\publish_repo.py --dir D:\workspace\projects\pm-{slug} --slug {slug} --description "PM pipeline: {title}"
+```bash
+python {SKILLS_ROOT}/scripts/publish_repo.py \
+  --dir {PROJECT_ROOT} --slug {slug} --description "PM pipeline: {title}"
 ```
 
 Kanban comment on parent:
@@ -47,46 +50,41 @@ pages: https://ttmens.github.io/pm-{slug}/
 
 ## Worker: after each stage (MANDATORY)
 
-From repo root `D:\workspace\projects\pm-{slug}`:
+From `{PROJECT_ROOT}`:
 
-```powershell
-python D:\workspace\pipelines\pm-idea-to-mvp\scripts\stage-complete.py --run . --slug {slug} --stage {stage} --message "stage({stage}): summary"
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+  --project-root {PROJECT_ROOT} --stage {stage} --message "stage({stage}): summary"
 ```
 
-`stage-complete.py` runs L0 `validate-gates` + L1 `eval-stage` + `build-run-report` + git push. **Exit non-zero → kanban_block, do NOT kanban_complete.**
+`stage-complete.py` runs `validate-gates` + `eval-stage` + `goal-check` + report build + git push. **Exit non-zero → do not mark stage complete.**
 
 ### Stage names
 
 | Profile | `--stage` value | Notes |
 |---------|-----------------|-------|
-| pm-aligner | `align` | |
+| pm-aligner | `align` | G1 debate gate |
 | pm-researcher | `research` | |
-| pm-analyst | `analysis` | |
-| pm-planner | `spec` | Also runs `prototype` gate |
-| pm-builder | `mvp` | |
-| pm-builder | `retro` | Then `merge-retro-knowledge.py` |
-
-Planner may iterate on openspec/prototype **within** the spec task before running stage-complete.
+| pm-analyst | `analysis` | C4 + PK debate |
+| pm-planner | `spec` | G2 red-team panel |
+| pm-builder | `mvp` | inner-loop |
+| pm-shipper | `ship` | human checkpoint default |
+| pm-builder | `retro` | harness evolution |
 
 ## Retro (pm-builder)
 
-```powershell
-python D:\workspace\pipelines\pm-idea-to-mvp\scripts\merge-retro-knowledge.py --run .
-python D:\workspace\pipelines\pm-idea-to-mvp\scripts\stage-complete.py --run . --slug {slug} --stage retro --message "stage(retro): pipeline complete"
+```bash
+python {SKILLS_ROOT}/scripts/merge-retro-knowledge.py --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+  --project-root {PROJECT_ROOT} --stage retro --message "stage(retro): pipeline complete"
 ```
 
 产物使用**简体中文**。
 
 ## Feishu notification
 
-`stage-complete.py` 调用 `feishu_notify.py` 向 `FEISHU_HOME_CHANNEL` 推送：
-
-```
-【PM 流水线】pm-{slug} — {stage} 完成
-产物页 / 仓库 / Gate / 摘要
-align、spec 阶段附加 ⏸ 人工确认提示
-```
+`stage-complete.py` 调用 `{SKILLS_ROOT}/scripts/feishu_notify.py` 向 `FEISHU_HOME_CHANNEL` 推送阶段摘要。
 
 ## Failure handling
 
-If `stage-complete.py` fails: `kanban_block` with stderr summary. Do not mark complete.
+If `stage-complete.py` fails: block with stderr summary. Do not mark complete.

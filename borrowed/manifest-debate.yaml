@@ -1,0 +1,19 @@
+# Panel dependencies for prd-red-team-panel — install with --profile debate
+sources:
+  phuryn:
+    path: vendor/phuryn-pm-skills
+    repo: https://github.com/phuryn/pm-skills
+    version: v2.0.0
+    license: MIT
+
+skills:
+  - id: strategy-red-team
+    source: phuryn/pm-execution/skills/strategy-red-team
+    install_as: pm-strategy-red-team
+    stage: spec
+    platforms: [cursor, hermes, opencode]
+  - id: pre-mortem
+    source: phuryn/pm-execution/skills/pre-mortem
+    install_as: pm-pre-mortem
+    stage: spec
+    platforms: [cursor, hermes, opencode]

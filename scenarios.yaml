@@ -1,0 +1,29 @@
+# Pipeline scenarios — used by decompose + install
+version: '6.1.0'
+
+scenarios:
+  greenfield:
+    label: "新建产品 0→1"
+    skip_stages: []
+    start_stage: brief
+    profiles: []
+
+  brownfield:
+    label: "优化现有产品"
+    skip_stages: [brief, align, research]
+    start_stage: analysis
+    profiles: []
+    bootstrap_skill: brownfield-bootstrap
+
+  refine:
+    label: "Refine 深化循环"
+    skip_stages: [brief, align, research, analysis, spec]
+    start_stage: mvp
+    profiles: [deep-research]
+    decompose_script: refine-decompose.py
+
+  optimize:
+    label: "仅优化（从 analysis 起）"
+    skip_stages: [brief, align, research]
+    start_stage: analysis
+    profiles: []

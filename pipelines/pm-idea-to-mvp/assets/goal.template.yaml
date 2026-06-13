@@ -1,101 +1,19 @@
-# Goal definitions for all stages
-# Each goal is verified by goal-check.py
-version: '6.0.0'
-
-stages:
-  brief:
-    - id: B1
-      description: 'Brief file exists and non-empty'
-      type: file_exists
-      target: '00-brief.md'
-      min_chars: 100
-
-  align:
-    - id: A1
-      description: 'CONTEXT.md with glossary ≥3'
-      type: content_match
-      target: 'CONTEXT.md'
-      pattern: '\|.*\|.*\|'  # table rows
-      min_table_rows: 3
-    - id: A2
-      description: 'No TBD markers'
-      type: forbidden
-      target: 'CONTEXT.md'
-      pattern: 'TBD'
-
-  research:
-    - id: R1
-      description: '≥5 source URLs'
-      type: url_count
-      target: '01-research.md'
-      min: 5
-    - id: R2
-      description: 'Competitor analysis present'
-      type: content_match
-      target: '01-research.md'
-      pattern: '竞品|competitor|对比'
-
-  analysis:
-    - id: AN1
-      description: '≥3 options compared'
-      type: content_match
-      target: '02-analysis.md'
-      pattern: '方案[A-D]|Option [A-D]'
-      min_matches: 3
-    - id: AN2
-      description: 'Recommendation present'
-      type: content_match
-      target: '02-analysis.md'
-      pattern: '推荐|recommend'
-    - id: AN3
-      description: 'C4 architecture files exist'
-      type: file_exists
-      target: 'architecture/c4-context.md'
-
-  spec:
-    - id: S1
-      description: 'PRD with 1-5 user stories'
-      type: content_match
-      target: '03-prd.md'
-      pattern: '用户故事|User Story|作为.+我希望'
-      min_matches: 1
-    - id: S2
-      description: 'OpenSpec tasks defined'
-      type: file_exists
-      target: 'openspec/tasks.md'
-      min_chars: 200
-
-  mvp:
-    - id: M1
-      description: 'MVP directory and README exist'
-      type: file_exists
-      target: '04-mvp/README.md'
-    - id: M2
-      description: 'Tests pass'
-      type: command_pass
-      command: 'pytest -q --tb=short'
-      workdir: '04-mvp'
-      optional: true  # won't block if no tests exist
-    - id: M3
-      description: 'UX review with P0=0'
-      type: file_exists
-      target: '04-mvp/UX-REVIEW.md'
-
-  ship:
-    - id: SH1
-      description: 'RUNBOOK.md with deploy instructions'
-      type: content_match
-      target: 'RUNBOOK.md'
-      pattern: '部署|deploy'
-    - id: SH2
-      description: 'UI acceptance report passes'
-      type: content_match
-      target: 'docs/ui-acceptance-report.md'
-      pattern: 'pass|通过|≥\s*85'
-
-  retro:
-    - id: RE1
-      description: 'Retro with evolution section'
-      type: content_match
-      target: '05-retro.md'
-      pattern: '进化|evolution|skill_patch'
+# Per-stage goals — copy to goals/{stage}.yaml
+# Verified by goal-check.py
+stage: align
+goals:
+  - id: A1
+    description: 'CONTEXT.md with glossary table'
+    type: content_match
+    target: 'CONTEXT.md'
+    pattern: '\|.*\|.*\|'
+  - id: A2
+    description: 'No TBD markers in CONTEXT'
+    type: forbidden
+    target: 'CONTEXT.md'
+    pattern: 'TBD|待定'
+  - id: A3
+    description: 'Assumption debate resolved'
+    type: debate_resolved
+    debates_dir: 'debates'
+    stage_prefix: 'align'

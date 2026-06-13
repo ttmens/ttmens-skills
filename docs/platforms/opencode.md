@@ -1,38 +1,33 @@
 # OpenCode
 
+> Agent 安装与 MVP 委托：[AGENT_ONBOARDING.md](../AGENT_ONBOARDING.md)
+
 ## Install
 
 ```bash
-./install.sh --core --opencode
-./install.sh --profile hermes --opencode   # optional opencode skill
-.\install.ps1 -Target OpenCode
+./install.sh --core --platform opencode --project /path/to/app
 ```
 
 Global: `~/.config/opencode/skills/`  
-Project: `<project>/.opencode/skills/`
-
-```bash
-./install.sh --project /path/to/app --opencode
-```
+Project: `<project>/.opencode/skills/` + `AGENTS.md` template
 
 ## Entry
 
-Project `AGENTS.md` pointing to `pm-idea-to-mvp`.
+Say **从想法做到上线**. Loads `pm-idea-to-mvp` v6.1.
 
-## PM phases
-
-OpenCode loads skills from `.opencode/skills/`. Run PM stages via conversation + [command-recipes.md](../../pipelines/pm-idea-to-mvp/references/command-recipes.md).
-
-## Coding delegation
-
-For MVP stage:
+## MVP delegation
 
 ```bash
-opencode run "Implement per openspec/tasks.md and 03-prd.md" --workdir ./04-mvp
+opencode run "Implement per openspec/tasks.md" --workdir ./04-mvp
 ```
 
-See `profiles/hermes-opencode/opencode/SKILL.md` (install with `--profile hermes`).
+Run stage-complete manually after each phase:
 
-## Note
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+  --stage mvp --project-root . --runtime --verify-goals
+```
 
-OpenCode does not expose phuryn slash commands; use plain-language prompt chains from command-recipes.
+See `profiles/hermes-opencode/opencode/SKILL.md` (optional `--profile hermes`).
+
+[command-recipes.md](../../pipelines/pm-idea-to-mvp/references/command-recipes.md)

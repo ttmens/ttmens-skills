@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install ttmens-skills — default: --core --all (40 skills)
+# Install ttmens-skills — default: --core --all (37 skills)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,14 +10,17 @@ usage() {
 Usage: ./install.sh [OPTIONS]
 
 Options:
-  --core            Install 17 native + 23 borrowed (default)
+  --core            Install 17 native + 20 borrowed (default)
+  --lite --stage S  Install only skills for pipeline stage S
   --cursor --hermes --opencode --all
-  --native-only     Skip borrowed skills
-  --borrowed-only   Skip native skills
-  --profile NAME    obsidian | deep-research | hermes (repeatable)
+  --platform NAME   cursor | hermes | opencode (templates + profiles)
+  --profile NAME    obsidian | deep-research | hermes | hermes-kanban | debate
+  --scenario NAME   greenfield | brownfield | refine | optimize
   --project PATH    Project .cursor/skills or .opencode/skills
   --dry-run
   -h, --help
+
+Agent install guide: docs/AGENT_ONBOARDING.md
 EOF
 }
 

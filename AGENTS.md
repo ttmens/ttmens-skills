@@ -1,6 +1,64 @@
-# Agent Entry
+# Agent Entry — ttmens-skills v6.1
 
-1. **默认流水线**：加载 `pm-idea-to-mvp` v6.0（Loop Engineering 集成）。触发语：从想法做到上线、继续 pm-{slug}。
-2. **人机协作**：On-the-loop 模式 — 仅 ship 阶段需人工确认（harness-rules.yaml 可配置）。MVP 阶段支持内循环（最多 3 次迭代）。
-3. **核心升级**：目标原语（goal-check.py）| 运行时验证（--runtime）| 细粒度进度追踪（PROGRESS.md）| 自适应 harness。
-4. **读者文档**：[README.md](README.md) · 维护者索引：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md) · 升级指南：[pipelines/pm-idea-to-mvp/references/v6.0-upgrade.md](pipelines/pm-idea-to-mvp/references/v6.0-upgrade.md)
+> 设计思想与能力全景：[README.md](README.md)  
+> **首次使用 / 安装 / 分平台自检**：[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)
+
+## 0. 启动检查（技能未装时先做）
+
+1. 按 [AGENT_ONBOARDING.md §2](docs/AGENT_ONBOARDING.md#2-解析-skills_root) 解析 `{SKILLS_ROOT}`
+2. 若缺少 `pipelines/pm-idea-to-mvp/SKILL.md` → 请用户执行 [§3 安装](docs/AGENT_ONBOARDING.md#3-安装技能缺失时) 或 Agent 在授权下执行
+3. 运行 `python {SKILLS_ROOT}/scripts/validate_skills.py` 确认通过
+4. spec 阶段前确认已装 `--profile debate`（G2 红队）
+
+## 1. 默认行为
+
+- **加载流水线**：`pm-idea-to-mvp` v6.1（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
+- **触发语**：从想法做到上线 · 继续 pm-{slug} · 优化现有产品 · 进入 {stage} 阶段
+- **路径变量**：`{PROJECT_ROOT}` = pm-{slug} 仓库根；`{SKILLS_ROOT}` = 技能库根（**勿硬编码绝对路径**）
+
+## 2. 阶段协议（强制）
+
+1. 只写**当前 stage** 的产物（见 stage 表）
+2. 阶段结束前运行：
+
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+  --project-root {PROJECT_ROOT} --stage <stage> --verify-goals
+```
+
+3. exit 非零 → 修复后重试，**不得**标记完成或进入下一阶段
+4. MVP 使用 `inner-loop-driver.py` 内循环（max 3 iter）
+
+## 3. 质量门
+
+| Gate | 何时 | 关键技能 / 验证 |
+|------|------|-----------------|
+| G1 | align 结束 | `grill-me` § Debate Protocol → `debates/align-synthesis.md` |
+| G2 | spec 结束 | `prd-red-team-panel` → `debates/spec-synthesis.md` |
+| G3 | mvp/ship | `ui-acceptance-review` + `ui_acceptance.py --full` |
+
+## 4. Stage → Skill 速查
+
+SSOT：[`pipelines/pm-idea-to-mvp/stage-skills.yaml`](pipelines/pm-idea-to-mvp/stage-skills.yaml)
+
+| Stage | Native | Borrowed |
+|-------|--------|----------|
+| align | grill-me, grill-with-docs | pm-identify-assumptions-new |
+| research | — | pm-opportunity-solution-tree, pm-competitor-analysis, pm-market-sizing |
+| analysis | c4-architecture, openspec, docs-hygiene | pm-product-strategy, kw-system-design |
+| spec | user-journey, open-design, ui-ux-pro-max, prd-red-team-panel | pm-create-prd, pm-user-stories |
+| mvp | writing-plans, subagent-driven-development, test-driven-development, ui-acceptance-review, requesting-code-review, dogfood | kw-testing-strategy |
+| ship | ui-acceptance-review, docs-hygiene | pm-shipping-artifacts, pm-intended-vs-implemented, kw-deploy-checklist, pm-security-audit-static |
+| retro | pm-git-publish | pm-retro, pm-release-notes |
+
+## 5. 语言
+
+面向用户产物 → **简体中文**。代码 / URL / goal YAML 键 → 英文可。
+
+## 6. 索引
+
+- 安装与平台：[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)
+- 技能全表：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md)
+- 目录布局：[docs/REPO_LAYOUT.md](docs/REPO_LAYOUT.md)
+- Prompt 链：[command-recipes.md](pipelines/pm-idea-to-mvp/references/command-recipes.md)
+- 场景：[scenarios.yaml](scenarios.yaml)

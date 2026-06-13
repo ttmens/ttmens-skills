@@ -1,0 +1,26 @@
+# Production quality bar — copy to project root as production-bar.yaml
+version: '6.1.0'
+
+ux:
+  ui_acceptance_full_min_score: 85
+  ui_acceptance_quick_min_score: 70
+  forbid_placeholder_text: true
+  placeholder_patterns:
+    - 'Lorem ipsum'
+    - 'TODO:'
+    - '占位'
+    - 'coming soon'
+
+performance:
+  max_bundle_kb: 2048
+  lighthouse_performance_min: 70
+
+accessibility:
+  min_contrast_ratio: 4.5
+  require_focus_states: true
+
+security:
+  no_secrets_in_repo: true
+  secret_patterns:
+    - 'AKIA[0-9A-Z]{16}'
+    - 'password\\s*=\\s*["\'][^"\']+["\']'

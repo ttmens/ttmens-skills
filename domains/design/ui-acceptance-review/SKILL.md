@@ -47,8 +47,8 @@ After journey review, fix P0/P1 in MVP UI:
 ## Mode: quick / full (script rubric)
 
 ```bash
-python3 scripts/ui_acceptance.py --quick --project-root .
-python3 scripts/ui_acceptance.py --full --project-root .
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --quick --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --full --project-root {PROJECT_ROOT}
 ```
 
 Full pass: **≥85** and compliance critical all pass.

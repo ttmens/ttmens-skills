@@ -1,4 +1,4 @@
-# Core borrowed skills (23) — copied from vendor/ at install time
+# Core borrowed skills (20) — copied from vendor/ at install time
 sources:
   phuryn:
     path: vendor/phuryn-pm-skills
@@ -37,11 +37,6 @@ skills:
     install_as: pm-product-strategy
     stage: analysis
     platforms: [cursor, hermes, opencode]
-  - id: strategy-red-team
-    source: phuryn/pm-execution/skills/strategy-red-team
-    install_as: pm-strategy-red-team
-    stage: analysis
-    platforms: [cursor, hermes, opencode]
   - id: create-prd
     source: phuryn/pm-execution/skills/create-prd
     install_as: pm-create-prd
@@ -50,11 +45,6 @@ skills:
   - id: user-stories
     source: phuryn/pm-execution/skills/user-stories
     install_as: pm-user-stories
-    stage: spec
-    platforms: [cursor, hermes, opencode]
-  - id: pre-mortem
-    source: phuryn/pm-execution/skills/pre-mortem
-    install_as: pm-pre-mortem
     stage: spec
     platforms: [cursor, hermes, opencode]
   - id: shipping-artifacts
@@ -102,11 +92,6 @@ skills:
     source: anthropic/engineering/skills/system-design
     install_as: kw-system-design
     stage: analysis
-    platforms: [cursor, hermes, opencode]
-  - id: code-review
-    source: anthropic/engineering/skills/code-review
-    install_as: kw-code-review
-    stage: mvp
     platforms: [cursor, hermes, opencode]
   - id: testing-strategy
     source: anthropic/engineering/skills/testing-strategy
