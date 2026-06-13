@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v6.1: Loop Engineering integrated. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2."
-version: 6.1.0
+description: "Super-dev pipeline v6.2: Loop Engineering + enforced governance. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency."
+version: 6.2.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -32,9 +32,9 @@ metadata:
       - requesting-code-review
 ---
 
-# Super Developer Pipeline v6.1 (pm-idea-to-mvp)
+# Super Developer Pipeline v6.2 (pm-idea-to-mvp)
 
-**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v6 引入 **Loop Engineering**：每个想法 = **一个 GitHub 仓库** + **GitHub Pages 报告** + **目标门禁流水线** + **内循环 MVP** + 可选 **Refine** 循环。
+**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v6.2 引入 **Enforced Governance**：基于 pm-knowledge-platform 实战复盘，强制 runtime 验证、辩论门禁、跨文档一致性检查，杜绝"纸面完成"。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）
@@ -107,6 +107,40 @@ metadata:
 棕地项目阶段开始前运行 `docs-hygiene`。`decompose-pm-pipeline.py --scenario brownfield` 生成 skip map。
 
 v6 变化：每个 Gate 现在包含 **artifact 存在性** + **runtime 验证** 两层检查，由 `validate-gates.py --runtime` 和 `goal-check.py` 协同执行。
+
+### v6.2 变化：Enforced Governance（实战驱动）
+
+基于 pm-knowledge-platform 项目复盘发现的 7 个核心问题，v6.2 引入以下强制执行机制：
+
+| 优化项 | 问题来源 | 解决方案 | 实现位置 |
+|--------|---------|---------|---------|
+| **强制 runtime 验证** | 任务标记完成但未实际验证 | mvp/ship 阶段自动运行 `--runtime` + `--goal` | `stage-complete.py` MANDATORY_RUNTIME_STAGES |
+| **跨文档一致性** | decisions.md 写 PostgreSQL，实际用 SQLite | `check_docs_ssot.py` 新增 tech-stack-conflict 检测 | `scripts/check_docs_ssot.py` |
+| **G1/G2 辩论门禁** | Align/Spec 阶段跳过辩论 | `validate-gates.py` 检查 `debates/` 目录 + `debate_resolved` 标记 | `validate-gates.py` debate_required |
+| **内循环前置检查** | MVP 内循环缺少 goals/harness 配置 | `inner-loop-driver.py` 启动前验证 prerequisites | `inner-loop-driver.py` check_prerequisites |
+| **Retro 量化要求** | Retro 内容空洞，缺乏数据 | `required_sections` 检查量化指标 + 迭代分析 | `validate-gates.py` required_sections |
+| **RUNBOOK 章节强制** | Ship 阶段 RUNBOOK 缺回滚/监控 | 检查部署步骤、回滚方案、监控指标三个必需章节 | `validate-gates.py` ship.required_sections |
+| **Operate/Grow 产物** | 这两个阶段完全跳过 | operate 要求 `07-ops-notes.md`，grow 提升 min_lines 到 30 | `validate-gates.py` STAGE_FILES |
+
+**最低行数提升**（防止敷衍产物）：
+
+| 阶段 | v6.0 | v6.2 | 原因 |
+|------|------|------|------|
+| brief | 5 | 20 | 防止一句话 brief |
+| align (CONTEXT.md) | 10 | 50 | pm-knowledge-platform 仅 69 行，深度不足 |
+| research | 20 | 50 | 确保充分调研 |
+| analysis | 30 | 100 | 确保方案论证深入 |
+| spec | 20 | 50 | 确保 PRD 完整 |
+| ship (RUNBOOK) | 10 | 50 | 确保部署文档可用 |
+| retro | 15 | 50 | 确保复盘有数据支撑 |
+
+**新增自动化检查**（`stage-complete.py` 自动触发，无需手动传参）：
+
+```python
+MANDATORY_RUNTIME_STAGES = ["mvp", "ship"]      # 自动 --runtime
+MANDATORY_GOAL_STAGES = ["mvp", "ship", "retro"] # 自动 --goal
+MANDATORY_DOCS_HYGIENE_STAGES = ["align", "analysis", "spec", "mvp", "ship"]  # 自动 docs-hygiene
+```
 
 可选：`docs/workflow_state.yaml`（来自 greenfield-light profile）与 `gates.json` 并存，用于非 Kanban 断点续跑。
 
@@ -786,6 +820,8 @@ v6 升级：
 
 | Version | Date | Key changes |
 |---------|------|-------------|
+| 6.2.0 | 2026-06-13 | **Enforced Governance**：强制 runtime 验证（mvp/ship 自动 --runtime/--goal）、G1/G2 辩论门禁（debates/ 目录检查）、跨文档一致性（tech-stack-conflict 检测）、内循环前置检查（goals/harness prerequisites）、RUNBOOK 必需章节（部署/回滚/监控）、Retro 量化要求、Operate 产物强制、最低行数全面提升。基于 pm-knowledge-platform 实战复盘。 |
+| 6.1.0 | 2026-06-12 | Production-tested: knowledge graph visualization, RAG fallback, tag management |
 | 6.0.0 | 2026-06-12 | **Loop Engineering 集成**：内循环 MVP、runtime verification、goal primitives、on-the-loop human collaboration、fine-grained progress tracking、self-improving harness |
 | 5.1.0 | 2026-06-11 | Super Developer pipeline: add ship, operate, grow stages; merge G1/G2/G3 gates |
 | 5.0.0 | 2026-06-11 | Cross-platform (Cursor/Hermes/OpenCode); borrowed skills; command-recipes |

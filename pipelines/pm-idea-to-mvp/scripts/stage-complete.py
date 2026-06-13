@@ -20,11 +20,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 
-PIPELINE_VERSION = "6.0.0"
+PIPELINE_VERSION = "6.2.0"
 
 # Default: only ship requires human checkpoint
 # align/spec become auto if harness-rules.yaml overrides this
 DEFAULT_HUMAN_CHECKPOINT_STAGES = ["ship"]
+
+# Stages that MANDATE runtime verification (cannot be skipped)
+# Based on pm-knowledge-platform post-mortem: tasks were marked complete without
+# actual verification, leading to bugs surfacing only at deployment.
+MANDATORY_RUNTIME_STAGES = ["mvp", "ship"]
+MANDATORY_GOAL_STAGES = ["mvp", "ship", "retro"]
+
+# Stages that mandate docs-hygiene check before completion
+MANDATORY_DOCS_HYGIENE_STAGES = ["align", "analysis", "spec", "mvp", "ship"]
 
 
 def load_harness_rules(project_root: Path) -> dict:
@@ -348,17 +357,38 @@ def main():
     harness_result = run_script("harness-runner.py", harness_args, project_root)
     report["steps"].append({"step": "harness_runner", **harness_result})
 
-    # Step 2: Validate gates
+    # Step 2: Validate gates (with mandatory runtime for mvp/ship)
     gate_args = ["--stage", stage, "--run", str(project_root), "--write"]
-    if args.runtime:
+    # v6.2: Force runtime verification for stages that need it
+    if args.runtime or stage in MANDATORY_RUNTIME_STAGES:
         gate_args.append("--runtime")
-    if args.verify_goals:
+    # v6.2: Force goal verification for stages that need it
+    if args.verify_goals or stage in MANDATORY_GOAL_STAGES:
         gate_args.append("--goal")
 
     gates_result = run_script("validate-gates.py", gate_args, project_root)
     report["steps"].append({"step": "validate_gates", **gates_result})
 
     gates_passed = gates_result.get("exit_code", 1) == 0
+
+    # Step 2b: v6.2 — Mandatory docs-hygiene check (cross-document consistency)
+    if stage in MANDATORY_DOCS_HYGIENE_STAGES:
+        hygiene_args = ["--project-root", str(project_root), "--json"]
+        hygiene_result = run_script("../../scripts/check_docs_ssot.py", hygiene_args, project_root)
+        # Also try the skills root location
+        if hygiene_result.get("status") == "error":
+            hygiene_result = run_script("check_docs_ssot.py", hygiene_args, project_root)
+        report["steps"].append({"step": "docs_hygiene", **hygiene_result})
+        hygiene_ok = hygiene_result.get("exit_code", 1) == 0 or hygiene_result.get("status") == "ok"
+        if not hygiene_ok:
+            # Don't block on warnings, only on errors
+            hygiene_data = hygiene_result.get("result", {})
+            has_errors = any(
+                i.get("severity") == "error"
+                for i in hygiene_data.get("issues", [])
+            ) if isinstance(hygiene_data, dict) else False
+            if has_errors and not args.force:
+                gates_passed = False
 
     # Step 3: Eval stage (quality scoring)
     eval_args = ["--stage", stage, "--project-root", str(project_root)]
@@ -370,11 +400,15 @@ def main():
 
     eval_passed = eval_result.get("exit_code", 1) == 0
 
-    # Step 4: Goal check (if requested)
-    if args.verify_goals:
+    # Step 4: Goal check (mandatory for certain stages, optional for others)
+    if args.verify_goals or stage in MANDATORY_GOAL_STAGES:
         goal_args = ["--stage", stage, "--project-root", str(project_root)]
         goal_result = run_script("goal-check.py", goal_args, project_root)
         report["steps"].append({"step": "goal_check", **goal_result})
+        # v6.2: Goal failure blocks stage completion (no more self-reported completion)
+        goal_passed = goal_result.get("exit_code", 1) == 0
+        if not goal_passed and not args.force:
+            gates_passed = False
 
     # Determine overall pass
     all_checks_passed = gates_passed and eval_passed

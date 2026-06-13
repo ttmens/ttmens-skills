@@ -1,6 +1,7 @@
-# Harness Rules v6.0 — Risk-based decision automation
+# Harness Rules v6.2 — Risk-based decision automation
 # Inspired by Loop Engineering (Martin Fowler's 'On the Loop' pattern)
-version: '6.0.0'
+# v6.2: Added mandatory governance checks, cross-document consistency
+version: '6.2.0'
 
 project:
   slug: ''  # filled by decompose

@@ -1,15 +1,45 @@
 {
-  "version": "6.0.0",
+  "version": "6.2.0",
   "mode": "loop",
   "stages": {
-    "align": { "status": "pending", "gate": "G1", "checkpoint": "auto" },
-    "research": { "status": "pending", "checkpoint": "auto" },
-    "analysis": { "status": "pending", "checkpoint": "auto" },
-    "spec": { "status": "pending", "gate": "G2", "checkpoint": "auto" },
-    "mvp": { "status": "pending", "gate": "G3", "checkpoint": "auto", "inner_loop": { "max_iterations": 3, "feedback_signals": ["test", "build", "lint"] } },
-    "ship": { "status": "pending", "checkpoint": "human" },
-    "operate": { "status": "pending", "checkpoint": "auto" },
-    "grow": { "status": "pending", "checkpoint": "auto" },
-    "retro": { "status": "pending", "checkpoint": "auto" }
+    "brief": { "status": "pending", "checkpoint": "auto", "min_lines": 20 },
+    "align": { "status": "pending", "gate": "G1", "checkpoint": "auto", "debate_required": true, "min_lines": 50 },
+    "research": { "status": "pending", "checkpoint": "auto", "min_urls": 5, "min_lines": 50 },
+    "analysis": { "status": "pending", "checkpoint": "auto", "min_lines": 100 },
+    "spec": { "status": "pending", "gate": "G2", "checkpoint": "auto", "debate_required": true, "min_lines": 50 },
+    "mvp": {
+      "status": "pending",
+      "gate": "G3",
+      "checkpoint": "auto",
+      "runtime_required": true,
+      "goals_required": true,
+      "inner_loop": {
+        "max_iterations": 3,
+        "feedback_signals": ["test", "build", "lint"],
+        "prerequisites": ["goals/mvp.yaml", "harness-rules.yaml"]
+      }
+    },
+    "ship": {
+      "status": "pending",
+      "checkpoint": "human",
+      "runtime_required": true,
+      "goals_required": true,
+      "runbook_sections": ["deploy", "rollback", "monitor"]
+    },
+    "operate": { "status": "pending", "checkpoint": "auto", "required_file": "07-ops-notes.md", "min_lines": 20 },
+    "grow": { "status": "pending", "checkpoint": "auto", "min_lines": 30 },
+    "retro": {
+      "status": "pending",
+      "checkpoint": "auto",
+      "goals_required": true,
+      "required_sections": ["metrics", "iteration_analysis"],
+      "min_lines": 50
+    }
+  },
+  "v6.2_enforcements": {
+    "mandatory_runtime_stages": ["mvp", "ship"],
+    "mandatory_goal_stages": ["mvp", "ship", "retro"],
+    "mandatory_docs_hygiene_stages": ["align", "analysis", "spec", "mvp", "ship"],
+    "debate_required_stages": ["align", "spec"]
   }
 }

@@ -24,29 +24,37 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root
 
-PIPELINE_VERSION = "6.0.0"
+PIPELINE_VERSION = "6.2.0"
 
-# Stage → required files/patterns (v5.1 backward-compatible checks)
+# Stage → required files/patterns (v6.2 enhanced checks)
+# v6.2 changes: increased min_lines, added debate checks for align/spec,
+# added operate artifacts, strengthened ship RUNBOOK requirements
 STAGE_FILES = {
     "brief": {
         "files": ["00-brief.md"],
-        "min_lines": 5,
+        "min_lines": 20,  # v6.2: was 5, increased to prevent stub briefs
     },
     "align": {
         "files": ["CONTEXT.md", "decisions.md"],
-        "min_lines": 10,
+        "min_lines": 50,  # v6.2: was 10, CONTEXT.md was only 69 lines in pm-knowledge-platform
+        "content_patterns": [
+            r"假设|assumption|风险|risk|验证|validat",
+        ],
+        # v6.2: Debate artifacts are MANDATORY for G1 gate
+        "debate_required": True,
+        "debate_prefix": "align",
     },
     "research": {
         "files": ["01-research.md"],
         "min_urls": 5,
-        "min_lines": 20,
+        "min_lines": 50,  # v6.2: was 20
         "content_patterns": [
             r"竞品|competitor|对比|分析",
         ],
     },
     "analysis": {
         "files": ["02-analysis.md"],
-        "min_lines": 30,
+        "min_lines": 100,  # v6.2: was 30
         "content_patterns": [
             r"方案|option|recommendation|推荐|风险|risk",
         ],
@@ -54,40 +62,59 @@ STAGE_FILES = {
     },
     "spec": {
         "files": ["03-prd.md", "03b-user-journey.md"],
-        "min_lines": 20,
+        "min_lines": 50,  # v6.2: was 20
         "content_patterns": [
             r"用户故事|user stor|验收标准|acceptance",
         ],
         "optional_dirs": ["02b-prototype", "openspec"],
+        # v6.2: Spec stage also requires debate (G2 gate)
+        "debate_required": True,
+        "debate_prefix": "spec",
     },
     "mvp": {
         "files": ["04-mvp/README.md"],
-        "min_lines": 5,
+        "min_lines": 20,  # v6.2: was 5
         "optional_dirs": ["04-mvp"],
+        # v6.2: MVP requires goals/mvp.yaml for runtime verification
+        "goals_required": True,
     },
     "ship": {
         "files": ["RUNBOOK.md"],
-        "min_lines": 10,
+        "min_lines": 50,  # v6.2: was 10
         "content_patterns": [
             r"部署|deploy|回滚|rollback|监控|monitor",
         ],
+        # v6.2: RUNBOOK must contain specific sections
+        "required_sections": [
+            (r"部署|deploy|步骤|step", "部署步骤"),
+            (r"回滚|rollback", "回滚方案"),
+            (r"监控|monitor|告警|alert", "监控指标"),
+        ],
     },
     "operate": {
-        "files": [],
-        "min_lines": 0,
+        "files": ["07-ops-notes.md"],  # v6.2: was empty, now requires ops notes
+        "min_lines": 20,  # v6.2: was 0
+        "content_patterns": [
+            r"监控|monitor|告警|alert|SLA|故障|incident",
+        ],
     },
     "grow": {
         "files": ["06-growth.md"],
-        "min_lines": 15,
+        "min_lines": 30,  # v6.2: was 15
         "content_patterns": [
-            r"增长|growth|指标|metric|渠道|channel",
+            r"增长|growth|指标|metric|渠道|channel|北极星|north.star",
         ],
     },
     "retro": {
         "files": ["05-retro.md"],
-        "min_lines": 15,
+        "min_lines": 50,  # v6.2: was 15
         "content_patterns": [
             r"回顾|retro|evolution|进化|教训|lesson",
+        ],
+        # v6.2: Retro must contain metrics data
+        "required_sections": [
+            (r"指标|metric|数据|data|统计|stat", "量化数据"),
+            (r"迭代|iteration|循环|loop", "内循环分析"),
         ],
     },
 }
@@ -211,7 +238,7 @@ def check_content_pattern(project_root: Path, filepath: str, pattern: str) -> di
 
 
 def validate_stage_files(stage: str, project_root: Path) -> list[dict]:
-    """Run all v5.1-compatible file checks for a stage."""
+    """Run all v6.2 file checks for a stage (including debate & section checks)."""
     checks = []
     stage_config = STAGE_FILES.get(stage, {})
 
@@ -243,6 +270,81 @@ def validate_stage_files(stage: str, project_root: Path) -> list[dict]:
     for pattern in stage_config.get("content_patterns", []):
         for filepath in stage_config.get("files", []):
             checks.append(check_content_pattern(project_root, filepath, pattern))
+
+    # v6.2: Debate directory checks (G1/G2 gate)
+    if stage_config.get("debate_required"):
+        debate_prefix = stage_config.get("debate_prefix", stage)
+        debates_dir = project_root / "debates"
+        if not debates_dir.is_dir():
+            checks.append({
+                "check": "debate_directory",
+                "pass": False,
+                "detail": f"debates/ directory missing — G1/G2 debate artifacts required for stage '{stage}'",
+            })
+        else:
+            # Look for debate files matching the stage prefix
+            debate_files = list(debates_dir.glob(f"{debate_prefix}-*.md"))
+            if not debate_files:
+                checks.append({
+                    "check": "debate_artifacts",
+                    "pass": False,
+                    "detail": f"No debate files found: debates/{debate_prefix}-*.md — debate must be resolved before passing G-gate",
+                })
+            else:
+                # Check for debate_resolved marker in any debate file
+                resolved = False
+                for df in debate_files:
+                    content = df.read_text(encoding="utf-8", errors="replace")
+                    if "debate_resolved" in content or "辩论已解决" in content:
+                        resolved = True
+                        break
+                checks.append({
+                    "check": "debate_artifacts",
+                    "pass": True,
+                    "debate_files": [f.name for f in debate_files],
+                    "debate_resolved": resolved,
+                    "detail": f"Found {len(debate_files)} debate file(s), resolved={resolved}",
+                })
+                if not resolved:
+                    checks.append({
+                        "check": "debate_resolved",
+                        "pass": False,
+                        "detail": f"Debate not resolved — add 'debate_resolved' marker to a debates/{debate_prefix}-*.md file",
+                    })
+
+    # v6.2: Required sections check (for RUNBOOK, retro, etc.)
+    required_sections = stage_config.get("required_sections", [])
+    if required_sections:
+        for filepath in stage_config.get("files", []):
+            full_path = project_root / filepath
+            if not full_path.exists():
+                continue
+            content = full_path.read_text(encoding="utf-8", errors="replace")
+            for pattern, section_name in required_sections:
+                match = re.search(pattern, content, re.IGNORECASE)
+                checks.append({
+                    "check": f"required_section:{section_name}",
+                    "pass": bool(match),
+                    "file": filepath,
+                    "section": section_name,
+                    "detail": f"{'Found' if match else 'Missing'} required section '{section_name}' in {filepath}",
+                })
+
+    # v6.2: Goals file check for MVP
+    if stage_config.get("goals_required"):
+        goals_file = project_root / "goals" / f"{stage}.yaml"
+        if not goals_file.exists():
+            checks.append({
+                "check": "goals_file",
+                "pass": False,
+                "detail": f"Goals file missing: goals/{stage}.yaml — required for runtime verification",
+            })
+        else:
+            checks.append({
+                "check": "goals_file",
+                "pass": True,
+                "detail": f"Goals file exists: goals/{stage}.yaml",
+            })
 
     return checks
 

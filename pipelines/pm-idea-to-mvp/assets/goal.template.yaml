@@ -1,9 +1,17 @@
-# Per-stage goals — copy to goals/{stage}.yaml
+# Per-stage goals template — copy to goals/{stage}.yaml
 # Verified by goal-check.py
+# v6.2: All stages should have goals files; MVP/Ship/Retro are mandatory
+#
+# USAGE: Copy this file to goals/{stage}.yaml and uncomment/edit the relevant section.
+# Each stage has its own goals block below, separated by comments.
+
+# ============================================================
+# STAGE: align (G1 gate — debate required)
+# ============================================================
 stage: align
 goals:
   - id: A1
-    description: 'CONTEXT.md with glossary table'
+    description: 'CONTEXT.md with glossary table and assumption analysis (min 50 lines)'
     type: content_match
     target: 'CONTEXT.md'
     pattern: '\|.*\|.*\|'
@@ -13,7 +21,106 @@ goals:
     target: 'CONTEXT.md'
     pattern: 'TBD|待定'
   - id: A3
-    description: 'Assumption debate resolved'
+    description: 'Assumption debate resolved in debates/'
     type: debate_resolved
     debates_dir: 'debates'
     stage_prefix: 'align'
+  - id: A4
+    description: 'decisions.md contains risk assessment'
+    type: content_match
+    target: 'decisions.md'
+    pattern: '风险|risk|影响|impact'
+
+# ============================================================
+# STAGE: research — copy below to goals/research.yaml
+# ============================================================
+# stage: research
+# goals:
+#   - id: R1
+#     description: 'At least 5 unique source URLs'
+#     type: url_count
+#     target: '01-research.md'
+#     min_urls: 5
+#   - id: R2
+#     description: 'Competitor analysis present'
+#     type: content_match
+#     target: '01-research.md'
+#     pattern: '竞品|competitor'
+#   - id: R3
+#     description: 'Minimum 50 lines of analysis'
+#     type: min_lines
+#     target: '01-research.md'
+#     min_lines: 50
+
+# ============================================================
+# STAGE: mvp (G3 gate — MANDATORY runtime + goals in v6.2)
+# ============================================================
+# stage: mvp
+# goals:
+#   - id: M1
+#     description: 'All tests pass'
+#     type: command_pass
+#     command: 'cd 04-mvp && npm test -- --passWithNoTests'
+#     weight: critical
+#   - id: M2
+#     description: 'Build succeeds'
+#     type: command_pass
+#     command: 'cd 04-mvp && npm run build'
+#     weight: required
+#   - id: M3
+#     description: 'Health endpoint returns 200'
+#     type: url_accessible
+#     url: 'http://localhost:3001/api/health'
+#     weight: required
+#   - id: M4
+#     description: 'README.md exists with documentation'
+#     type: file_exists
+#     target: '04-mvp/README.md'
+#     min_lines: 20
+#     weight: required
+#   - id: M5
+#     description: 'UX review completed'
+#     type: file_exists
+#     target: '04-mvp/UX-REVIEW.md'
+#     weight: required
+
+# ============================================================
+# STAGE: ship (MANDATORY runtime + goals in v6.2)
+# ============================================================
+# stage: ship
+# goals:
+#   - id: S1
+#     description: 'RUNBOOK.md with deploy steps'
+#     type: content_match
+#     target: 'RUNBOOK.md'
+#     pattern: '部署|deploy'
+#   - id: S2
+#     description: 'RUNBOOK contains rollback plan'
+#     type: content_match
+#     target: 'RUNBOOK.md'
+#     pattern: '回滚|rollback'
+#   - id: S3
+#     description: 'RUNBOOK contains monitoring'
+#     type: content_match
+#     target: 'RUNBOOK.md'
+#     pattern: '监控|monitor'
+
+# ============================================================
+# STAGE: retro (MANDATORY goals in v6.2)
+# ============================================================
+# stage: retro
+# goals:
+#   - id: RT1
+#     description: 'Retro contains quantitative metrics'
+#     type: content_match
+#     target: '05-retro.md'
+#     pattern: '指标|metric|数据|统计'
+#   - id: RT2
+#     description: 'Retro analyzes inner loop iterations'
+#     type: content_match
+#     target: '05-retro.md'
+#     pattern: '迭代|iteration|循环'
+#   - id: RT3
+#     description: 'harness-improvements.md generated'
+#     type: file_exists
+#     target: 'harness-improvements.md'
