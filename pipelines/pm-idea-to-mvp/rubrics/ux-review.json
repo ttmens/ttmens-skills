@@ -1,0 +1,9 @@
+{
+  "stage": "ux-review",
+  "description": "L1 rubric — MVP UX acceptance report",
+  "checks": [
+    {"id": "ux_review_file", "file": "04-mvp/UX-REVIEW.md", "min_chars": 200, "message": "UX-REVIEW.md required"},
+    {"id": "p0_stats", "file": "04-mvp/UX-REVIEW.md", "any_of": ["P0", "统计", "waived", "Waived"], "message": "UX review must document P0 status"},
+    {"id": "journey_ref", "file": "04-mvp/UX-REVIEW.md", "any_of": ["journey", "旅程", "03b-user-journey"], "message": "UX review must reference user journey"}
+  ]
+}

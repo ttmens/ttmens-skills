@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency, anti-rationalization tables, 5-axis code review, browser verification, rollback decision tree."
-version: 7.1.0
+description: "Super-dev pipeline v6.1 Hermes UX: Feishu grill preflight, trigger routing, brownfield/resume, Kanban v6 twelve-step + MVP inner loop. (v7.1 governance refs in references/ — planned)"
+version: 6.1.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -62,16 +62,12 @@ metadata:
 
 **强制规则**：当用户提到以下关键词时，**必须**先调用 `skill_view(name='pm-idea-to-mvp')` 加载技能。
 
-| 用户说 | 场景 | 入口阶段 | 说明 |
-|--------|------|---------|------|
-| "做一个新产品" / "新项目" | greenfield | brief | 默认 0→1 全流程 |
-| "优化现有项目" / "改进" | refine | mvp (内循环) | 深化循环，使用内循环协议 |
-| "审查代码质量" / "审计" | brownfield | analysis | 棕地审计，跳过 brief/align/research |
-| "部署到生产" / "上线" / "发布" | ship | ship | Ship 阶段，含浏览器验证 |
-| "回顾项目" / "复盘" | retro | retro | Retro 阶段，量化复盘 |
-| "回退" / "回滚" | rollback | — | 见 `references/rollback-decision-tree.md` |
-| "E2E 测试" / "端到端验证" | ship | ship | 强制浏览器端到端验证 |
-| "重构前端" / "UI 升级" | refine | mvp | 使用 Refine 系统性 UI 重构模式 |
+| 用户说 | 场景 | decompose | 说明 |
+|--------|------|-----------|------|
+| "做一个新产品" / `/goal 产品想法` | greenfield | `--scenario greenfield` | 飞书 grill 1–2 问 → 12 子任务 |
+| "优化现有项目" / "继续优化" | brownfield | `--scenario brownfield` | 棕地审计 + 精简子图 |
+| "部署" / "修 bug" | optimize | `--scenario optimize` | ship + operate |
+| "UX 复审" / "refine" | refine | `--scenario refine` | 深研 + spec + mvp iter |
 
 **触发关键词列表**（出现在用户消息中即触发）：
 - 优化、重构、E2E、端到端、深入分析、改进、审查、审计
@@ -1267,16 +1263,22 @@ When resuming work on an existing pm-{slug} project or diagnosing pipeline execu
 - v6 新增：可从 `PROGRESS.md` 恢复，无需依赖 `workflow_state.yaml`。
 - **棕地审计**：对已有项目执行 v6.2 合规检查，见 `references/brownfield-audit.md`（含诊断命令、产物清单、常见陷阱）。
 
-## Feishu trigger
+## Feishu trigger (v6.1 Hermes UX)
+
+**契约 SSOT**: `references/hermes-integration.md` + `assets/trigger-routing.yaml`
+
+| 输入 | 路由 |
+|------|------|
+| `/goal 产品想法：{描述}` | 飞书 grill 1–2 问 → Kanban greenfield 12 子任务 |
+| `/goal 继续优化…` / `继续 pm-{slug}` | `pm_resume` 或 `--scenario brownfield` |
+| 正文含 `想法到产品` / `pm-idea-to-mvp` | Kanban（非 Ralph） |
 
 ```
 /goal 产品想法：{描述}
-
-按 pm-idea-to-mvp v6 超级开发者流水线执行。项目目录：{PROJECT_ROOT}
-含 C4、旅程、UX 验收、MVP 内循环、Ship/Ops/Grow 与 Retro。
-使用 On-the-loop 风险分级（仅 deploy 需人工确认）。
-完成后发 GitHub Pages 链接。
 ```
+
+Grill 完成后 gateway 调用 `decompose-pm-pipeline.py --task-id … --scenario greenfield`。
+人工卡点 align / spec / ship — `hermes kanban unblock <task-id>`。
 
 ## Upgrade history
 

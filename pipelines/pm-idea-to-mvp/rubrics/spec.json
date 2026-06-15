@@ -1,0 +1,11 @@
+{
+  "stage": "spec",
+  "description": "L1 rubric — spec + prototype",
+  "checks": [
+    {"id": "user_stories", "file": "03-prd.md", "any_of": ["用户故事", "User Story", "作为"], "message": "PRD needs user stories"},
+    {"id": "scope", "file": "03-prd.md", "any_of": ["范围", "scope", "in scope", "out of scope"], "message": "PRD needs scope boundaries"},
+    {"id": "tasks", "file": "openspec/tasks.md", "min_lines": 5, "message": "openspec/tasks.md must be substantive"},
+    {"id": "prototype", "file": "02b-prototype/index.html", "min_chars": 100, "message": "Static prototype required"},
+    {"id": "chinese_primary", "file": "03-prd.md", "any_of": ["用户故事", "范围", "验收", "作为", "需求"], "message": "PRD should be primarily Chinese"}
+  ]
+}

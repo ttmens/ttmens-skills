@@ -1,0 +1,12 @@
+{
+  "stage": "analysis",
+  "description": "L1 rubric — analysis quality",
+  "checks": [
+    {"id": "recommendation", "file": "02-analysis.md", "any_of": ["推荐", "recommend"], "message": "Explicit recommendation required"},
+    {"id": "options", "file": "02-analysis.md", "min_option_markers": 3, "message": "≥3 options in comparison"},
+    {"id": "risks", "file": "02-analysis.md", "any_of": ["风险", "risk"], "message": "Risks section required"},
+    {"id": "proposal", "file": "openspec/proposal.md", "any_of": ["Why", "为什么", "What"], "message": "openspec/proposal.md must exist with why/what"},
+    {"id": "adr", "file": "decisions.md", "pattern": "ADR", "message": "At least one ADR in decisions.md"},
+    {"id": "chinese_primary", "file": "02-analysis.md", "any_of": ["方案", "风险", "推荐", "对比", "论证"], "message": "Analysis should be primarily Chinese"}
+  ]
+}

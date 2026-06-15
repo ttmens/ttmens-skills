@@ -1,0 +1,10 @@
+{
+  "stage": "benchmark",
+  "description": "L1 rubric — industry implementation benchmark (Refine)",
+  "checks": [
+    {"id": "benchmark_file", "file": "01b-benchmark.md", "min_chars": 600, "message": "01b-benchmark.md required"},
+    {"id": "case_studies", "file": "01b-benchmark.md", "any_of": ["案例 1", "案例1", "Case 1", "## 案例"], "message": "Need case study sections"},
+    {"id": "urls", "file": "01b-benchmark.md", "min_urls": 3, "message": "Need >=3 source URLs"},
+    {"id": "gap_table", "file": "01b-benchmark.md", "any_of": ["差距", "gap", "汇总"], "message": "Gap summary table required"}
+  ]
+}

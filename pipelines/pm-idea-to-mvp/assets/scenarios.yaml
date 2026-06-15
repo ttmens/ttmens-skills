@@ -1,0 +1,21 @@
+# pm-idea-to-mvp decompose scenarios (v6.1.0)
+# Used by decompose-pm-pipeline.py --scenario
+
+version: "6.1.0"
+
+scenarios:
+  greenfield:
+    description: "New product idea — full 12-step outer loop + MVP inner loop"
+    builder: greenfield
+
+  brownfield:
+    description: "Existing pm-{slug} project — audit then targeted MVP/ship"
+    builder: brownfield
+
+  optimize:
+    description: "Deploy/fix/hotfix on existing project — minimal tasks"
+    builder: optimize
+
+  refine:
+    description: "UX/journey/prototype refinement — spec-focused subset"
+    builder: refine

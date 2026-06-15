@@ -1,6 +1,9 @@
-# Runtime Kanban v6.0 — 运行时详解
+# Runtime Kanban v6.0 / v6.1 — 运行时详解
 
-> pm-idea-to-mvp v6.0 的 Kanban 系统、Harness Rules、Goal Verification 和 Progress Tracking 集成指南
+> pm-idea-to-mvp v6.1 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、status-report。
+> Kanban 图仍为 v6.0 十二步 + MVP inner loop（见 §1）。
+
+**v6.1 适配层**：`hermes_cli/pm_pipeline.py` + `references/hermes-integration.md`
 
 ## 1. v6.0 Kanban 阶段图（含 Inner Loop）
 
@@ -63,22 +66,36 @@ idle → running → [pass] → idle (exit to Ship)
                 → [fail, iter = 3, no_design_flaw] → blocked (→ human)
 ```
 
-## 2. Profiles 表（v6.0 更新）
+## 2. Profiles 表（v6.0 Hermes 真实名称）
 
-| Profile | 职责 | 绑定的 Skills | 触发条件 |
-|---------|------|---------------|----------|
-| **orchestrator** | 阶段流转、gate 检查、harness 执行 | kanban-skill, goal-check, progress-tracker | 用户说"继续 pm-{slug}" |
-| **pm-aligner** | Align 阶段：问题域、成功标准、术语表 | pm-aligner, context-builder | current_phase = align |
-| **pm-researcher** | Research 阶段：竞品、技术调研、URL 收集 | pm-researcher, web-search | current_phase = research |
-| **pm-analyst** | Analysis 阶段：方案对比、C4 架构 | pm-analyst, c4-modeler | current_phase = analysis |
-| **pm-spec-writer** | Spec 阶段：PRD、用户故事、OpenSpec | pm-spec-writer, openspec | current_phase = spec |
-| **pm-builder** | MVP 阶段：代码实现、测试、inner loop | pm-builder, pytest-runner | current_phase = mvp |
-| **pm-shipper** | Ship 阶段：部署、RUNBOOK、UI 验收 | pm-shipper, deploy-helper | current_phase = ship |
-| **pm-operator** | Operate 阶段：监控、告警、健康检查 | pm-operator, health-monitor | current_phase = operate |
-| **pm-grower** | Grow 阶段：功能扩展、用户反馈 | pm-grower, feedback-analyzer | current_phase = grow |
-| **pm-retrospector** | Retro 阶段：反思、evolution、skill_patch | pm-retrospector, skill-patcher | current_phase = retro |
+| Profile | 职责 | 阶段 | 触发条件 |
+|---------|------|------|----------|
+| **pm-orchestrator** | 父任务汇总、路由（无 terminal） | triage 根 | gateway 已代跑 decompose |
+| **pm-aligner** | Align：问题域、成功标准、术语表 | align | assignee = pm-aligner |
+| **pm-researcher** | Research：竞品、技术调研 | research | assignee = pm-researcher |
+| **pm-analyst** | Analysis：方案对比、C4 架构 | analysis | assignee = pm-analyst |
+| **pm-planner** | Spec：PRD、原型、OpenSpec | spec | assignee = pm-planner |
+| **pm-builder** | MVP 内循环：Plan + iter1-3 + Retro | mvp-plan / mvp-iter* / retro | assignee = pm-builder |
+| **pm-shipper** | Ship：部署、RUNBOOK、UI 验收 | ship | assignee = pm-shipper |
+| **pm-operator** | Operate：监控、告警、回滚 | operate | assignee = pm-operator |
+| **pm-growth** | Grow：增长、GTM | grow | assignee = pm-growth |
 
-### 2.1 Profile 切换协议
+> v6 文档旧称 `pm-spec-writer` / `pm-grower` / `pm-retrospector` 已废弃；Hermes 使用上表 9 个 `pm-*` profile。
+
+### 2.1 Gateway 代跑（orchestrator 无 terminal）
+
+以下确定性操作由 **gateway / pm_pipeline** 子进程执行，worker **不要**重复：
+
+| 操作 | 脚本 | 调用方 |
+|------|------|--------|
+| 分解 triage | `decompose-pm-pipeline.py --task-id` | `pm_pipeline.run_pm_decompose` |
+| harness 初始化 | `setup_harness_rules` inside decompose | 同上 |
+| goals / PROGRESS | `progress-tracker.py init` inside decompose | 同上 |
+| GitHub repo | `publish_repo.py` inside decompose | 同上 |
+
+`pm-orchestrator` 仅做父任务汇总与子任务 done 检查；阶段 worker 跑 `stage-complete.py`。
+
+### 2.2 Profile 切换协议
 
 ```python
 # orchestrator 的 phase_transition 逻辑

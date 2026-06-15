@@ -1,0 +1,7 @@
+# Stage: spec
+stage: spec
+goals:
+  - id: Spe1
+    description: 'spec stage artifacts exist'
+    type: file_exists
+    target: 'TODO'

@@ -1,0 +1,15 @@
+# Harness Rules v6.2
+version: '6.2.0'
+project:
+  slug: 'test-project'
+  tech_stack: node
+  language: zh-CN
+runtime:
+  test_cmd: 'npm test'
+  build_cmd: 'npm run build'
+  health_url: ''
+  workdir: '.'
+human_checkpoints:
+  - ship
+inner_loop:
+  max_iterations: 3

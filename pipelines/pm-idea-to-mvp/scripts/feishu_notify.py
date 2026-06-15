@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# Do not edit logic here — SSOT is scripts/feishu_notify.py
-"""Delegate to repo-root feishu_notify.py."""
+"""Feishu notify — delegate to skills/scripts/feishu_notify.py (SSOT)."""
 import runpy
 from pathlib import Path
 

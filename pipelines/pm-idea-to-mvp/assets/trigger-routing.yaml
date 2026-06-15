@@ -1,0 +1,90 @@
+# pm-idea-to-mvp Hermes trigger routing — single source of truth (v6.1.0)
+# Consumed by hermes_cli/pm_pipeline.py
+
+version: "6.1.0"
+
+markers:
+  - pm-idea-to-mvp
+  - pm idea to mvp
+  - 想法到mvp
+  - 想法到 mvp
+  - 想法到产品
+  - 想法到产品mvp
+  - 想法到产品 mvp
+  - 产品想法
+  - 超级开发者流水线
+  - idea-to-mvp
+  - idea to mvp
+
+regexes:
+  - pattern: '按\s*pm[-\s]?idea'
+    flags: i
+  - pattern: 'projects/pm-[\w-]+'
+    flags: i
+  - pattern: '想法到\s*产品'
+    flags: i
+  - pattern: '使用.{0,24}想法到.{0,16}产品'
+    flags: i
+  - pattern: '使用.{0,24}想法到.{0,12}mvp'
+    flags: i
+
+goal_prefixes:
+  - "产品想法"
+  - "产品想法："
+  - "产品想法:"
+  - "idea:"
+  - "idea："
+
+resume_patterns:
+  - pattern: '继续\s*pm[-\s]?([\w-]+)'
+    flags: i
+  - pattern: 'resume\s*pm[-\s]?([\w-]+)'
+    flags: i
+  - pattern: '继续(?:优化|部署|修复|使用|跑|执行)'
+    flags: i
+  - pattern: '继续.*(?:当前|这个|已有).*(?:工程|项目|流水线|技能)'
+    flags: i
+
+scenario_keywords:
+  brownfield:
+    - 优化
+    - 重构
+    - 棕地
+    - brownfield
+    - 存量
+    - 已有项目
+    - 继续优化
+    - 产品知识库
+    - 赛博取名
+  optimize:
+    - 部署
+    - 修 bug
+    - 修复
+    - 生产
+    - hotfix
+  refine:
+    - 复审
+    - refine
+    - ux
+    - ui/ux
+    - 旅程
+  greenfield:
+    - 产品想法
+    - 新产品
+    - 从零
+    - greenfield
+
+slug_keywords:
+  产品知识库: product-knowledge
+  产品知识平台: product-knowledge
+  知识平台: product-knowledge
+  赛博取名: cyber-naming
+
+grill:
+  max_rounds: 2
+  skip_if_brief_enriched: true
+  questions:
+    - id: success_metric
+      prompt: "【Grill 1/2】这个产品/优化的**成功标准**是什么？怎样算做完？（1-3 句）"
+    - id: non_goals
+      prompt: "【Grill 2/2】本次**明确不做**的范围是什么？（非目标、边界、约束）"

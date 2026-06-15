@@ -1,0 +1,7 @@
+# Stage: retro
+stage: retro
+goals:
+  - id: Ret1
+    description: 'retro stage artifacts exist'
+    type: file_exists
+    target: 'TODO'

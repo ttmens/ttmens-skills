@@ -1,0 +1,11 @@
+{
+  "stage": "research",
+  "description": "L1 rubric — research depth",
+  "checks": [
+    {"id": "has_sources", "file": "01-research.md", "min_urls": 5, "message": "Need ≥5 source URLs"},
+    {"id": "competitor_table", "file": "01-research.md", "min_table_rows": 3, "message": "Competitor table needs ≥3 data rows"},
+    {"id": "confidence_tags", "file": "01-research.md", "any_of": ["confidence", "置信", "high", "medium", "low"], "message": "Tag confidence on claims"},
+    {"id": "context_reference", "file": "01-research.md", "any_of": ["CONTEXT", "竞品", "competitor", "用户"], "message": "Research should reference problem/context"},
+    {"id": "chinese_primary", "file": "01-research.md", "any_of": ["调研", "竞品", "用户", "市场", "痛点"], "message": "Research should be primarily Chinese"}
+  ]
+}

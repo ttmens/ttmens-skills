@@ -1,0 +1,7 @@
+# Stage: mvp
+stage: mvp
+goals:
+  - id: Mvp1
+    description: 'mvp stage artifacts exist'
+    type: file_exists
+    target: 'TODO'

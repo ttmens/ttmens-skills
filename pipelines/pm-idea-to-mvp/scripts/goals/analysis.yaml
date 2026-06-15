@@ -1,0 +1,7 @@
+# Stage: analysis
+stage: analysis
+goals:
+  - id: Ana1
+    description: 'analysis stage artifacts exist'
+    type: file_exists
+    target: 'TODO'

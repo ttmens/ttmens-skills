@@ -2,6 +2,28 @@
 
 All notable changes to pm-idea-to-mvp pipeline will be documented in this file.
 
+## [6.1.0] - 2026-06-06 — Hermes UX
+
+### Overview
+
+Feishu/Kanban integration fixes: trigger routing SSOT, grill preflight, brownfield/resume, observability.
+
+### Added
+
+- `assets/trigger-routing.yaml`, `references/hermes-integration.md`
+- `scripts/feishu-grill-preflight.py`, `references/feishu-grill-protocol.md`
+- `scripts/kanban-status-report.py`
+- `decompose-pm-pipeline.py --scenario brownfield|optimize|refine`
+- Stage cards: `feishu-grill.md`, `brownfield.md`
+- `skills/scripts/feishu_notify.py` (webhook + checkpoint messages)
+
+### Changed
+
+- `pm_pipeline.py` v6.1.0: `handle_pm_gateway_message`, resume, scenario detection
+- `gateway/run.py`: route audit logs
+- `stage-complete.py`: align/spec/ship checkpoints + blocked Feishu notify
+- pm-aligner SOUL: Feishu grill vs Kanban autonomous modes
+
 ## [6.2.1] - 2026-06-13
 
 ### 🎯 Overview

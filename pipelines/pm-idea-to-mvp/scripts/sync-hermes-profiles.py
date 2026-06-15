@@ -52,7 +52,7 @@ def report_hub_noise() -> dict:
 
 PROFILE_CARDS: dict[str, list[str]] = {
     "pm-orchestrator": ["orchestrator.md"],
-    "pm-aligner": ["align.md"],
+    "pm-aligner": ["align.md", "feishu-grill.md", "brownfield.md"],
     "pm-researcher": ["research.md"],
     "pm-analyst": ["analysis.md"],
     "pm-planner": ["spec.md"],
@@ -131,6 +131,8 @@ def audit_scripts() -> list[str]:
         "validate-gates.py",
         "goal-check.py",
         "progress-tracker.py",
+        "kanban-status-report.py",
+        "feishu-grill-preflight.py",
     ]
     for name in required:
         if not (SCRIPTS_DIR / name).exists():
@@ -149,8 +151,8 @@ def audit_versions() -> list[str]:
     uniq = {v for v in versions.values() if v}
     if len(uniq) > 1:
         issues.append(f"VERSION MISMATCH: {versions}")
-    if decompose_v != "6.0.0":
-        issues.append(f"decompose expected 6.0.0, got {decompose_v}")
+    if decompose_v != "6.1.0":
+        issues.append(f"decompose expected 6.1.0, got {decompose_v}")
     return issues
 
 
@@ -165,7 +167,7 @@ def build_skill_md(profile: str, cards: list[str]) -> str:
     return f"""---
 name: pm-idea-to-mvp
 description: "Hermes stage slice v6.0 for {profile} ({card_names})"
-version: 6.0.0
+version: 6.1.0
 author: ttmens
 platforms: [cli, hermes, linux, macos, windows]
 metadata:
@@ -174,7 +176,7 @@ metadata:
     profile: {profile}
 ---
 
-# pm-idea-to-mvp — {profile} (v6.0 stage card)
+# pm-idea-to-mvp — {profile} (v6.1 stage card)
 
 > Thin worker slice. Full design doc: canonical `SKILL.md` in skills tree.
 > Runtime: `references/runtime-kanban-v6.0.md`

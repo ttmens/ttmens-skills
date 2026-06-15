@@ -20,11 +20,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 
-PIPELINE_VERSION = "7.0.0"
+PIPELINE_VERSION = "6.1.0"
 
-# Default: only ship requires human checkpoint
-# align/spec become auto if harness-rules.yaml overrides this
-DEFAULT_HUMAN_CHECKPOINT_STAGES = ["ship"]
+# Default human checkpoints (overridable via harness-rules.yaml)
+DEFAULT_HUMAN_CHECKPOINT_STAGES = ["align", "spec", "ship"]
 
 # Stages that MANDATE runtime verification (cannot be skipped)
 # Based on pm-knowledge-platform post-mortem: tasks were marked complete without
@@ -238,20 +237,34 @@ def run_script(script_name: str, args: list[str], project_root: Path, timeout: i
         }
 
 
-def run_feishu_notify(stage: str, project_root: Path, passed: bool, task_id: str = "") -> dict:
+def run_feishu_notify(
+    stage: str,
+    project_root: Path,
+    passed: bool,
+    task_id: str = "",
+    *,
+    needs_checkpoint: bool = False,
+) -> dict:
     """Send Feishu notification via feishu_notify.py if available."""
     scripts_dir = Path(__file__).resolve().parent
     skills_root = resolve_skills_root()
 
-    # Try multiple locations for feishu_notify
     notify_scripts = [
         scripts_dir / "feishu_notify.py",
         skills_root / "scripts" / "feishu_notify.py",
     ]
 
+    if needs_checkpoint and passed:
+        status_text = "CHECKPOINT ⏸ — awaiting unblock"
+    else:
+        status_text = "PASS ✅" if passed else "FAIL ❌"
+
+    extra = ""
+    if needs_checkpoint and passed and task_id:
+        extra = f"确认产物后: hermes kanban unblock {task_id}"
+
     for notify_script in notify_scripts:
         if notify_script.exists():
-            status_text = "PASS ✅" if passed else "FAIL ❌"
             args = [
                 "--stage", stage,
                 "--status", status_text,
@@ -259,6 +272,8 @@ def run_feishu_notify(stage: str, project_root: Path, passed: bool, task_id: str
             ]
             if task_id:
                 args.extend(["--task-id", task_id])
+            if extra:
+                args.extend(["--extra", extra])
 
             return run_script("feishu_notify.py", args, project_root, timeout=30)
 
@@ -508,7 +523,10 @@ def main():
 
     # Step 6: Feishu notification
     if not args.skip_notify:
-        notify_result = run_feishu_notify(stage, project_root, all_checks_passed, args.task_id)
+        notify_result = run_feishu_notify(
+            stage, project_root, all_checks_passed, args.task_id,
+            needs_checkpoint=needs_checkpoint,
+        )
         report["steps"].append({"step": "feishu_notify", **notify_result})
 
     # Step 7: Git push (only if checks passed or forced)

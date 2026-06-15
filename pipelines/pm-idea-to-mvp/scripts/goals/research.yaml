@@ -1,0 +1,7 @@
+# Stage: research
+stage: research
+goals:
+  - id: Res1
+    description: 'research stage artifacts exist'
+    type: file_exists
+    target: 'TODO'

@@ -1,0 +1,7 @@
+# Stage: align
+stage: align
+goals:
+  - id: Ali1
+    description: 'align stage artifacts exist'
+    type: file_exists
+    target: 'TODO'
