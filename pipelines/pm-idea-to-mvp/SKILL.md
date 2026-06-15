@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v6.2: Loop Engineering + enforced governance. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency."
-version: 6.2.0
+description: "Super-dev pipeline v7.0: Loop Engineering + enforced governance + agent behavior code. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency, anti-rationalization tables, 5-axis code review."
+version: 7.0.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -32,9 +32,9 @@ metadata:
       - requesting-code-review
 ---
 
-# Super Developer Pipeline v6.2 (pm-idea-to-mvp)
+# Super Developer Pipeline v7.0 (pm-idea-to-mvp)
 
-**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v6.2 引入 **Enforced Governance**：基于 pm-knowledge-platform 实战复盘，强制 runtime 验证、辩论门禁、跨文档一致性检查，杜绝"纸面完成"。
+**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v7.0 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）
@@ -143,6 +143,21 @@ MANDATORY_DOCS_HYGIENE_STAGES = ["align", "analysis", "spec", "mvp", "ship"]  # 
 ```
 
 可选：`docs/workflow_state.yaml`（来自 greenfield-light profile）与 `gates.json` 并存，用于非 Kanban 断点续跑。
+
+### v7.0 变化：Agent 行为准则融合（agent-skills 驱动）
+
+融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)（56K+ stars）的核心模式，解决 v6.2 遗留的"走得好不好"问题：
+
+| 优化项 | 问题来源 | 解决方案 | 实现位置 |
+|--------|---------|---------|---------|
+| **6 条不可协商行为准则** | agent 跳过假设/验证/范围纪律 | 共享行为约束文件，所有 profile 引用 | `references/agent-behavior-code.md` |
+| **每阶段反合理化表格** | agent 合理化跳过关键步骤 | 每个 stage card 新增"常见借口→反驳"表格 | `references/hermes-stage-cards/*.md` |
+| **每阶段失败模式清单** | 同类错误反复出现 | 结构化失败模式 + 后果 + 预防 | `references/hermes-stage-cards/*.md` |
+| **5 轴 Code Review** | review 缺乏结构化维度 | 正确性/可读性/架构/安全/性能 + 严重性标签 | `requesting-code-review` v3.0 |
+| **变更规模约束** | 单次变更过大无法审查 | ~100行Good/~300行Acceptable/~1000行拆分 | `agent-behavior-code.md` + `requesting-code-review` |
+| **路由器决策树** | orchestrator 只做分发不做路由 | 任务特征→技能推荐决策树 | `hermes-stage-cards/orchestrator.md` |
+
+**与 v6.2 的关系**：v7.0 不替代 v6.2 的 Enforced Governance（门禁/runtime 验证），而是在其上层叠加行为标准。v6.2 解决"走不走"，v7.0 解决"走得好不好"。
 
 After each stage (Hermes): `validate-gates.py --runtime --write` → `goal-check.py --stage <current>` → `pm-git-publish` when available.
 
@@ -791,6 +806,22 @@ v6 升级：
 - 每完成一个文件的升级后，用 `terminal(grep -c "keyToken" file)` 做批量验证
 - 最终必须运行项目自身的构建/生成命令（如 `python generator.py`）确认模板语法无误，再跑测试
 
+**Refine 前端重构后必须审计所有 API 调用路径**：UI 重构（换设计系统、改配色、重组布局）时，很容易只关注视觉层而忽略功能层的 API 调用。常见陷阱：
+- **SSE/流式请求使用原生 `fetch()` 而非 axios**：`fetch()` 不经过 axios 拦截器，不会自动附加 `Authorization` header。重构后这些调用会 401。
+- **审计方法**：`grep -rn "fetch(" packages/web/src/` 找出所有原生 fetch 调用，逐一确认是否携带 auth token
+- **修复模式**：在 fetch headers 中显式添加 `...(token ? { 'Authorization': \`Bearer ${token}\` } : {})`
+- **更深层检查**：重构后必须端到端测试每个页面的核心功能（不只是视觉），特别是：流式聊天、文件上传、WebSocket 连接等不走标准 axios 管线的功能
+
+**Refine 系统性 UI 重构模式**（多页面 <500 行场景）：当重构目标是整个应用的交互页面（如 8 个 Next.js 页面），且每个文件 <500 行时，采用以下高效模式：
+1. **全量阅读**：先用 `search_files` + `read_file` 读取所有页面代码，理解当前状态
+2. **设计系统先行**：先写 tailwind.config + globals.css（设计 token），这是一切页面的基础
+3. **共享组件次之**：重写 sidebar/layout 等影响所有页面的组件
+4. **批量写页面**：用 `execute_code` 包裹多个 `write_file` 调用，一次性重写所有页面（比逐个 patch 快 5x）
+5. **统一构建验证**：所有页面写完后 `pnpm build`，一次性修复 TypeScript 跨文件错误
+6. **部署**：tar 打包上传 → 服务器 build → PM2 restart
+
+关键洞察：对于中等规模文件（200-500 行），`write_file` 比连续 `patch` 更可靠且更快。TypeScript 严格模式会捕获跨文件类型错误（如 union type 比较），统一构建比逐文件验证更高效。
+
 **dispatch 延迟**：`hermes kanban dispatch` 可能返回 `Deferred (<profile> at per-profile cap, 1 running): <task_id>`。这是因为该 profile 已有一个任务在跑（并发上限）。这是正常行为 — dispatcher 会在当前任务完成后自动拾取 deferred 任务，无需手动干预。
 
 ## Platform notes
@@ -798,6 +829,8 @@ v6 升级：
 ### Pipeline Self-Audit
 
 When resuming work on an existing pm-{slug} project or diagnosing pipeline execution quality, use the self-audit methodology: `references/pipeline-self-audit.md`. It provides a 3-layer audit (artifact inventory → automated validation → quality assessment) with ready-to-run diagnostic commands and common findings table.
+
+**Known pitfalls from past audits**: See `references/self-audit-pitfalls.md` for Python gotchas (subprocess timeout ordering, read_file corruption, regex quote nesting), version drift patterns, hardcoded path detection, and quick audit commands.
 
 ### Cursor / OpenCode
 
@@ -836,6 +869,7 @@ When resuming work on an existing pm-{slug} project or diagnosing pipeline execu
 
 | Version | Date | Key changes |
 |---------|------|-------------|
+| 7.0.0 | 2026-06-15 | **Agent 行为准则融合**：融合 addyosmani/agent-skills 核心模式 — 6 条不可协商行为准则（`agent-behavior-code.md`）、每阶段反合理化表格 + 失败模式清单（stage cards v7.0）、5 轴 Code Review + 严重性标签（`requesting-code-review` v3.0）、变更规模约束、路由器决策树（orchestrator）。v6.2 解决"走不走"，v7.0 解决"走得好不好"。 |
 | 6.2.0 | 2026-06-13 | **Enforced Governance**：强制 runtime 验证（mvp/ship 自动 --runtime/--goal）、G1/G2 辩论门禁（debates/ 目录检查）、跨文档一致性（tech-stack-conflict 检测）、内循环前置检查（goals/harness prerequisites）、RUNBOOK 必需章节（部署/回滚/监控）、Retro 量化要求、Operate 产物强制、最低行数全面提升。基于 pm-knowledge-platform 实战复盘。 |
 | 6.1.0 | 2026-06-12 | Production-tested: knowledge graph visualization, RAG fallback, tag management |
 | 6.0.0 | 2026-06-12 | **Loop Engineering 集成**：内循环 MVP、runtime verification、goal primitives、on-the-loop human collaboration、fine-grained progress tracking、self-improving harness |
