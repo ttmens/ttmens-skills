@@ -510,6 +510,9 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/progress-tracker.py --proj
 # 阶段完成（含目标验证）
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage <stage> --project-root {PROJECT_ROOT} --verify-goals
 
+# v7.0: 行为准则检查（自动执行，也可手动触发）
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage <stage> --project-root {PROJECT_ROOT} --check-behavior
+
 # 全流水线验证（v6.2 新增）
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/validate-gates.py --all-stages --run {PROJECT_ROOT} --write
 
