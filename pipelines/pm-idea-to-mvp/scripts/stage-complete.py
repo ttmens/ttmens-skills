@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 
-PIPELINE_VERSION = "6.2.0"
+PIPELINE_VERSION = "7.0.0"
 
 # Default: only ship requires human checkpoint
 # align/spec become auto if harness-rules.yaml overrides this
@@ -34,6 +34,78 @@ MANDATORY_GOAL_STAGES = ["mvp", "ship", "retro"]
 
 # Stages that mandate docs-hygiene check before completion
 MANDATORY_DOCS_HYGIENE_STAGES = ["align", "analysis", "spec", "mvp", "ship"]
+
+# v7.0: Stages that mandate behavior check (anti-rationalization + failure modes)
+MANDATORY_BEHAVIOR_STAGES = ["align", "research", "analysis", "spec", "mvp", "ship", "operate", "grow", "retro"]
+
+
+def check_behavior(stage: str, project_root: Path, skills_root: Path) -> dict:
+    """
+    v7.0: Check stage card for anti-rationalization table and failure modes.
+    Returns dict with status, issues, and details.
+    """
+    stage_card_dir = skills_root / "pipelines" / "pm-idea-to-mvp" / "references" / "hermes-stage-cards"
+    
+    # Map stage names to file names
+    stage_file_map = {
+        "mvp": "mvp-iter.md",  # mvp uses mvp-iter card
+        "mvp-plan": "mvp-plan.md",
+    }
+    card_file = stage_file_map.get(stage, f"{stage}.md")
+    card_path = stage_card_dir / card_file
+    
+    result = {
+        "status": "ok",
+        "issues": [],
+        "checks": {
+            "anti_rationalization": False,
+            "failure_modes": False,
+            "behavior_code_ref": False,
+            "version_tag": False,
+        }
+    }
+    
+    if not card_path.exists():
+        result["status"] = "skip"
+        result["detail"] = f"Stage card {card_file} not found"
+        return result
+    
+    try:
+        content = card_path.read_text(encoding="utf-8")
+    except Exception as e:
+        result["status"] = "error"
+        result["detail"] = f"Failed to read stage card: {e}"
+        return result
+    
+    # Check 1: Anti-rationalization table
+    if "反合理化" in content or "Rationalization" in content:
+        result["checks"]["anti_rationalization"] = True
+    else:
+        result["issues"].append("Missing anti-rationalization table (反合理化表格)")
+    
+    # Check 2: Failure modes section
+    if "失败模式" in content or "Failure Mode" in content:
+        result["checks"]["failure_modes"] = True
+    else:
+        result["issues"].append("Missing failure modes section (失败模式)")
+    
+    # Check 3: Reference to agent-behavior-code.md
+    if "agent-behavior-code" in content:
+        result["checks"]["behavior_code_ref"] = True
+    else:
+        result["issues"].append("Missing reference to agent-behavior-code.md")
+    
+    # Check 4: Version tag (v7.0)
+    if "v7.0" in content:
+        result["checks"]["version_tag"] = True
+    else:
+        result["issues"].append("Missing v7.0 version tag")
+    
+    # Determine overall status
+    if result["issues"]:
+        result["status"] = "warning"  # Don't block, just warn
+    
+    return result
 
 
 def load_harness_rules(project_root: Path) -> dict:
@@ -319,6 +391,10 @@ def main():
         "--progress-task", type=int,
         help="Update this progress task ID to 'done' before validation"
     )
+    parser.add_argument(
+        "--check-behavior", action="store_true",
+        help="v7.0: Check stage card for anti-rationalization table and failure modes"
+    )
 
     args = parser.parse_args()
     project_root = Path(args.project_root).resolve()
@@ -389,6 +465,14 @@ def main():
             ) if isinstance(hygiene_data, dict) else False
             if has_errors and not args.force:
                 gates_passed = False
+
+    # Step 2c: v7.0 — Behavior check (anti-rationalization + failure modes)
+    if args.check_behavior or stage in MANDATORY_BEHAVIOR_STAGES:
+        behavior_result = check_behavior(stage, project_root, resolve_skills_root())
+        report["steps"].append({"step": "behavior_check", **behavior_result})
+        # Behavior check is advisory (warning), not blocking
+        if behavior_result.get("status") == "error" and not args.force:
+            gates_passed = False
 
     # Step 3: Eval stage (quality scoring)
     eval_args = ["--stage", stage, "--project-root", str(project_root)]
