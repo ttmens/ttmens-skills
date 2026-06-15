@@ -22,13 +22,13 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
-from pipeline_paths import resolve_pipeline_root  # noqa: E402
+from pipeline_paths import resolve_pipeline_root, resolve_hermes_home, resolve_projects_root  # noqa: E402
 
-PIPELINE_VERSION = "6.1.0"
-PROJECTS_ROOT = Path(r"D:/workspace/projects")
+PIPELINE_VERSION = "7.1.0"
+PROJECTS_ROOT = resolve_projects_root()
 PIPELINE_ROOT = resolve_pipeline_root()
 
-HERMES_HOME = Path(os.environ.get("HERMES_HOME", r"D:\hermes-data"))
+HERMES_HOME = resolve_hermes_home()
 HERMES_AGENT = HERMES_HOME / "hermes-agent"
 if str(HERMES_AGENT) not in sys.path:
     sys.path.insert(0, str(HERMES_AGENT))
@@ -189,7 +189,7 @@ def ensure_brief(project_root: Path, title: str, body: str) -> dict:
 
 
 def publish_project_repo(proj: Path, slug: str, title: str) -> str | None:
-    script = PIPELINE_ROOT / "scripts" / "publish_repo.py"
+    script = PIPELINE_ROOT / "scripts" / "bootstrap_github_repo.py"
     if not script.exists():
         return None
     proc = subprocess.run(

@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "7.1.0"
 
 
 def main() -> int:
@@ -41,7 +41,7 @@ def main() -> int:
     ua = skills_root / "scripts" / "ui_acceptance.py"
     if ua.exists() and wd.exists():
         r2 = subprocess.run(
-            [sys.executable, str(ua), "--project-root", str(root), "--mode", "quick"],
+            [sys.executable, str(ua), "--project-root", str(root), "--quick"],
             capture_output=True,
             text=True,
             timeout=120,

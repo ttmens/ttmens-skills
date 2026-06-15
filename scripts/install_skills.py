@@ -40,9 +40,33 @@ PROFILE_PATHS = {
         "profiles/hermes-kanban/pm-growth",
     ],
     "debate": [],
+    "ui-pro-max-full": ["profiles/ui-pro-max-full"],
+    "playwright-e2e": ["profiles/playwright-e2e"],
+    "ux-principles": ["profiles/ux-principles"],
+}
+
+# Relative dest under installed skill dir → vendor source (requires submodule init)
+VENDOR_PROFILE_BUNDLES: dict[str, list[tuple[str, Path]]] = {
+    "ui-pro-max-full": [
+        ("upstream", ROOT / "vendor/ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max"),
+    ],
+    "playwright-e2e": [
+        ("upstream", ROOT / "vendor/e2e-agent-skills/skills/playwright-automation-expert"),
+    ],
+    "ux-principles": [
+        ("upstream/uxui-evaluator", ROOT / "vendor/uxuiprinciples-agent-skills/uxui-evaluator"),
+        ("upstream/interface-auditor", ROOT / "vendor/uxuiprinciples-agent-skills/interface-auditor"),
+    ],
+}
+
+PROFILE_SUBMODULES: dict[str, str] = {
+    "ui-pro-max-full": "vendor/ui-ux-pro-max-skill",
+    "playwright-e2e": "vendor/e2e-agent-skills",
+    "ux-principles": "vendor/uxuiprinciples-agent-skills",
 }
 
 STAGE_SKILLS_PATH = ROOT / "pipelines" / "pm-idea-to-mvp" / "stage-skills.yaml"
+SCENARIOS_PATH = ROOT / "pipelines" / "pm-idea-to-mvp" / "assets" / "scenarios.yaml"
 DEBATE_MANIFEST_PATH = ROOT / "borrowed" / "manifest-debate.yaml"
 
 
@@ -162,14 +186,33 @@ def install_borrowed(manifest: dict, dest_root: Path, platforms_filter: list[str
     return count
 
 
-def install_skill_list(skills: list[tuple[str, Path]], dest_root: Path) -> int:
+def bundle_vendor_into_skill(profile: str, dest_skill: Path, mode: str = "copy") -> None:
+    """Copy upstream vendor skill trees into profile skill directory."""
+    for rel_dest, src in VENDOR_PROFILE_BUNDLES.get(profile, []):
+        if not src.exists():
+            sub = PROFILE_SUBMODULES.get(profile, "?")
+            print(f"  skip vendor bundle (init submodule): {sub} -> {rel_dest}")
+            continue
+        target = dest_skill / rel_dest
+        copy_skill_tree(src, target, mode)
+
+
+def install_skill_list(
+    skills: list[tuple[str, Path]],
+    dest_root: Path,
+    *,
+    profiles: list[str] | None = None,
+) -> int:
     count = 0
+    profile_set = set(profiles or [])
     for skill_id, src in skills:
         dest = dest_root / skill_id
         if not src.exists():
             print(f"  skip missing: {src}")
             continue
         copy_skill_tree(src, dest, "copy")
+        if skill_id in profile_set:
+            bundle_vendor_into_skill(skill_id, dest, "copy")
         count += 1
     return count
 
@@ -239,7 +282,8 @@ def run_install(
         if do_borrowed and manifest:
             b = install_borrowed(manifest, dest, [platform])
         if profile_skills:
-            pr = install_skill_list(profile_skills, dest)
+            profile_ids = {sid for sid, _ in profile_skills}
+            pr = install_skill_list(profile_skills, dest, profiles=list(profile_ids))
         if "debate" in profiles and DEBATE_MANIFEST_PATH.exists():
             debate_manifest = load_yaml(DEBATE_MANIFEST_PATH)
             bd = install_borrowed(debate_manifest, dest, [platform])
@@ -288,6 +332,8 @@ def main() -> int:
 
     if args.scenario == "brownfield" and "debate" not in args.profile:
         args.profile.append("debate")
+    if args.scenario == "refine" and "deep-research" not in args.profile:
+        args.profile.append("deep-research")
     if args.stage == "spec" and "debate" not in args.profile:
         args.profile.append("debate")
 
@@ -322,6 +368,12 @@ def main() -> int:
         platform_pack=args.platform,
         lite_stage=args.stage if args.lite else None,
     )
+    if not args.dry_run:
+        detect = ROOT / "scripts" / "detect_agent_env.py"
+        if detect.exists():
+            print("\n=== Post-install ===")
+            print(f"  python {detect} --json")
+            print(f"  python {ROOT / 'scripts' / 'validate_skills.py'}")
     return 0
 
 

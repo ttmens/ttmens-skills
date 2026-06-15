@@ -489,6 +489,29 @@ def main():
         if behavior_result.get("status") == "error" and not args.force:
             gates_passed = False
 
+    # Step 2d: v7.1 — Lighthouse (ship + runtime, advisory)
+    if stage == "ship" and (args.runtime or stage in MANDATORY_RUNTIME_STAGES):
+        skills_root = resolve_skills_root()
+        lh = skills_root / "scripts" / "lighthouse_check.py"
+        if lh.exists():
+            lh_result = subprocess.run(
+                [sys.executable, str(lh), "--project-root", str(project_root), "--json"],
+                capture_output=True,
+                text=True,
+                timeout=200,
+                cwd=str(project_root),
+            )
+            try:
+                lh_data = json.loads(lh_result.stdout) if lh_result.stdout.strip() else {}
+            except json.JSONDecodeError:
+                lh_data = {"status": "error", "raw": lh_result.stdout[:200]}
+            report["steps"].append({
+                "step": "lighthouse_check",
+                "status": "ok" if lh_result.returncode == 0 else "warning",
+                "exit_code": lh_result.returncode,
+                "result": lh_data,
+            })
+
     # Step 3: Eval stage (quality scoring)
     eval_args = ["--stage", stage, "--project-root", str(project_root)]
     if args.runtime:

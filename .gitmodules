@@ -4,3 +4,12 @@
 [submodule "vendor/knowledge-work-plugins"]
 	path = vendor/knowledge-work-plugins
 	url = https://github.com/anthropics/knowledge-work-plugins.git
+[submodule "vendor/ui-ux-pro-max-skill"]
+	path = vendor/ui-ux-pro-max-skill
+	url = https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git
+[submodule "vendor/e2e-agent-skills"]
+	path = vendor/e2e-agent-skills
+	url = https://github.com/jmr85/e2e-agent-skills.git
+[submodule "vendor/uxuiprinciples-agent-skills"]
+	path = vendor/uxuiprinciples-agent-skills
+	url = https://github.com/uxuiprinciples/agent-skills.git

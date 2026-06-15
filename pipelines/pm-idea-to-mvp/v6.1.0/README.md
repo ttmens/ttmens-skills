@@ -1,3 +1,6 @@
+> **ARCHIVE — DO NOT INSTALL.** This directory is a frozen snapshot for historical reference only.
+> **Live SSOT:** `pipelines/pm-idea-to-mvp/` (v7.1.0). Agents and Hermes sync must use the live path.
+
 # pm-idea-to-mvp v6.1.0
 
 **Production-tested version** with real-world deployment experience.

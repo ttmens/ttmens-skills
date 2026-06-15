@@ -78,3 +78,19 @@ python {SKILLS_ROOT}/scripts/check_docs_ssot.py --project-root {PROJECT_ROOT} --
 
 - **Pipeline greenfield**: primary SSOT is `04-mvp/DESIGN.md`
 - **Site/docs projects**: may use `docs/DESIGN.md` — pick one canonical path per repo and note it in DESIGN.md header
+
+## Upgrade path (full design intelligence)
+
+When generic tokens are insufficient (industry palette, multi-stack CSV search, 161 product types):
+
+```bash
+./install.sh --profile ui-pro-max-full --platform cursor
+```
+
+Then use **`ui-pro-max-full`** profile skill and run upstream search:
+
+```bash
+python {SKILLS_ROOT}/vendor/ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max/scripts/search.py "<product>" --domain product --design-system
+```
+
+Core **`ui-ux-pro-max`** (this skill) remains the default for standard pm-{slug} flows — profile does not replace this skill ID.

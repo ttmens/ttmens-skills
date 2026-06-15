@@ -43,11 +43,11 @@ For each Task in plan:
 # 后端
 python -m pytest tests/ -q --tb=short
 
-# 全链路（stock-copilot）
-python scripts/self_check.py --quick
+# 全链路
+python {SKILLS_ROOT}/scripts/self_check.py --project-root {PROJECT_ROOT}
 
 # UI 改动
-python scripts/ui_acceptance.py --quick
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --quick --project-root {PROJECT_ROOT} --profile auto
 ```
 
 ## UI change protocol

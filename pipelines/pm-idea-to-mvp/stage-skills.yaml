@@ -1,6 +1,6 @@
-# Machine-readable stage → skill mapping (v6.1 SSOT).
+# Machine-readable stage → skill mapping (v7.1 SSOT).
 # validate_skills.py cross-checks this against marketplace.yaml + borrowed/manifest.yaml
-version: "6.1.0"
+version: "7.1.0"
 
 stages:
   brief:

@@ -37,7 +37,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
 Bootstrap repo if needed:
 
 ```bash
-python {SKILLS_ROOT}/scripts/publish_repo.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/bootstrap_github_repo.py \
   --dir {PROJECT_ROOT} --slug {slug} --description "PM pipeline: {title}"
 ```
 

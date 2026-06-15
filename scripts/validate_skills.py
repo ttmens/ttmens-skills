@@ -17,20 +17,34 @@ ROOT = Path(__file__).resolve().parent.parent
 ERRORS: list[str] = []
 
 PIPELINE_SCRIPTS = [
-    "validate-gates.py",
-    "goal-check.py",
-    "eval-stage.py",
-    "stage-complete.py",
-    "progress-tracker.py",
+    "bootstrap_github_repo.py",
+    "build-index.py",
+    "build-run-report.py",
+    "consume-feedback.py",
     "decompose-pm-pipeline.py",
+    "decompose-refine-pipeline.py",
+    "eval-stage.py",
+    "feishu-grill-preflight.py",
+    "goal-check.py",
     "harness-runner.py",
+    "init-project.py",
     "inner-loop-driver.py",
-    "phase-transition.py",
+    "kanban-status-report.py",
     "kanban-sync.py",
+    "merge_retro_sections.py",
+    "phase-transition.py",
+    "pipeline_paths.py",
+    "pipeline_utils.py",
+    "progress-tracker.py",
     "refine-decompose.py",
+    "stage-complete.py",
+    "sync-hermes-profiles.py",
+    "validate-gates.py",
+    "validate-profile-env.py",
 ]
 
 ROOT_SCRIPTS = [
+    "detect_agent_env.py",
     "feishu_notify.py",
     "publish_repo.py",
     "merge-retro-knowledge.py",
@@ -38,8 +52,27 @@ ROOT_SCRIPTS = [
     "deploy-verify.py",
     "check_docs_ssot.py",
     "ui_acceptance.py",
+    "lighthouse_check.py",
     "validate_skills.py",
+    "install_skills.py",
 ]
+
+VENDOR_SUBMODULES = [
+    "vendor/phuryn-pm-skills",
+    "vendor/knowledge-work-plugins",
+    "vendor/ui-ux-pro-max-skill",
+    "vendor/e2e-agent-skills",
+    "vendor/uxuiprinciples-agent-skills",
+]
+
+UI_ACCEPTANCE_GENERIC = (
+    ROOT / "pipelines" / "pm-idea-to-mvp" / "assets" / "ui-acceptance-profiles" / "generic.yaml"
+)
+
+# Pipeline scripts that may share a name with scripts/ (delegate only)
+DUPLICATE_SCRIPT_ALLOWLIST = {"feishu_notify.py"}
+
+ENTRY_DOC_VERSION = "7.1.0"
 
 LEGACY_ROOT_DIRS = [
     "skills",
@@ -57,6 +90,10 @@ SKILL_TREE_PREFIXES = ("domains", "profiles")
 
 def err(msg: str) -> None:
     ERRORS.append(msg)
+
+
+def warn(msg: str) -> None:
+    print(f"WARN: {msg}")
 
 
 def load_yaml(path: Path) -> dict:
@@ -122,6 +159,54 @@ def check_stage_skills_ssot(marketplace: dict, manifest: dict, stage_skills: dic
     missing_borrowed = borrowed_ids - core_borrowed
     if missing_borrowed:
         err(f"borrowed manifest skills not in stage-skills.yaml: {sorted(missing_borrowed)}")
+
+
+def check_no_duplicate_script_names() -> None:
+    """Root scripts/ and pipeline scripts/ must not share names (except allowlist)."""
+    root_names = {p.name for p in (ROOT / "scripts").glob("*.py")}
+    pipe_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
+    if not pipe_dir.is_dir():
+        return
+    pipe_names = {p.name for p in pipe_dir.glob("*.py")}
+    overlap = (root_names & pipe_names) - DUPLICATE_SCRIPT_ALLOWLIST
+    if overlap:
+        err(f"duplicate script names across scripts/ and pipeline scripts/: {sorted(overlap)}")
+
+
+def check_no_tracked_bytecode() -> None:
+    r = subprocess.run(
+        ["git", "ls-files", "--", "*.pyc", "**/__pycache__/**"],
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+    )
+    if r.returncode != 0:
+        return
+    for line in r.stdout.splitlines():
+        line = line.strip()
+        if line:
+            err(f"bytecode file should not be committed: {line}")
+
+
+def check_entry_doc_versions() -> None:
+    skill_md = ROOT / "pipelines" / "pm-idea-to-mvp" / "SKILL.md"
+    if not skill_md.exists():
+        return
+    text = skill_md.read_text(encoding="utf-8-sig")
+    if not text.startswith("---"):
+        return
+    fm = text.split("---", 2)[1]
+    if f"version: {ENTRY_DOC_VERSION}" not in fm and f'version: "{ENTRY_DOC_VERSION}"' not in fm:
+        err(f"SKILL.md frontmatter version should be {ENTRY_DOC_VERSION}")
+    for rel in ("AGENTS.md", "README.md", "templates/cursor/AGENTS.md"):
+        doc = ROOT / rel
+        if doc.exists() and ENTRY_DOC_VERSION not in doc.read_text(encoding="utf-8"):
+            err(f"{rel} missing pipeline version {ENTRY_DOC_VERSION}")
+
+
+def pipeline_script_names() -> list[str]:
+    pipe_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
+    return sorted(p.name for p in pipe_dir.glob("*.py") if p.is_file())
 
 
 def check_no_legacy_root_dirs() -> None:
@@ -209,6 +294,9 @@ def main() -> int:
                 "pm-builder", "pm-shipper", "pm-operator", "pm-growth",
             ]
         ],
+        "ui-pro-max-full": ["profiles/ui-pro-max-full"],
+        "playwright-e2e": ["profiles/playwright-e2e"],
+        "ux-principles": ["profiles/ux-principles"],
     }
     for profile, paths in profile_paths.items():
         if profile not in marketplace.get("profiles", {}):
@@ -219,10 +307,26 @@ def main() -> int:
     if "debate" not in marketplace.get("profiles", {}):
         err("profiles: debate missing from marketplace.yaml")
 
+    if not UI_ACCEPTANCE_GENERIC.exists():
+        err("ui-acceptance-profiles: missing generic.yaml")
+
+    for sub in VENDOR_SUBMODULES:
+        p = ROOT / sub
+        if not p.is_dir():
+            warn(f"submodule path missing: {sub} (run git submodule update --init)")
+            continue
+        has_content = any(x.name != ".git" for x in p.iterdir())
+        if not has_content:
+            warn(f"submodule not initialized: {sub} (run git submodule update --init)")
+
     scripts_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
-    for name in PIPELINE_SCRIPTS:
+    for name in pipeline_script_names():
         if not (scripts_dir / name).exists():
             err(f"pipeline script missing: {name}")
+
+    for name in PIPELINE_SCRIPTS:
+        if not (scripts_dir / name).exists():
+            err(f"required pipeline script missing: {name}")
 
     for name in ROOT_SCRIPTS:
         if not (ROOT / "scripts" / name).exists():
@@ -240,6 +344,19 @@ def main() -> int:
     check_stage_skills_ssot(marketplace, manifest, stage_skills)
     check_no_legacy_root_dirs()
     check_no_duplicate_ssot_scripts()
+    check_no_duplicate_script_names()
+    check_no_tracked_bytecode()
+    check_entry_doc_versions()
+
+    r2 = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "detect_agent_env.py"), "--json"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=str(ROOT),
+    )
+    if r2.returncode not in (0, 1):
+        err("detect_agent_env.py --json failed unexpectedly")
 
     native_count = len(marketplace.get("skills", {}).get("native", []))
     borrowed_count = len(manifest.get("skills", []))

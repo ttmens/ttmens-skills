@@ -1,0 +1,38 @@
+id: generic
+description: "Default pm-{slug} UI acceptance — driven by DESIGN.md and user journey"
+checks:
+  design_tokens:
+    design_md: "04-mvp/DESIGN.md"
+    css_globs:
+      - "04-mvp/**/*.css"
+      - "docs/**/*.css"
+    min_palette_keys: ["primary", "surface", "text"]
+  journey:
+    file: "03b-user-journey.md"
+    screen_map_markers: ["屏幕", "screen", "映射", "Screen"]
+  ia:
+    html_globs: ["04-mvp/**/*.html", "docs/**/*.html"]
+    required_paths_from_journey: true
+  interaction:
+    html_globs: ["04-mvp/**/*.html", "docs/**/*.html"]
+    js_globs: ["04-mvp/**/*.js", "docs/**/*.js"]
+    min_interactive_hints: ["button", "form", "nav", "aria-label", "href"]
+  static_dynamic:
+    js_globs: ["04-mvp/**/*.js", "docs/**/*.js"]
+    dynamic_hints: ["fetch(", "axios", "XMLHttpRequest"]
+    empty_state_hints: ["empty", "暂无", "unavailable", "no data"]
+  compliance:
+    enabled: false
+  performance:
+    forbid_cdn: true
+    scan_globs: ["04-mvp/**/*.html", "docs/**/*.html"]
+  responsive:
+    html_globs: ["04-mvp/**/*.html", "docs/**/*.html"]
+    css_globs: ["04-mvp/**/*.css", "docs/**/*.css"]
+  a11y:
+    html_globs: ["04-mvp/**/*.html", "docs/**/*.html"]
+    css_globs: ["04-mvp/**/*.css", "docs/**/*.css"]
+    js_globs: ["04-mvp/**/*.js", "docs/**/*.js"]
+pass_threshold:
+  quick_ratio: 0.70
+  full_score: 85

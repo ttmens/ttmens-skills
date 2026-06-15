@@ -1,8 +1,8 @@
-# pm-idea-to-mvp v6.1 — Cursor Agent
+# pm-idea-to-mvp v7.1.0 — Cursor Agent
 
 ## 技能从哪来
 
-1. 解析 `{SKILLS_ROOT}`（按序尝试）：
+1. 运行 `python {SKILLS_ROOT}/scripts/detect_agent_env.py --json`，或按序尝试：
    - 本项目 `.cursor/skills/`（若含 `pm-idea-to-mvp/`）
    - `~/.cursor/skills/`
    - 本机 ttmens-skills 克隆根（含 `marketplace.yaml`）
@@ -17,7 +17,7 @@ git submodule update --init --recursive
 
 ## 运行时（强制）
 
-- 默认流水线：`pm-idea-to-mvp` v6.1 → 读 `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md`
+- 默认流水线：`pm-idea-to-mvp` v7.1.0 → 读 `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md`
 - 触发语：**从想法做到上线** · 继续 pm-{slug} · 进入 {stage} 阶段
 - 每 stage 结束：
 

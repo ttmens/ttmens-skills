@@ -1,0 +1,56 @@
+id: stock-copilot
+description: "Legacy stock-copilot / fintech dashboard rubric (docs/ + src/site/)"
+engine: legacy
+extends: generic
+checks:
+  compliance:
+    enabled: true
+    index_html: "docs/index.html"
+    disclaimer_patterns:
+      - "不构成任何投资建议"
+      - "仅供个人研究参考"
+      - "股市有风险"
+    forbidden_patterns:
+      - "必涨"
+      - "必买"
+      - "保证收益"
+  design_tokens:
+    src_theme: "src/site/theme.css"
+    dst_theme: "docs/assets/theme.css"
+    design_md: "docs/DESIGN.md"
+    key_tokens:
+      - price-up
+      - price-down
+      - signal-bull
+      - signal-bear
+      - canvas-deep
+  ia:
+    engine: stock
+    signals:
+      - id: signal-dashboard
+        label: "市场温度/信号分布区"
+      - id: stock-card
+        label: "自选股卡片"
+      - id: signal-badge
+        label: "信号标签"
+      - id: decision-score
+        label: "综合评分"
+    extra_tokens:
+      - filter-bar
+  interaction:
+    engine: stock
+    tokens:
+      - id: filter-search
+        label: "搜索"
+      - id: filter-signal
+        label: "信号筛选"
+      - id: filter-sort
+        label: "排序"
+      - id: aria-label
+        label: "无障碍标签"
+    app_pages:
+      - docs/app/watchlist.html
+      - docs/app/stock.html
+pass_threshold:
+  quick_ratio: 0.70
+  full_score: 85

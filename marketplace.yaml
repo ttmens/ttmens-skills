@@ -37,6 +37,21 @@ profiles:
     path: borrowed
     skills: [pm-strategy-red-team, pm-pre-mortem]
     manifest: borrowed/manifest-debate.yaml
+  ui-pro-max-full:
+    label: "UI UX Pro Max 完整版 (nextlevelbuilder)"
+    path: profiles/ui-pro-max-full
+    skills: [ui-pro-max-full]
+    vendor: vendor/ui-ux-pro-max-skill
+  playwright-e2e:
+    label: "Playwright E2E (jmr85/e2e-agent-skills)"
+    path: profiles/playwright-e2e
+    skills: [playwright-e2e]
+    vendor: vendor/e2e-agent-skills
+  ux-principles:
+    label: "UX 原则审计 (uxuiprinciples)"
+    path: profiles/ux-principles
+    skills: [ux-principles]
+    vendor: vendor/uxuiprinciples-agent-skills
 
 skills:
   native:

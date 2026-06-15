@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge retro evolution notes into pipeline-knowledge/."""
+"""Merge retro evolution notes into pipeline-knowledge/ (structured sections)."""
 from __future__ import annotations
 
 import argparse

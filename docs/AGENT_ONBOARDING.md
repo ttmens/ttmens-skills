@@ -9,7 +9,15 @@
 
 ## 1. 判断当前平台
 
-按优先级检测（命中即停）：
+**首选（自动化）：**
+
+```bash
+python scripts/detect_agent_env.py --json
+```
+
+返回 `platform`、`skills_root`、`project_root`、`source_mode`、`install_needed`、`recommended_install_cmd`。
+
+**Fallback 启发式**（命中即停）：
 
 | 信号 | 平台 | 技能安装目录 |
 |------|------|--------------|
@@ -26,7 +34,9 @@
 
 ## 2. 解析 `{SKILLS_ROOT}`
 
-**禁止硬编码** `D:\...` 或固定 clone 路径。按序尝试：
+**首选：** `detect_agent_env.py --json` 的 `skills_root` 字段。
+
+**Fallback**（禁止硬编码 `D:\...` 或固定 clone 路径）：
 
 ```text
 1. 源码模式：cwd 或上级目录含 marketplace.yaml → 该目录
@@ -37,14 +47,14 @@
 6. 全局 OpenCode：~/.config/opencode/skills/ 且含 pm-idea-to-mvp/
 ```
 
-**检测命令**（任选其一存在即可）：
+**检测命令**：
 
 ```bash
-# 应返回 0
-test -f "{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md"
-test -f "{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py"
+python "{SKILLS_ROOT}/scripts/detect_agent_env.py" --json
+python "{SKILLS_ROOT}/scripts/validate_skills.py"
 ```
 
+或手动确认文件存在：`pipelines/pm-idea-to-mvp/SKILL.md`、`pipelines/pm-idea-to-mvp/scripts/stage-complete.py`。
 **`{PROJECT_ROOT}`**：当前 pm-{slug} 产品仓库根（含 `00-brief.md` 或 `gates.json` 或 `docs/workflow_state.yaml`）。  
 若用户只在 ttmens-skills 仓库里对话，则 `{PROJECT_ROOT}` ≠ `{SKILLS_ROOT}`。
 
@@ -71,7 +81,7 @@ cd {SKILLS_ROOT}   # ttmens-skills 克隆根
 - `--core`：37 个技能（17 native + 20 borrowed）
 - `--profile debate`：**G2 红队**依赖（`pm-strategy-red-team`、`pm-pre-mortem`），spec 阶段必需
 
-Windows：
+Windows（默认含 `--profile debate`）：
 
 ```powershell
 .\install.ps1 -Target All
@@ -100,7 +110,17 @@ Windows：
 |------|------|
 | 新建 0→1 | 默认即可 |
 | 优化现有产品 | 加 `--scenario brownfield`（会自动加 `debate` profile） |
-| Refine 深化 | `--scenario refine --profile deep-research` |
+| Refine 深化 | `--scenario refine`（自动加 `deep-research` profile） |
+| 强 UI / E2E / UX 审计 | 见下表 Optional UI profiles |
+
+**Optional UI / QA profiles**（可组合）：
+
+| 场景 | 安装 |
+|------|------|
+| 行业配色 / CSV 设计 intelligence | `--profile ui-pro-max-full` |
+| Playwright E2E | `--profile playwright-e2e` |
+| UX 168 原则 + smell 审计 | `--profile ux-principles` |
+| Ship 前推荐组合 | `--profile ui-pro-max-full --profile ux-principles --profile playwright-e2e` |
 
 Agent **若无 shell 权限**：向用户说明缺少的技能 ID，并给出上表对应 `install.sh` 命令，请用户执行后再继续。
 
@@ -109,19 +129,23 @@ Agent **若无 shell 权限**：向用户说明缺少的技能 ID，并给出上
 ## 4. 自检（安装后必做）
 
 ```bash
+python {SKILLS_ROOT}/scripts/detect_agent_env.py --json
 python {SKILLS_ROOT}/scripts/validate_skills.py
 ```
 
 通过应看到：`OK: 17 native + 20 borrowed skills; pipeline scripts present`
 
-可选：
+新项目初始化治理产物：
 
 ```bash
-# 确认 G2 红队依赖（spec 阶段）
-test -d "{SKILLS_ROOT}/pm-strategy-red-team" || test -d "~/.cursor/skills/pm-strategy-red-team"
-# 实际路径取决于 install 目标；或检查 install 日志 debate_borrowed=2
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/init-project.py --project-root {PROJECT_ROOT}
 ```
 
+retro 阶段消费反馈：
+
+```bash
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/consume-feedback.py --project-root {PROJECT_ROOT}
+```
 ---
 
 ## 5. 加载与使用顺序
@@ -206,7 +230,7 @@ opencode run "Implement per openspec/tasks.md and 04-mvp/DESIGN.md" --workdir {P
 |------|-------|----------|
 | G1 | align | `debates/align-synthesis.md` + `goal-check --stage align` |
 | G2 | spec | `prd-red-team-panel` + `debates/spec-synthesis.md`（需 debate profile） |
-| G3 | mvp/ship | 测试/lint/build + `ui_acceptance.py --full` |
+| G3 | mvp/ship | 测试/lint/build + `ui_acceptance.py --full` + 浏览器 E2E（ship 强制） |
 
 ---
 
@@ -218,7 +242,7 @@ opencode run "Implement per openspec/tasks.md and 04-mvp/DESIGN.md" --workdir {P
 | G2 `debate_resolved` 失败 | 未装 debate profile | `./install.sh --profile debate --all` |
 | borrowed 技能缺失 | vendor submodule 未 init | `git submodule update --init --recursive` 后重装 |
 | `validate_skills.py` 失败 | marketplace 与 stage-skills 不一致 | 拉最新 main，勿用 `deprecated/` 下技能 |
-| Agent 加载了旧路径 | 根目录 `pm-idea-to-mvp/` 等已废弃 | 只用 `pipelines/pm-idea-to-mvp/` |
+| Agent 加载了旧路径 | 根目录 `pm-idea-to-mvp/` 或 `v6.1.0/` 快照 | 只用 live `pipelines/pm-idea-to-mvp/` |
 
 ---
 

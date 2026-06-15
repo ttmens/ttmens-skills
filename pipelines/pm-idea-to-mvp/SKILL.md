@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v6.1 Hermes UX: Feishu grill preflight, trigger routing, brownfield/resume, Kanban v6 twelve-step + MVP inner loop. (v7.1 governance refs in references/ — planned)"
-version: 6.1.0
+description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code + Hermes UX (Feishu grill, trigger routing, brownfield/resume). brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro."
+version: 7.1.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -50,7 +50,7 @@ metadata:
 
 # Super Developer Pipeline v7.1 (pm-idea-to-mvp)
 
-**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
+**唯一主流水线**（live 入口 = 本目录 `pipelines/pm-idea-to-mvp/`；**勿安装** `v6.1.0/` 快照）。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）
@@ -117,6 +117,8 @@ metadata:
 | 2 research | `pm-researcher` | `01-research.md` | — | `pm-opportunity-solution-tree`, `pm-competitor-analysis`, `pm-market-sizing` | ≥5 URLs + 来源可访问（HTTP 200 抽检） |
 | 3 analysis | `pm-analyst` | `02-analysis.md`, `architecture/c4-*.md`, `debates/analysis-*.md` | `c4-architecture` (含 PK), `openspec`, `docs-hygiene` | `pm-product-strategy`, `kw-system-design` | C4 L1–L3 + PK 辩论 synthesis |
 | 4 spec | `pm-planner` | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md`, `debates/spec-*.md` | `user-journey`, `open-design`, `ui-ux-pro-max`, `prd-red-team-panel` | `pm-create-prd`, `pm-user-stories` | **G2**: PRD + 原型 + `debate_resolved` |
+
+**spec UI 选型**：需行业配色 / 多 stack CSV 推理 → 安装 `--profile ui-pro-max-full`（slim `ui-ux-pro-max` 仍为默认）。
 | 5 mvp | `pm-builder` | `04-mvp/`, `UX-REVIEW.md` | `writing-plans`, `subagent-driven-development`, `test-driven-development`, `ui-acceptance-review`, `requesting-code-review`, `dogfood` | `kw-testing-strategy` | **G3**: 测试 + lint + build + health 200 |
 | 6 ship | `pm-shipper` | `RUNBOOK.md`, `docs/ui-acceptance-report.md` | `ui-acceptance-review` (full), `docs-hygiene` | `pm-shipping-artifacts`, `pm-intended-vs-implemented`, `kw-deploy-checklist`, `pm-security-audit-static` | Deploy ready + RUNBOOK 可执行 |
 | 7 operate | `pm-operator` | ops notes | — | `kw-incident-response`, `kw-runbook`, `pm-sql-queries` | — |
@@ -849,6 +851,8 @@ opencode run "Implement MVP per openspec/tasks.md and 03-prd.md. Apply 04-mvp/DE
 
 #### v7.1 新增：强制浏览器端到端验证（不可跳过）
 
+**工具 SSOT**：[`references/browser-tools-ssot.md`](references/browser-tools-ssot.md) — Cursor / Hermes 工具名映射，勿硬编码单一平台 API。
+
 **为什么**：curl 200 不代表 CSS 加载、JS 执行、登录流程正常。常见陷阱：
 - standalone 模式漏拷静态文件（CSS 404 但 HTML 200）
 - 中间件 auth 无限重定向
@@ -899,17 +903,19 @@ opencode run "Implement MVP per openspec/tasks.md and 03-prd.md. Apply 04-mvp/DE
 | 3 | FID (First Input Delay) | ≤ 100ms | `lighthouse` | recommended |
 | 4 | CLS (Cumulative Layout Shift) | ≤ 0.1 | `lighthouse` | recommended |
 
-**性能测试命令**：
+**性能测试命令**（可执行 SSOT）：
 
 ```bash
-# 运行 Lighthouse 测试
-lighthouse {DEPLOY_URL} --output=json --output-path=./lighthouse.json
+python {SKILLS_ROOT}/scripts/lighthouse_check.py --url {DEPLOY_URL} --min-performance 90 --project-root {PROJECT_ROOT}
+# 或从 gates.json / harness 读取 URL：
+python {SKILLS_ROOT}/scripts/lighthouse_check.py --project-root {PROJECT_ROOT}
+```
 
-# 检查性能分数
-cat lighthouse.json | jq '.categories.performance.score'
+输出：`docs/lighthouse-report.json`；摘要可追加到 `docs/ui-acceptance-report.md`。无 Node/npx 时 **warning 非阻塞**（与 recommended 权重一致）。
 
-# 检查 LCP
-cat lighthouse.json | jq '.audits.largest-contentful-paint.numericValue'
+```bash
+# 手动 Lighthouse（fallback）
+lighthouse {DEPLOY_URL} --output=json --output-path=./docs/lighthouse-report.json
 ```
 
 **性能优化建议**：

@@ -54,15 +54,37 @@ def resolve_pipeline_root() -> Path:
 
 def resolve_skills_root() -> Path:
     """Resolve the SKILLS_ROOT (ttmens-skills repo root)."""
+    env_root = os.environ.get("SKILLS_ROOT")
+    if env_root:
+        p = Path(env_root).expanduser()
+        if p.exists():
+            return p.resolve()
+
     pipeline_root = resolve_pipeline_root()
-    # Walk up from pipelines/pm-idea-to-mvp to find the repo root
     for parent in pipeline_root.parents:
         if (parent / "pipelines" / "pm-idea-to-mvp" / "SKILL.md").exists():
             return parent
-    # Fallback: two levels up from pipeline root
     return pipeline_root.parent.parent.resolve()
+
+
+def resolve_hermes_home() -> Path:
+    """Resolve Hermes home directory (~/.hermes or HERMES_HOME)."""
+    env = os.environ.get("HERMES_HOME")
+    if env:
+        return Path(env).expanduser().resolve()
+    return Path.home() / ".hermes"
+
+
+def resolve_projects_root() -> Path:
+    """Resolve pm-{slug} projects parent directory."""
+    env = os.environ.get("PROJECTS_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+    return Path.home() / "projects"
 
 
 if __name__ == "__main__":
     print(f"pipeline_root: {resolve_pipeline_root()}")
     print(f"skills_root: {resolve_skills_root()}")
+    print(f"hermes_home: {resolve_hermes_home()}")
+    print(f"projects_root: {resolve_projects_root()}")

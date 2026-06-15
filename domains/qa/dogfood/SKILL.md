@@ -136,19 +136,19 @@ The report must include:
 
 Save the report to `{output_dir}/report.md`.
 
-## Tools Reference
+## Tools Reference (intent → platform)
 
-| Tool | Purpose |
-|------|---------|
-| `browser_navigate` | Go to a URL |
-| `browser_snapshot` | Get DOM text snapshot (accessibility tree) |
-| `browser_click` | Click an element by ref (`@eN`) or text |
-| `browser_type` | Type into an input field |
-| `browser_scroll` | Scroll up/down on the page |
-| `browser_back` | Go back in browser history |
-| `browser_press` | Press a keyboard key |
-| `browser_vision` | Screenshot + AI analysis; use `annotate=true` for element labels |
-| `browser_console` | Get JS console output and errors |
+See [`browser-tools-ssot.md`](../../pipelines/pm-idea-to-mvp/references/browser-tools-ssot.md) for Cursor / Hermes mapping.
+
+| Intent | Cursor MCP | Hermes alias |
+|--------|------------|--------------|
+| Navigate | `browser_navigate` | same |
+| Structure | `browser_snapshot` | DOM snapshot |
+| Screenshot | `browser_take_screenshot` | `browser_vision` |
+| Console | `browser_cdp` (Log/Runtime) | `browser_console` |
+| Click / type | `browser_click`, `browser_type` | same |
+
+Legacy Hermes-only names in workflow examples below may use `browser_vision` / `browser_console` — map to your platform per SSOT doc.
 
 ## Tips
 

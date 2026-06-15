@@ -91,7 +91,7 @@ idle → running → [pass] → idle (exit to Ship)
 | 分解 triage | `decompose-pm-pipeline.py --task-id` | `pm_pipeline.run_pm_decompose` |
 | harness 初始化 | `setup_harness_rules` inside decompose | 同上 |
 | goals / PROGRESS | `progress-tracker.py init` inside decompose | 同上 |
-| GitHub repo | `publish_repo.py` inside decompose | 同上 |
+| GitHub repo | `bootstrap_github_repo.py` inside decompose | 同上 |
 
 `pm-orchestrator` 仅做父任务汇总与子任务 done 检查；阶段 worker 跑 `stage-complete.py`。
 

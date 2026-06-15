@@ -49,7 +49,6 @@ def main() -> None:
     except subprocess.CalledProcessError:
         run(["git", "commit", "--allow-empty", "-m", "initial: PM pipeline artifacts"], repo_dir)
     run(["git", "push", "-u", "origin", "main"], repo_dir)
-    # Drop token from stored remote URL
     run(["git", "remote", "set-url", "origin", f"https://github.com/ttmens/{repo_name}.git"], repo_dir)
 
     try:

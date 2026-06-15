@@ -133,12 +133,54 @@ def init_governance(project_root: Path, slug: str) -> list[str]:
     return created
 
 
+def init_playwright_e2e(project_root: Path, skills_root: Path) -> list[str]:
+    """Scaffold e2e/ Playwright smoke tests from pipeline templates."""
+    created: list[str] = []
+    tpl_dir = skills_root / "pipelines" / "pm-idea-to-mvp" / "assets" / "templates"
+    e2e_dir = project_root / "e2e"
+    if not e2e_dir.exists():
+        e2e_dir.mkdir(parents=True)
+        created.append("e2e/")
+
+    mappings = [
+        ("playwright.config.template.ts", "playwright.config.ts"),
+        ("e2e-smoke.template.spec.ts", "smoke.spec.ts"),
+    ]
+    for tpl_name, dest_name in mappings:
+        tpl = tpl_dir / tpl_name
+        dest = e2e_dir / dest_name
+        if tpl.exists() and not dest.exists():
+            shutil.copy2(tpl, dest)
+            created.append(f"e2e/{dest_name}")
+
+    pkg_path = project_root / "package.json"
+    if pkg_path.exists():
+        try:
+            pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pkg = {}
+        scripts = pkg.setdefault("scripts", {})
+        if "test:e2e" not in scripts:
+            scripts["test:e2e"] = "playwright test"
+            pkg_path.write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            created.append("package.json (test:e2e script)")
+    return created
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Initialize governance artifacts for pm-{slug} project (v6.2)"
     )
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--slug", required=True, help="Project slug (e.g., knowledge-platform)")
+    parser.add_argument(
+        "--profile",
+        action="append",
+        default=[],
+        choices=["playwright-e2e"],
+        help="Optional profile hooks (e.g. playwright-e2e scaffolds e2e/)",
+    )
+    parser.add_argument("--skills-root", type=Path, default=None, help="ttmens-skills root for templates")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -146,6 +188,12 @@ def main() -> int:
     project_root.mkdir(parents=True, exist_ok=True)
 
     created = init_governance(project_root, args.slug)
+
+    skills_root = args.skills_root
+    if skills_root is None:
+        skills_root = Path(__file__).resolve().parents[3]
+    if "playwright-e2e" in args.profile or (project_root / "package.json").exists():
+        created.extend(init_playwright_e2e(project_root, skills_root))
 
     report = {
         "pipeline_version": PIPELINE_VERSION,

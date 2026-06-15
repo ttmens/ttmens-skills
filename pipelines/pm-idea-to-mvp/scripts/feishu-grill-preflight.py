@@ -19,11 +19,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "6.1.0"
-PROJECTS_ROOT = Path(r"D:/workspace/projects")
-HERMES_HOME = Path(os.environ.get("HERMES_HOME", r"D:\hermes-data"))
+PIPELINE_VERSION = "7.1.0"
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from pipeline_paths import resolve_hermes_home, resolve_pipeline_root, resolve_projects_root  # noqa: E402
+
+PROJECTS_ROOT = resolve_projects_root()
+HERMES_HOME = resolve_hermes_home()
 GRILL_DIR = HERMES_HOME / "feishu-grill"
-PIPELINE_ROOT = Path(__file__).resolve().parent.parent
+PIPELINE_ROOT = resolve_pipeline_root()
 
 
 def _load_grill_config() -> dict:

@@ -9,15 +9,19 @@ import re
 import sys
 from pathlib import Path
 
-HERMES_HOME = Path(os.environ.get("HERMES_HOME", r"D:\hermes-data"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from pipeline_paths import resolve_hermes_home, resolve_pipeline_root, resolve_projects_root  # noqa: E402
+
+HERMES_HOME = resolve_hermes_home()
 HERMES_AGENT = HERMES_HOME / "hermes-agent"
 if str(HERMES_AGENT) not in sys.path:
     sys.path.insert(0, str(HERMES_AGENT))
 
 from hermes_cli import kanban_db as kb  # noqa: E402
 
-PROJECTS_ROOT = Path(rstr(Path(__file__).resolve().parents[4] / "projects"))
-PIPELINE_ROOT = Path(rstr(Path(__file__).resolve().parent.parent))
+PROJECTS_ROOT = resolve_projects_root()
+PIPELINE_ROOT = resolve_pipeline_root()
 
 CHECKPOINT_REFINE_UX = """HUMAN CHECKPOINT (two-phase):
   FIRST RUN (kanban_show has no unblock comment):

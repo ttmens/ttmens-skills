@@ -25,3 +25,25 @@ cd ../..
 ./install.sh --borrowed-only --all
 python scripts/validate_skills.py
 ```
+
+## nextlevelbuilder/ui-ux-pro-max-skill (profile: ui-pro-max-full)
+
+- Repository: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+- Version pin: **v2.5.0** (submodule `vendor/ui-ux-pro-max-skill`)
+- License: MIT
+- Install: `./install.sh --profile ui-pro-max-full --platform cursor`
+
+## jmr85/e2e-agent-skills (profile: playwright-e2e)
+
+- Repository: https://github.com/jmr85/e2e-agent-skills
+- Version pin: main (submodule `vendor/e2e-agent-skills`)
+- License: MIT
+- Install: `./install.sh --profile playwright-e2e --platform cursor`
+
+## uxuiprinciples/agent-skills (profile: ux-principles)
+
+- Repository: https://github.com/uxuiprinciples/agent-skills
+- Version pin: main (submodule `vendor/uxuiprinciples-agent-skills`)
+- License: see vendor LICENSE
+- Install: `./install.sh --profile ux-principles --platform cursor`
+- Optional API key for enriched output — non-blocking

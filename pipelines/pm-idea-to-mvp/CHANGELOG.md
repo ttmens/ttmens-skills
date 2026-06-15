@@ -2,6 +2,33 @@
 
 All notable changes to pm-idea-to-mvp pipeline will be documented in this file.
 
+## [7.1.0] - 2026-06-15
+
+### Overview
+
+Battle-hardened release from pm-knowledge-platform E2E retrospective.
+
+### Added
+
+- Skill trigger routing (`assets/trigger-routing.yaml`) + quick scenario table
+- Mandatory browser E2E verification at ship stage
+- Rollback decision tree (`references/rollback-decision-tree.md`)
+- Forced brownfield audit flow (`references/brownfield-audit.md`)
+- Inner loop entry checks + PROGRESS.md update protocol
+
+## [7.0.0] - 2026-06-15
+
+### Overview
+
+Agent behavior code fusion from addyosmani/agent-skills.
+
+### Added
+
+- `references/agent-behavior-code.md` — 6 non-negotiable behavior rules
+- Anti-rationalization tables in all Hermes stage cards
+- `requesting-code-review` v3.0 — 5-axis code review
+- `stage-complete.py --check-behavior` validation
+
 ## [6.1.0] - 2026-06-06 — Hermes UX
 
 ### Overview

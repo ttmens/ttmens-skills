@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
-DEFAULT_PROFILES_ROOT = Path(r"D:\hermes-data\profiles")
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from pipeline_paths import resolve_hermes_home  # noqa: E402
+
+DEFAULT_PROFILES_ROOT = resolve_hermes_home() / "profiles"
 PM_PROFILES = [
     "pm-aligner",
     "pm-researcher",

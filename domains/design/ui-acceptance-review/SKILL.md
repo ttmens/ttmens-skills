@@ -46,12 +46,25 @@ After journey review, fix P0/P1 in MVP UI:
 
 ## Mode: quick / full (script rubric)
 
+Profiles SSOT: `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/assets/ui-acceptance-profiles/`
+
+| Profile | When |
+|---------|------|
+| `auto` (default) | `{PROJECT_ROOT}/ui-acceptance.yaml` → else `generic` |
+| `generic` | Standard pm-{slug} (`04-mvp/DESIGN.md` + journey) |
+| `stock-copilot` | Legacy fintech dashboard (`docs/` + `src/site/`) |
+
+Optional project override: `{PROJECT_ROOT}/ui-acceptance.yaml` with `profile: generic` or `extends: generic`.
+
 ```bash
 python {SKILLS_ROOT}/scripts/ui_acceptance.py --quick --project-root {PROJECT_ROOT}
-python {SKILLS_ROOT}/scripts/ui_acceptance.py --full --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --full --project-root {PROJECT_ROOT} --profile auto
+python {SKILLS_ROOT}/scripts/ui_acceptance.py --full --project-root {PROJECT_ROOT} --profile stock-copilot
 ```
 
-Full pass: **≥85** and compliance critical all pass.
+Optional前置（`--profile ux-principles`）：journey 前跑 `uxui-evaluator`；full 前跑 `interface-auditor`（见 profiles/ux-principles）。
+
+Full pass: **≥85** and compliance critical all pass (when enabled).
 
 **Pre/post snapshots:** `docs/ui-snapshots/pre.png` + `post.png` → attach to report.
 

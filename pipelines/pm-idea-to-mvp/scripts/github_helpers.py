@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 GITHUB_OWNER = os.environ.get("PM_GITHUB_OWNER", "ttmens")
-HERMES_ENV = Path(os.environ.get("HERMES_HOME", r"D:\hermes-data")) / ".env"
+HERMES_ENV = (Path(os.environ.get("HERMES_HOME", "")).expanduser() if os.environ.get("HERMES_HOME") else Path.home() / ".hermes") / ".env"
 
 
 def load_token() -> str:

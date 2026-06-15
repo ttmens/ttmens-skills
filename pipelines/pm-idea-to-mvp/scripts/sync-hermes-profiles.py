@@ -9,23 +9,37 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-HERMES_HOME = Path(__file__).resolve().parents[4]  # .../hermes-data
-if not (HERMES_HOME / "profiles").exists():
-    HERMES_HOME = Path(rstr(Path(__file__).resolve().parents[3]))
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from pipeline_paths import resolve_hermes_home, resolve_pipeline_root, resolve_projects_root, resolve_skills_root  # noqa: E402
 
-SKILLS_ROOT = HERMES_HOME / "skills"
-PIPELINE_ROOT = SKILLS_ROOT / "pipelines" / "pm-idea-to-mvp"
+HERMES_HOME = resolve_hermes_home()
+SKILLS_ROOT = resolve_skills_root()
+PIPELINE_ROOT = resolve_pipeline_root()
+PROJECTS_ROOT = resolve_projects_root()
 PROFILES_ROOT = HERMES_HOME / "profiles"
 AGENT_ROOT = HERMES_HOME / "hermes-agent"
 SCRIPTS_DIR = PIPELINE_ROOT / "scripts"
 STAGE_CARDS = PIPELINE_ROOT / "references" / "hermes-stage-cards"
 RUNTIME_DOC = PIPELINE_ROOT / "references" / "runtime-kanban-v6.0.md"
+
+STAGE_COMPLETE = SCRIPTS_DIR / "stage-complete.py"
+
+
+def _stage_exit_cmd(stage: str, extra: str = "") -> str:
+    proj = PROJECTS_ROOT / "pm-{slug}"
+    cmd = (
+        f'python "{STAGE_COMPLETE}" '
+        f'--project-root "{proj}" --stage {stage} --task-id <this_task_id>{extra}'
+    )
+    return cmd
 
 PIPELINE_HUB_ALLOWLIST = {
     "pm-idea-to-mvp", "grill-me", "grill-with-docs", "openspec", "opencode", "dogfood",
@@ -65,38 +79,14 @@ PROFILE_CARDS: dict[str, list[str]] = {
 SCRIPT_RE = re.compile(r"scripts/[a-z0-9_-]+\.py", re.I)
 
 SOUL_EXIT: dict[str, str] = {
-    "pm-aligner": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage align --task-id <this_task_id> --runtime"
-    ),
-    "pm-researcher": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage research --task-id <this_task_id>"
-    ),
-    "pm-analyst": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage analysis --task-id <this_task_id>"
-    ),
-    "pm-planner": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage spec --task-id <this_task_id> --runtime"
-    ),
-    "pm-builder": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage mvp --task-id <this_task_id> --runtime --verify-goals"
-    ),
-    "pm-shipper": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage ship --task-id <this_task_id> --runtime"
-    ),
-    "pm-operator": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage operate --task-id <this_task_id>"
-    ),
-    "pm-growth": (
-        "python D:\\hermes-data\\skills\\pipelines\\pm-idea-to-mvp\\scripts\\stage-complete.py "
-        "--project-root D:\\workspace\\projects\\pm-{slug} --stage grow --task-id <this_task_id>"
-    ),
+    "pm-aligner": _stage_exit_cmd("align", " --runtime"),
+    "pm-researcher": _stage_exit_cmd("research"),
+    "pm-analyst": _stage_exit_cmd("analysis"),
+    "pm-planner": _stage_exit_cmd("spec", " --runtime"),
+    "pm-builder": _stage_exit_cmd("mvp", " --runtime --verify-goals"),
+    "pm-shipper": _stage_exit_cmd("ship", " --runtime"),
+    "pm-operator": _stage_exit_cmd("operate"),
+    "pm-growth": _stage_exit_cmd("grow"),
 }
 
 
@@ -151,8 +141,8 @@ def audit_versions() -> list[str]:
     uniq = {v for v in versions.values() if v}
     if len(uniq) > 1:
         issues.append(f"VERSION MISMATCH: {versions}")
-    if decompose_v != "6.1.0":
-        issues.append(f"decompose expected 6.1.0, got {decompose_v}")
+    if decompose_v != "7.1.0":
+        issues.append(f"decompose expected 7.1.0, got {decompose_v}")
     return issues
 
 
@@ -167,7 +157,7 @@ def build_skill_md(profile: str, cards: list[str]) -> str:
     return f"""---
 name: pm-idea-to-mvp
 description: "Hermes stage slice v6.0 for {profile} ({card_names})"
-version: 6.1.0
+version: 7.1.0
 author: ttmens
 platforms: [cli, hermes, linux, macos, windows]
 metadata:
