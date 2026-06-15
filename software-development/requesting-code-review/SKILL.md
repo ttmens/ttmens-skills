@@ -49,7 +49,7 @@ git diff HEAD -- specific_file.py
 
 ## Step 2 — Static security scan
 
-Scan added lines only. Any match is a security concern fed into Step 5.
+Scan added lines only. Any match is a security concern fed into Step 6.
 
 ```bash
 # Hardcoded secrets

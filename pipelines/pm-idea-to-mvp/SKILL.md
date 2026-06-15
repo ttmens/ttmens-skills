@@ -716,6 +716,7 @@ Retro 阶段现在包含 **harness 自我改进**机制：
 | Pipeline | `pipeline-knowledge/patterns.md`, `anti-patterns.md` |
 | Skills | `pm-idea-to-mvp/CHANGELOG.md` (human-approved patches) |
 | Harness | `harness-rules.yaml` (auto-applied improvements) |
+| External fusion | `references/external-frameworks-analysis.md` (已分析的外部框架 + 融合决策) |
 
 `feedback.jsonl` schema:
 
