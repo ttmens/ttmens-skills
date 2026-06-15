@@ -1,13 +1,29 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v7.0: Loop Engineering + enforced governance + agent behavior code. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency, anti-rationalization tables, 5-axis code review."
-version: 7.0.0
+description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code. brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro. Dual-loop, goal primitives, runtime verification, debate gates G1/G2, cross-document consistency, anti-rationalization tables, 5-axis code review, browser verification, rollback decision tree."
+version: 7.1.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
 metadata:
   hermes:
-    tags: [super-developer, pipeline, kanban, loop-engineering, goal-primitives, runtime-verification, on-the-loop, github, pages, openspec, ship, ops, grow]
+    tags: [super-developer, pipeline, kanban, loop-engineering, goal-primitives, runtime-verification, on-the-loop, github, pages, openspec, ship, ops, grow, browser-verification, rollback, brownfield-audit]
+    trigger_conditions:
+      - "优化"
+      - "重构"
+      - "E2E"
+      - "端到端"
+      - "深入分析"
+      - "改进"
+      - "审查"
+      - "审计"
+      - "refine"
+      - "brownfield"
+      - "部署"
+      - "上线"
+      - "发布"
+      - "回退"
+      - "回滚"
     related_skills:
       - grill-me
       - grill-with-docs
@@ -32,15 +48,34 @@ metadata:
       - requesting-code-review
 ---
 
-# Super Developer Pipeline v7.0 (pm-idea-to-mvp)
+# Super Developer Pipeline v7.1 (pm-idea-to-mvp)
 
-**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v7.0 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review。
+**唯一主流水线**。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）
 > - **How Loop**（执行循环）：快速迭代实现路径（spec → MVP inner-loop → ship → operate 反馈）
 >
 > 两个循环通过 `feedback.jsonl` 与 `evolution-notes.md` 互相驱动，形成自进化闭环。
+
+## 快速判断：何时使用本技能？
+
+**强制规则**：当用户提到以下关键词时，**必须**先调用 `skill_view(name='pm-idea-to-mvp')` 加载技能。
+
+| 用户说 | 场景 | 入口阶段 | 说明 |
+|--------|------|---------|------|
+| "做一个新产品" / "新项目" | greenfield | brief | 默认 0→1 全流程 |
+| "优化现有项目" / "改进" | refine | mvp (内循环) | 深化循环，使用内循环协议 |
+| "审查代码质量" / "审计" | brownfield | analysis | 棕地审计，跳过 brief/align/research |
+| "部署到生产" / "上线" / "发布" | ship | ship | Ship 阶段，含浏览器验证 |
+| "回顾项目" / "复盘" | retro | retro | Retro 阶段，量化复盘 |
+| "回退" / "回滚" | rollback | — | 见 `references/rollback-decision-tree.md` |
+| "E2E 测试" / "端到端验证" | ship | ship | 强制浏览器端到端验证 |
+| "重构前端" / "UI 升级" | refine | mvp | 使用 Refine 系统性 UI 重构模式 |
+
+**触发关键词列表**（出现在用户消息中即触发）：
+- 优化、重构、E2E、端到端、深入分析、改进、审查、审计
+- refine、brownfield、部署、上线、发布、回退、回滚
 
 环境变量（替代硬编码路径）：
 
@@ -100,11 +135,27 @@ metadata:
 | Scenario | 入口 | 说明 |
 |----------|------|------|
 | `greenfield` | brief | 默认 0→1 |
-| `brownfield` | analysis | 跳过 brief/align/research；见 `domains/product/brownfield-bootstrap` + `scenarios.yaml` |
+| `brownfield` | analysis | 跳过 brief/align/research；见 `references/brownfield-audit.md` + `scenarios.yaml` |
 | `refine` | mvp | 深化循环；`refine-decompose.py` |
 | `optimize` | analysis | 同 brownfield，无 bootstrap 强制 |
 
 棕地项目阶段开始前运行 `docs-hygiene`。`decompose-pm-pipeline.py --scenario brownfield` 生成 skip map。
+
+**v7.1 新增：强制棕地审计**（不可跳过）：
+
+当用户说"优化"、"重构"、"E2E"、"深入分析"时，**必须**先执行棕地审计（见 `references/brownfield-audit.md`）：
+
+1. **Step 0: 构建验证** — `pnpm build` 必须成功（阻塞性检查）
+2. **Step 0.5: 浏览器现状记录** — 截图 + 控制台错误记录
+3. **Step 1-6: 完整审计流程** — 见 `references/brownfield-audit.md`
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "直接开始优化" | ❌ 没有审计 = 不知道问题在哪。可能优化了错误的方向。 |
+| "审计太耗时" | ❌ 审计只需 15-20 分钟，但可以节省 2 小时的无效工作。 |
+| "用户急着要结果" | ❌ 没有审计的结果可能是错误的结果，返工成本更高。 |
 
 v6 变化：每个 Gate 现在包含 **artifact 存在性** + **runtime 验证** 两层检查，由 `validate-gates.py --runtime` 和 `goal-check.py` 协同执行。
 
@@ -215,7 +266,7 @@ pm-{slug}/
   docs/index.html
 ```
 
-## Inner Loop Protocol（v6 核心）
+## Inner Loop Protocol（v6 核心，v7.1 强化）
 
 MVP 阶段（Stage 5）不再是线性链，而是**递归内循环**：
 
@@ -229,6 +280,35 @@ MVP 阶段（Stage 5）不再是线性链，而是**递归内循环**：
 │          PASS → exit loop → Gate G3              │
 └─────────────────────────────────────────────────┘
 ```
+
+### v7.1 新增：入口检查（必须全部通过才能进入内循环）
+
+| # | 检查项 | 检查命令 | 通过标准 | 失败处理 |
+|---|--------|---------|---------|---------|
+| 1 | `openspec/tasks.md` 存在 | `test -f openspec/tasks.md` | 文件存在且 > 100 字节 | 阻塞，先生成 tasks.md |
+| 2 | `goals/mvp.yaml` 存在 | `test -f goals/mvp.yaml` | 文件存在且定义了 runtime goals | 阻塞，先生成 goals |
+| 3 | `harness-rules.yaml` 存在 | `test -f harness-rules.yaml` | 文件存在且定义了测试/lint/build 命令 | 阻塞，先生成 harness-rules |
+| 4 | `04-mvp/DESIGN.md` 存在 | `test -f 04-mvp/DESIGN.md` | 文件存在（由 `ui-ux-pro-max` 生成） | 阻塞，先运行 ui-ux-pro-max |
+| 5 | 项目可构建 | `pnpm build` | exit_code == 0 | 阻塞，先修复构建错误 |
+
+**入口检查命令**：
+
+```bash
+# 一键检查所有入口条件
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py \
+  --project-root {PROJECT_ROOT} \
+  check_prerequisites
+```
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "直接写代码，后面再补 tasks.md" | ❌ 没有 tasks.md = 没有计划 = 盲目编码。内循环的核心是先计划再执行。 |
+| "goals 不重要" | ❌ goals 是验证标准。没有 goals = 无法判断 PASS/FAIL = 内循环失效。 |
+| "harness-rules 太麻烦" | ❌ harness-rules 定义了测试/lint/build 命令。没有它 = 无法自动化验证。 |
+| "DESIGN.md 可以后面再写" | ❌ DESIGN.md 定义了设计 token。没有它 = UI 不一致 = 返工。 |
+| "构建错误不重要，先写功能" | ❌ 构建失败 = 无法部署 = 无法验证。构建错误是阻塞性问题。 |
 
 ### 循环步骤
 
@@ -410,9 +490,32 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage mvp 
 | `required` | 应当通过，失败产生 warning | 可人工 override |
 | `recommended` | 建议通过，失败仅记录 | 不阻塞 |
 
-## Progress Tracking（细粒度进度追踪）
+## Progress Tracking（细粒度进度追踪，v7.1 强化）
 
 v6 引入 `PROGRESS.md` 作为项目级任务追踪文件，取代仅靠 Kanban 状态的方式。
+
+### v7.1 新增：强制更新协议（不可跳过）
+
+**每个阶段完成后必须**：
+
+1. 运行 `progress-tracker.py --project-root {PROJECT_ROOT} update --task <id> --status done`
+2. 运行 `progress-tracker.py --project-root {PROJECT_ROOT} show` 确认更新
+3. 提交 PROGRESS.md 到 git：`git add PROGRESS.md && git commit -m "chore: update progress"`
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "Kanban 已经记录了状态" | ❌ Kanban 是粗粒度（todo/ready/done），PROGRESS.md 是细粒度（子步骤、阻塞、内循环历史）。两者互补，不是替代。 |
+| "更新 PROGRESS.md 太麻烦" | ❌ 使用 `progress-tracker.py` 自动化，不需要手动编辑。一条命令完成。 |
+| "用户不关心进度" | ❌ 用户关心。PROGRESS.md 是用户了解项目状态的窗口。没有它 = 用户需要反复询问。 |
+| "下次再更新" | ❌ "下次" = "永远不"。立即更新，否则你会忘记做了什么。 |
+| "PROGRESS.md 不重要" | ❌ PROGRESS.md 是跨会话恢复的关键。没有它 = 下次会话需要重新理解项目状态。 |
+
+**用户信号**（看到这些信号说明你跳过了 PROGRESS.md 更新）：
+- "现在做到哪了？"
+- "上次做了什么？"
+- "为什么又要重新做？"
 
 ### PROGRESS.md 格式
 
@@ -631,6 +734,115 @@ opencode run "Implement MVP per openspec/tasks.md and 03-prd.md. Apply 04-mvp/DE
 - Smoke test locally; Pages shows static report (MVP runs on localhost)
 - 内循环失败 3 次后：写入 `harness-improvements.md`，通知人类介入
 
+#### v7.1 新增：自动化测试集成（强制执行）
+
+**测试要求**（在 `goals/mvp.yaml` 中定义）：
+
+| # | 测试类型 | 命令 | 权重 | 说明 |
+|---|---------|------|------|------|
+| 1 | 单元测试 | `npm test` | critical | 必须全部通过 |
+| 2 | E2E 测试 | `npm run test:e2e` | required | 关键用户流程必须覆盖 |
+| 3 | 测试覆盖率 | `npm run test:coverage` | recommended | 目标 ≥ 80% |
+| 4 | 代码审查 | `requesting-code-review` skill | required | 5 轴 Code Review |
+
+**测试集成流程**：
+
+1. **Plan 阶段**：在 `phase-plan.md` 中定义本轮测试目标
+2. **Code 阶段**：使用 TDD（先写测试，再写代码）
+3. **Test 阶段**：运行所有测试命令，收集结果
+4. **Observe 阶段**：检查测试通过率、覆盖率、审查报告
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "测试太耗时，先写功能" | ❌ 没有测试的功能 = 未验证的功能。TDD 比后补测试更快。 |
+| "覆盖率不重要" | ❌ 覆盖率低 = 未测试路径多 = 潜在 bug 多。80% 是最低标准。 |
+| "E2E 测试太慢" | ❌ E2E 测试验证关键用户流程。没有它 = 不知道系统是否可用。 |
+| "代码审查不重要" | ❌ 代码审查发现隐藏问题。5 轴审查（正确性/可读性/架构/安全/性能）是质量保证的关键。 |
+
+#### v7.1 新增：AI 辅助代码审查（强制执行）
+
+**5 轴 Code Review**（使用 `requesting-code-review` skill）：
+
+| 轴 | 检查项 | 严重性 | 工具 |
+|----|--------|--------|------|
+| **正确性** | 逻辑错误、边界条件、空指针 | Critical | 静态分析 + AI 审查 |
+| **可读性** | 命名规范、注释、代码结构 | Required | AI 审查 |
+| **架构** | 模块划分、依赖关系、设计模式 | Required | AI 审查 |
+| **安全** | XSS、CSRF、SQL 注入、敏感信息泄露 | Critical | 静态分析 + AI 审查 |
+| **性能** | 算法复杂度、内存泄漏、N+1 查询 | Recommended | 性能分析工具 + AI 审查 |
+
+**代码审查流程**：
+
+1. **运行代码审查**：
+   ```bash
+   # 使用 requesting-code-review skill
+   skill_view(name='requesting-code-review')
+   ```
+
+2. **生成代码审查报告**：`04-mvp/CODE-REVIEW.md`
+
+3. **修复 Critical 问题**（阻塞 MVP 完成）
+
+4. **记录 Required/Recommended 问题**到 backlog
+
+**代码审查报告格式**：
+
+```markdown
+# 代码审查报告 — {slug}
+
+生成时间：{timestamp}
+
+## 审查摘要
+
+- 总问题数：15
+- Critical：2
+- Required：8
+- Recommended：5
+
+## 问题清单
+
+### Critical
+
+1. **XSS 漏洞** — src/app/query/page.tsx:42
+   - 问题：用户输入未清理直接渲染
+   - 修复：使用 DOMPurify 清理输入
+   - 代码示例：
+     ```tsx
+     // Before
+     <div dangerouslySetInnerHTML={{__html: userInput}} />
+     
+     // After
+     <div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(userInput)}} />
+     ```
+
+### Required
+
+1. **函数过长** — src/lib/api.ts:18-150
+   - 问题：函数超过 100 行，难以维护
+   - 修复：拆分为多个小函数
+
+### Recommended
+
+1. **魔法数字** — src/app/dashboard/page.tsx:25
+   - 问题：使用魔法数字 `86400000`
+   - 修复：定义为常量 `const MS_PER_DAY = 86400000`
+```
+
+**代码审查失败时的处理**：
+- **Critical 问题**：阻塞 MVP 完成，必须修复
+- **Required 问题**：记录到 backlog，下个迭代修复
+- **Recommended 问题**：记录到 backlog，择机修复
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "代码审查太耗时" | ❌ 代码审查发现隐藏问题。现在花 15 分钟审查，节省未来 1 天 debug。 |
+| "AI 审查不可靠" | ❌ AI 审查是辅助工具，不是替代人工。AI 发现 80% 的问题，人工发现 20% 的深层问题。 |
+| "我的代码没问题" | ❌ 每个人都认为自己的代码没问题。代码审查是质量保证的标准流程。 |
+
 ### Ship (`pm-shipper`) — v6 新增独立阶段
 
 - 生成 `RUNBOOK.md`：部署步骤、回滚方案、监控指标
@@ -638,6 +850,147 @@ opencode run "Implement MVP per openspec/tasks.md and 03-prd.md. Apply 04-mvp/DE
 - `docs-hygiene`：文档一致性检查
 - Deploy 为 High risk → **必须**人工确认
 - `goal-check.py --stage ship` 验证 RUNBOOK 可执行性
+
+#### v7.1 新增：强制浏览器端到端验证（不可跳过）
+
+**为什么**：curl 200 不代表 CSS 加载、JS 执行、登录流程正常。常见陷阱：
+- standalone 模式漏拷静态文件（CSS 404 但 HTML 200）
+- 中间件 auth 无限重定向
+- API 代理路径错误
+- React hydration 失败
+
+**验证清单**（必须逐项完成，截图保存证据）：
+
+| # | 验证项 | 工具 | 通过标准 | 证据 |
+|---|--------|------|---------|------|
+| 1 | 登录页渲染 | `browser_navigate` | 样式正常（按钮有背景色、布局正确） | 截图 |
+| 2 | 登录流程 | `browser_type` + `browser_click` | 跳转到首页（非停留在登录页） | URL 变化 |
+| 3 | 首页渲染 | `browser_snapshot` | 侧边栏、统计卡片、快捷入口正常 | 快照 |
+| 4 | 核心页面 | `browser_click` 2-3 个页面 | 无白屏、无 JS 错误 | 快照 |
+| 5 | 认证状态 | `browser_console` | `localStorage.getItem('token')` 存在 | 控制台输出 |
+| 6 | API 响应 | `browser_console` fetch | 关键 API 返回正确格式 | 响应 JSON |
+
+**验证失败时的处理**：
+1. 截图保存证据
+2. 记录失败原因到 `feedback.jsonl`
+3. 进入修复循环（最多 3 次）
+4. 3 次失败后，通知人类介入或回退到稳定版本
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "curl 返回 200 了应该没问题" | ❌ 200 只证明服务器在响应，不证明前端可用。必须亲眼看到页面。 |
+| "PM2 状态是 online" | ❌ 进程在线不代表应用可用。CSS 可能 404，JS 可能报错。 |
+| "本地测试没问题" | ❌ 本地 ≠ 生产。网络、代理、环境变量可能不同。 |
+| "用户没报告问题" | ❌ 用户可能还没发现。主动验证比被动修复成本低 10x。 |
+| "时间紧迫，先上线再说" | ❌ 上线后发现问题，修复成本更高。现在花 5 分钟验证，节省未来 2 小时修复。 |
+
+**用户信号**（看到这些信号说明你跳过了浏览器验证）：
+- "我登陆看到样式全部没了"
+- "页面一直转圈"
+- "点击没反应"
+- "你自己检测好 确保最终可用"
+
+#### v7.1 新增：性能基准测试（推荐执行）
+
+**性能指标**（在 `goals/ship.yaml` 中定义）：
+
+| # | 指标 | 目标 | 工具 | 权重 |
+|---|------|------|------|------|
+| 1 | Lighthouse Performance Score | ≥ 90 | `lighthouse` | recommended |
+| 2 | LCP (Largest Contentful Paint) | ≤ 2.5s | `lighthouse` | recommended |
+| 3 | FID (First Input Delay) | ≤ 100ms | `lighthouse` | recommended |
+| 4 | CLS (Cumulative Layout Shift) | ≤ 0.1 | `lighthouse` | recommended |
+
+**性能测试命令**：
+
+```bash
+# 运行 Lighthouse 测试
+lighthouse {DEPLOY_URL} --output=json --output-path=./lighthouse.json
+
+# 检查性能分数
+cat lighthouse.json | jq '.categories.performance.score'
+
+# 检查 LCP
+cat lighthouse.json | jq '.audits.largest-contentful-paint.numericValue'
+```
+
+**性能优化建议**：
+- 图片优化：使用 WebP 格式，懒加载
+- 代码分割：使用 Next.js 动态导入
+- 缓存策略：配置 CDN 缓存头
+- 减少第三方脚本
+
+#### v7.1 新增：安全审计集成（强制执行）
+
+**安全审计流程**（使用 `pm-security-audit-static` skill）：
+
+1. **运行安全审计**：
+   ```bash
+   # 使用 pm-security-audit-static skill
+   skill_view(name='pm-security-audit-static')
+   ```
+
+2. **检查常见漏洞**：
+   - XSS（跨站脚本攻击）
+   - CSRF（跨站请求伪造）
+   - SQL 注入
+   - 敏感信息泄露（API Key、密码）
+
+3. **检查依赖漏洞**：
+   ```bash
+   # npm 项目
+   npm audit
+   
+   # pnpm 项目
+   pnpm audit
+   
+   # Python 项目
+   pip-audit
+   ```
+
+4. **生成安全报告**：`docs/security-audit-report.md`
+
+**安全报告格式**：
+
+```markdown
+# 安全审计报告 — {slug}
+
+生成时间：{timestamp}
+
+## 漏洞清单
+
+| 严重性 | 漏洞 | 位置 | 修复建议 |
+|--------|------|------|---------|
+| High | XSS | src/app/query/page.tsx:42 | 使用 DOMPurify 清理输入 |
+| Medium | CSRF | src/lib/api.ts:18 | 添加 CSRF token |
+
+## 依赖漏洞
+
+| 包名 | 版本 | 漏洞 | 修复版本 |
+|------|------|------|---------|
+| lodash | 4.17.20 | Prototype Pollution | 4.17.21 |
+
+## 修复状态
+
+- [ ] High 漏洞已修复
+- [ ] Medium 漏洞已修复
+- [ ] 依赖已更新
+```
+
+**安全审计失败时的处理**：
+- **High 漏洞**：阻塞 Ship，必须修复
+- **Medium 漏洞**：记录到 backlog，下个迭代修复
+- **Low 漏洞**：记录到 backlog，择机修复
+
+**反合理化表格**：
+
+| 常见借口 | 反驳 |
+|---------|------|
+| "安全审计太耗时" | ❌ 安全漏洞修复成本远高于预防成本。现在花 10 分钟审计，节省未来 2 天修复。 |
+| "内部工具不需要安全" | ❌ 内部工具也有敏感数据。安全无小事。 |
+| "用户不关心安全" | ❌ 用户关心数据安全。一个安全漏洞可以毁掉整个产品。 |
 
 ### Operate (`pm-operator`)
 
@@ -816,6 +1169,14 @@ v6 升级：
 - **修复模式**：在 fetch headers 中显式添加 `...(token ? { 'Authorization': \`Bearer ${token}\` } : {})`
 - **更深层检查**：重构后必须端到端测试每个页面的核心功能（不只是视觉），特别是：流式聊天、文件上传、WebSocket 连接等不走标准 axios 管线的功能
 
+**Refine 部署后必须做浏览器端到端验证**：curl 健康检查通过 ≠ 应用可用。部署后必须：
+1. 浏览器打开公开 URL，验证 CSS 样式正常渲染
+2. 登录测试账号，验证跳转到首页（非重定向循环）
+3. 逐页检查所有功能页面是否正常渲染
+4. 检查浏览器控制台无 JS 错误
+5. **特别检查 API 响应格式匹配**：后端返回 `{feedbacks:[]}` 但前端用 `r.data.items` → `undefined.map()` 崩溃。部署前必须 `curl` 检查每个 API 的实际响应 key，前端代码使用正确的字段名
+- **用户信号**："你自己检测好 确保最终可用" = 你部署后没做浏览器验证
+
 **Refine 系统性 UI 重构模式**（多页面 <500 行场景）：当重构目标是整个应用的交互页面（如 8 个 Next.js 页面），且每个文件 <500 行时，采用以下高效模式：
 1. **全量阅读**：先用 `search_files` + `read_file` 读取所有页面代码，理解当前状态
 2. **设计系统先行**：先写 tailwind.config + globals.css（设计 token），这是一切页面的基础
@@ -825,6 +1186,54 @@ v6 升级：
 6. **部署**：tar 打包上传 → 服务器 build → PM2 restart
 
 关键洞察：对于中等规模文件（200-500 行），`write_file` 比连续 `patch` 更可靠且更快。TypeScript 严格模式会捕获跨文件类型错误（如 union type 比较），统一构建比逐文件验证更高效。
+
+**回退决策树**（v7.1 新增）：当修复引入新问题或修复时间过长时，使用 `references/rollback-decision-tree.md` 判断是否回退。核心原则：
+- 修复尝试 ≥ 3 次仍未解决 → 回退
+- 修复引入新的 bug → 回退
+- 用户明确要求回退 → 立即回退
+- 修复时间 > 30 分钟 → 暂停，通知人类决策
+
+**Next.js standalone + PM2 部署配置**：当 `next.config.js` 设置 `output: 'standalone'` 时，PM2 ecosystem.config.js 必须指向 standalone server.js，不能用 `next start`：
+```js
+// ecosystem.config.js — standalone 模式正确配置
+{
+  name: 'pm-web',
+  script: 'packages/web/.next/standalone/packages/web/server.js',  // ← 关键路径
+  cwd: '/path/to/project',  // ← 必须是项目根目录
+  env: { NODE_ENV: 'production', PORT: 3000, HOSTNAME: '0.0.0.0' },
+}
+```
+构建后必须手动同步静态文件：`cp -r .next/static .next/standalone/.next/`。否则 CSS/JS 全部 404（HTML 200 但页面白屏）。
+常见错误：PM2 日志出现 `⚠ "next start" does not work with "output: standalone"` 说明配置指向了错误的 script。
+
+**AuthProvider 加载卡死诊断**：页面一直显示 loading spinner（AppShell 的 `if (isLoading)` 分支），但 API 全部正常时的排查路径：
+1. `localStorage.getItem('token')` 是否存在？→ 不存在则登录流程有问题
+2. `fetch('/api/auth/me', {headers: {Authorization: ...}})` 是否返回正确格式？→ 检查响应 key 是否匹配前端期望（`res.data.user` vs `res.data` 直接是 user）
+3. AuthProvider useEffect 中 `.catch()` 是否静默删除 token？→ 加 `console.error` 看实际错误
+4. 浏览器控制台 `document.body.innerHTML` 如果只有 spinner div，说明 React hydration 未完成或 useEffect 卡在 await
+关键：`curl` 200 + 浏览器 spinner = 前端 JS 执行问题，不是服务器问题。不要反复重启 PM2。
+
+**API 参数兼容性过渡**：前后端并行开发时，前端发送的字段名可能与后端 schema 不一致（如 `query` vs `question`）。后端 zod schema 应同时接受两种名称：
+```ts
+const schema = z.object({
+  question: z.string().min(1).optional(),
+  query: z.string().min(1).optional(),
+});
+// 路由处理中：const q = question || query;
+```
+避免前端改一个字段名就导致 400 错误。迁移完成后再移除兼容。
+
+**部署后必须浏览器端到端验证（不可跳过）**：部署完成后，仅靠 `curl` 检查 HTTP 状态码（200/307）和 PM2 状态（online）是**不够的**。必须使用浏览器工具实际验证页面渲染和功能可用性：
+
+- **为什么**：curl 200 不代表 CSS 加载、JS 执行、登录流程正常。常见陷阱：standalone 模式漏拷静态文件（CSS 404 但 HTML 200）、中间件 auth 无限重定向、API 代理路径错误等。
+- **验证清单**：
+  1. `browser_navigate` 到登录页 → 确认样式正常（按钮有背景色、布局正确）
+  2. 输入凭据登录 → 确认跳转到首页（不是停留在登录页）
+  3. 首页加载 → 确认侧边栏、统计卡片、快捷入口渲染正常
+  4. 点击 2-3 个核心页面 → 确认无白屏、无 JS 错误
+  5. `browser_console` 检查 `localStorage.getItem('token')` 确认认证工作
+- **用户信号**："我登陆看到样式全部没了" — 这就是跳过了浏览器验证的后果。
+- **反合理化**："curl 返回 200 了应该没问题" → ❌ 200 只证明服务器在响应，不证明前端可用。必须亲眼看到页面。
 
 **dispatch 延迟**：`hermes kanban dispatch` 可能返回 `Deferred (<profile> at per-profile cap, 1 running): <task_id>`。这是因为该 profile 已有一个任务在跑（并发上限）。这是正常行为 — dispatcher 会在当前任务完成后自动拾取 deferred 任务，无需手动干预。
 
@@ -873,6 +1282,7 @@ When resuming work on an existing pm-{slug} project or diagnosing pipeline execu
 
 | Version | Date | Key changes |
 |---------|------|-------------|
+| 7.1.0 | 2026-06-15 | **实战强化版**：基于 pm-knowledge-platform E2E 优化复盘 — 强化技能触发机制（trigger_conditions + 快速判断表）、强制浏览器端到端验证（Ship 阶段不可跳过）、回退决策树（`references/rollback-decision-tree.md`）、强化棕地审计流程（构建验证 + 浏览器现状记录）、强化 Inner Loop Protocol（入口检查 + 反合理化表格）、PROGRESS.md 强制更新协议、自动化测试集成（测试覆盖率 + E2E 测试）、性能基准测试（Lighthouse）、安全审计集成（`pm-security-audit-static`）、AI 辅助代码审查（5 轴 Code Review）。每阶段新增反合理化表格，防止 agent 合理化跳过关键步骤。 |
 | 7.0.0 | 2026-06-15 | **Agent 行为准则融合**：融合 addyosmani/agent-skills 核心模式 — 6 条不可协商行为准则（`agent-behavior-code.md`）、每阶段反合理化表格 + 失败模式清单（stage cards v7.0）、5 轴 Code Review + 严重性标签（`requesting-code-review` v3.0）、变更规模约束、路由器决策树（orchestrator）。v6.2 解决"走不走"，v7.0 解决"走得好不好"。 |
 | 6.2.0 | 2026-06-13 | **Enforced Governance**：强制 runtime 验证（mvp/ship 自动 --runtime/--goal）、G1/G2 辩论门禁（debates/ 目录检查）、跨文档一致性（tech-stack-conflict 检测）、内循环前置检查（goals/harness prerequisites）、RUNBOOK 必需章节（部署/回滚/监控）、Retro 量化要求、Operate 产物强制、最低行数全面提升。基于 pm-knowledge-platform 实战复盘。 |
 | 6.1.0 | 2026-06-12 | Production-tested: knowledge graph visualization, RAG fallback, tag management |

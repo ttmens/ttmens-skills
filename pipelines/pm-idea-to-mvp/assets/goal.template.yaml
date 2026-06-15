@@ -53,7 +53,7 @@ goals:
 #     min_lines: 50
 
 # ============================================================
-# STAGE: mvp (G3 gate — MANDATORY runtime + goals in v6.2)
+# STAGE: mvp (G3 gate — MANDATORY runtime + goals in v6.2, v7.1 enhanced)
 # ============================================================
 # stage: mvp
 # goals:
@@ -83,9 +83,25 @@ goals:
 #     type: file_exists
 #     target: '04-mvp/UX-REVIEW.md'
 #     weight: required
+#   # v7.1 新增：自动化测试集成
+#   - id: M6
+#     description: 'Test coverage ≥ 80%'
+#     type: command_pass
+#     command: 'cd 04-mvp && npm run test:coverage -- --coverageThreshold=80'
+#     weight: recommended
+#   - id: M7
+#     description: 'E2E tests pass'
+#     type: command_pass
+#     command: 'cd 04-mvp && npm run test:e2e'
+#     weight: required
+#   - id: M8
+#     description: 'Code review completed (5-axis)'
+#     type: file_exists
+#     target: '04-mvp/CODE-REVIEW.md'
+#     weight: required
 
 # ============================================================
-# STAGE: ship (MANDATORY runtime + goals in v6.2)
+# STAGE: ship (MANDATORY runtime + goals in v6.2, v7.1 enhanced)
 # ============================================================
 # stage: ship
 # goals:
@@ -104,6 +120,22 @@ goals:
 #     type: content_match
 #     target: 'RUNBOOK.md'
 #     pattern: '监控|monitor'
+#   # v7.1 新增：性能基准测试
+#   - id: S4
+#     description: 'Lighthouse performance score ≥ 90'
+#     type: command_pass
+#     command: 'lighthouse {DEPLOY_URL} --output=json --output-path=./lighthouse.json && cat lighthouse.json | jq ".categories.performance.score >= 0.9"'
+#     weight: recommended
+#   - id: S5
+#     description: 'LCP ≤ 2.5s'
+#     type: command_pass
+#     command: 'lighthouse {DEPLOY_URL} --output=json | jq ".audits.largest-contentful-paint.numericValue <= 2500"'
+#     weight: recommended
+#   - id: S6
+#     description: 'Security audit passed'
+#     type: file_exists
+#     target: 'docs/security-audit-report.md'
+#     weight: required
 
 # ============================================================
 # STAGE: retro (MANDATORY goals in v6.2)
