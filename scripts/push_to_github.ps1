@@ -37,5 +37,5 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-git fetch origin $Branch 2>$null
+git fetch origin $Branch 2>&1 | Out-Null
 Write-Host "OK: origin/$Branch updated."
