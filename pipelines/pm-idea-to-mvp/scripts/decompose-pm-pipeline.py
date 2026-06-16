@@ -23,8 +23,8 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from pipeline_paths import resolve_pipeline_root, resolve_hermes_home, resolve_projects_root  # noqa: E402
+from pipeline_version import PIPELINE_VERSION  # noqa: E402
 
-PIPELINE_VERSION = "7.1.0"
 PROJECTS_ROOT = resolve_projects_root()
 PIPELINE_ROOT = resolve_pipeline_root()
 
@@ -96,6 +96,9 @@ def slugify(text: str) -> str:
     return text[:48] or "idea"
 
 
+_RESERVED_SLUGS = {"idea-to-mvp", "pm-idea-to-mvp"}
+
+
 def extract_slug_from_text(title: str, body: str, explicit: str | None = None) -> str:
     if explicit:
         return explicit.strip().removeprefix("pm-")
@@ -112,7 +115,9 @@ def extract_slug_from_text(title: str, body: str, explicit: str | None = None) -
     for pat in (r"projects/pm-([\w-]+)", r"slug[:\s]+([\w-]+)", r"pm-([\w-]+)"):
         m = re.search(pat, combined, re.I)
         if m:
-            return m.group(1).removeprefix("pm-")
+            slug = m.group(1).removeprefix("pm-")
+            if slug not in _RESERVED_SLUGS:
+                return slug
     if "yuxi" in combined.lower():
         return "product-knowledge-yuxi"
     raw = slugify(title)
@@ -246,12 +251,57 @@ All artifacts under {proj}/. See harness-rules.yaml + PROGRESS.md.
     return base.strip()
 
 
+_STAGE_SKILLS_CACHE: dict | None = None
+
+
+def load_stage_skills_config() -> dict:
+    global _STAGE_SKILLS_CACHE
+    if _STAGE_SKILLS_CACHE is None:
+        import yaml
+
+        path = PIPELINE_ROOT / "stage-skills.yaml"
+        _STAGE_SKILLS_CACHE = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return _STAGE_SKILLS_CACHE
+
+
+def skills_for_stage(stage_key: str) -> list[str]:
+    cfg = load_stage_skills_config()
+    stage = cfg.get("stages", {}).get(stage_key, {})
+    native = list(stage.get("native") or [])
+    borrowed = list(stage.get("borrowed") or [])
+    pipeline = list(cfg.get("pipeline_native") or ["pm-idea-to-mvp"])
+    seen: set[str] = set()
+    out: list[str] = []
+    for name in pipeline + native + borrowed:
+        if name and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
+
+
+def _attach_stage_skills(children: list[dict], stage_keys: list[str]) -> list[dict]:
+    for child, stage_key in zip(children, stage_keys):
+        child["skills"] = skills_for_stage(stage_key)
+    return children
+
+
+def _align_grill_note(slug: str) -> str:
+    brief = project_dir(slug) / "00-brief.md"
+    if brief.exists() and "## 飞书 Grill" in brief.read_text(encoding="utf-8", errors="replace"):
+        return "Feishu grill preflight already done. Use grill-with-docs on 00-brief.md.\n"
+    return (
+        "NOTE: 飞书 Grill 尚未完成（gateway 未写入 ## 飞书 Grill）。"
+        "自主读 00-brief.md + grill-with-docs；align 完成后会 kanban_block 等待用户确认产物（非 Grill 问答）。\n"
+    )
+
+
 def build_children_greenfield(slug: str, title: str) -> list[dict]:
     proj = project_dir(slug).as_posix()
+    grill_note = _align_grill_note(slug)
     return [
         {"title": f"Grill 对齐想法 — {slug}", "assignee": "pm-aligner", "parents": [],
          "body": task_body("align", slug, title,
-             "Feishu grill preflight already done. Use grill-with-docs on 00-brief.md.\n"
+             grill_note +
              "Outputs: CONTEXT.md, decisions.md.\n" + CHECKPOINT_ALIGN)},
         {"title": f"深度调研 — {slug}", "assignee": "pm-researcher", "parents": [0],
          "body": task_body("research", slug, title, "Output: 01-research.md (≥5 URLs).")},
@@ -334,8 +384,20 @@ def build_children(scenario: str, slug: str, title: str) -> list[dict]:
         "optimize": build_children_optimize,
         "refine": build_children_refine,
     }
+    stage_keys_by_scenario = {
+        "greenfield": [
+            "align", "research", "analysis", "spec",
+            "mvp", "mvp", "mvp", "mvp",
+            "ship", "operate", "grow", "retro",
+        ],
+        "brownfield": ["align", "mvp", "mvp", "ship", "retro"],
+        "optimize": ["ship", "operate"],
+        "refine": ["research", "spec", "mvp"],
+    }
     fn = builders.get(scenario, build_children_greenfield)
-    return fn(slug, title)
+    children = fn(slug, title)
+    keys = stage_keys_by_scenario.get(scenario, stage_keys_by_scenario["greenfield"])
+    return _attach_stage_skills(children, keys[: len(children)])
 
 
 def setup_project(project_root: Path, slug: str, title: str, body: str) -> dict:

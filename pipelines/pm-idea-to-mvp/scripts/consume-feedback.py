@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 consume-feedback.py — Parse and summarize feedback.jsonl for retro stage.
 
@@ -18,7 +18,12 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "6.2.0"
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
+
+from pipeline_version import PIPELINE_VERSION
 
 
 def load_feedback(project_root: Path) -> list[dict]:

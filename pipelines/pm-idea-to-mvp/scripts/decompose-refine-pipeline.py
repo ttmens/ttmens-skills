@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Deterministic PM pipeline v4 Refine decomposition (manual trigger)."""
+"""DEPRECATED — use decompose-pm-pipeline.py --scenario refine (v7.1).
+
+Legacy PM pipeline v4 Refine decomposition. Kept for reference only.
+`hermes kanban refine` now routes through pm_pipeline.run_pm_decompose(..., scenario='refine').
+"""
 from __future__ import annotations
 
 import argparse

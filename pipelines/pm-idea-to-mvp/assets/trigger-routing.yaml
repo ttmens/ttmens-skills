@@ -1,7 +1,33 @@
 # pm-idea-to-mvp Hermes trigger routing — single source of truth (v6.1.0)
 # Consumed by hermes_cli/pm_pipeline.py
 
-version: "6.1.0"
+version: "7.1.1"
+
+# Meta questions ABOUT the skill — do NOT start Kanban (route to Ralph chat)
+query_exclusions:
+  - pattern: '总结.{0,30}(pm[-\s]?idea|想法到产品|idea-to-mvp)'
+    flags: i
+  - pattern: '(介绍|说明|解释|讲讲|梳理).{0,20}(pm[-\s]?idea|想法到产品|技能|流水线)'
+    flags: i
+  - pattern: '(pm[-\s]?idea|想法到产品).{0,20}(能力|功能|版本|怎么用|是什么|干什么)'
+    flags: i
+  - pattern: '有哪些.{0,12}(能力|阶段|功能)'
+    flags: i
+  - pattern: '完整能力'
+    flags: i
+  - pattern: '当前.{0,8}(能力|版本|状态)'
+    flags: i
+
+# Strong execution intent — overrides query_exclusions
+strong_intent_markers:
+  - 产品想法
+  - 按 pm-idea
+  - 按pm-idea
+  - 使用想法到
+  - 继续 pm-
+  - 继续优化
+  - 继续部署
+  - 超级开发者流水线
 
 markers:
   - pm-idea-to-mvp
@@ -79,6 +105,11 @@ slug_keywords:
   产品知识平台: product-knowledge
   知识平台: product-knowledge
   赛博取名: cyber-naming
+
+# Skill/pipeline names — never use as pm-{slug} project directory
+reserved_slugs:
+  - idea-to-mvp
+  - pm-idea-to-mvp
 
 grill:
   max_rounds: 2

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 eval-stage.py — Evaluate pipeline stage quality with rubric scoring.
 
@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root
 
-PIPELINE_VERSION = "6.2.0"
+from pipeline_version import PIPELINE_VERSION
 
 # Default text-pattern rubrics (v5.1 compatible)
 DEFAULT_RUBRICS = {

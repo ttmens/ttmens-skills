@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Drive MVP inner loop: Plan → Code → Test → Observe → Adjust (max N iterations).
 
@@ -19,9 +19,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
+
 import importlib.util
 
-PIPELINE_VERSION = "6.2.0"
+from pipeline_version import PIPELINE_VERSION
 
 
 def _load_harness_helpers():

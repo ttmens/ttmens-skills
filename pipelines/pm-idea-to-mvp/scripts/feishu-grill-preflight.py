@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 feishu-grill-preflight.py — Feishu 1-2 round grill before Kanban decompose (v6.1.0).
 
@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "7.1.0"
+from pipeline_version import PIPELINE_VERSION
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from pipeline_paths import resolve_hermes_home, resolve_pipeline_root, resolve_projects_root  # noqa: E402

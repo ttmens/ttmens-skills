@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Sync PROGRESS.md / stage status to Hermes Kanban comments."""
 
 from __future__ import annotations
@@ -9,7 +9,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-PIPELINE_VERSION = "6.2.0"
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
+
+from pipeline_version import PIPELINE_VERSION
 
 
 def kanban_comment(task_id: str, message: str) -> dict:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 kanban-status-report.py — Human-readable Kanban status for pm-idea-to-mvp (v6.1.0).
 
@@ -16,7 +16,7 @@ import os
 import sys
 from pathlib import Path
 
-PIPELINE_VERSION = "7.1.0"
+from pipeline_version import PIPELINE_VERSION
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from pipeline_paths import resolve_hermes_home, resolve_projects_root  # noqa: E402

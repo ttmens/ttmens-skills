@@ -72,6 +72,12 @@ def resolve_hermes_home() -> Path:
     env = os.environ.get("HERMES_HOME")
     if env:
         return Path(env).expanduser().resolve()
+    for candidate in (
+        Path(r"D:/hermes-data"),
+        Path.home() / ".hermes",
+    ):
+        if candidate.exists():
+            return candidate.resolve()
     return Path.home() / ".hermes"
 
 
@@ -80,6 +86,12 @@ def resolve_projects_root() -> Path:
     env = os.environ.get("PROJECTS_ROOT")
     if env:
         return Path(env).expanduser().resolve()
+    for candidate in (
+        Path(r"D:/workspace/projects"),
+        resolve_hermes_home().parent / "workspace" / "projects",
+    ):
+        if candidate.exists():
+            return candidate.resolve()
     return Path.home() / "projects"
 
 

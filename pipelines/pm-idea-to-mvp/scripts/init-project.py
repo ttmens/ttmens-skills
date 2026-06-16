@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 init-project.py — Initialize all governance artifacts for a new pm-{slug} project.
 
@@ -19,7 +19,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "6.2.0"
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
+
+from pipeline_version import PIPELINE_VERSION
 
 
 def init_governance(project_root: Path, slug: str) -> list[str]:

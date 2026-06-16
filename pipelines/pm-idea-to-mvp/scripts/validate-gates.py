@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 validate-gates.py — Validate pipeline stage gates (v6.0.0).
 
@@ -24,7 +24,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root
 
-PIPELINE_VERSION = "6.2.0"
+from pipeline_version import PIPELINE_VERSION
 
 # Stage → required files/patterns (v6.2 enhanced checks)
 # v6.2 changes: increased min_lines, added debate checks for align/spec,

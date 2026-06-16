@@ -3,7 +3,7 @@
 
 > Maintainer index — auto-generated. Reader-facing docs: [README.md](../README.md).
 
-Generated: 2026-06-13 11:12 UTC
+Generated: 2026-06-16 01:05 UTC
 
 **Counts:** 17 native + 20 borrowed = **37** core skills
 
@@ -100,6 +100,24 @@ Install: `./install.sh --profile {pid} --all`
 ### debate — G2 红队面板依赖 (phuryn)
 
 Path: `borrowed` — skills: `pm-strategy-red-team`, `pm-pre-mortem`
+
+Install: `./install.sh --profile {pid} --all`
+
+### ui-pro-max-full — UI UX Pro Max 完整版 (nextlevelbuilder)
+
+Path: `profiles/ui-pro-max-full` — skills: `ui-pro-max-full`
+
+Install: `./install.sh --profile {pid} --all`
+
+### playwright-e2e — Playwright E2E (jmr85/e2e-agent-skills)
+
+Path: `profiles/playwright-e2e` — skills: `playwright-e2e`
+
+Install: `./install.sh --profile {pid} --all`
+
+### ux-principles — UX 原则审计 (uxuiprinciples)
+
+Path: `profiles/ux-principles` — skills: `ux-principles`
 
 Install: `./install.sh --profile {pid} --all`
 

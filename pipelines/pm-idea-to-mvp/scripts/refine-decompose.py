@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Refine sprint decompose — 4 subtasks for existing pm-{slug}."""
 
 from __future__ import annotations
@@ -10,8 +10,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
 
-PIPELINE_VERSION = "6.2.0"
+from pipeline_version import PIPELINE_VERSION
 
 REFINE_STAGES = [
     ("Refine-1: 业界深研", "pm-researcher", "industry-benchmark → 01b-benchmark.md"),

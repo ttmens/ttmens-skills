@@ -1,6 +1,6 @@
 # Machine-readable stage → skill mapping (v7.1 SSOT).
 # validate_skills.py cross-checks this against marketplace.yaml + borrowed/manifest.yaml
-version: "7.1.0"
+version: "7.1.1"
 
 stages:
   brief:
@@ -53,3 +53,9 @@ pipeline_native: [pm-idea-to-mvp]
 # Scenario-only (not in core count); see scenarios.yaml
 scenario_skills:
   brownfield-bootstrap: domains/product/brownfield-bootstrap
+
+# Optional profile packs (not in --core count)
+optional_profile_skills:
+  debate:
+    - pm-strategy-red-team
+    - pm-pre-mortem

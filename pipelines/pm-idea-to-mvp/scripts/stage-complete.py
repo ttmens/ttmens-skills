@@ -19,8 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
-
-PIPELINE_VERSION = "6.1.0"
+from pipeline_version import PIPELINE_VERSION
 
 # Default human checkpoints (overridable via harness-rules.yaml)
 DEFAULT_HUMAN_CHECKPOINT_STAGES = ["align", "spec", "ship"]

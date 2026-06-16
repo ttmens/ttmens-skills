@@ -2,6 +2,29 @@
 
 All notable changes to pm-idea-to-mvp pipeline will be documented in this file.
 
+## [7.1.1] - 2026-06-16
+
+### Fixed
+
+- **Feishu Grill routing**: normalize `/goal` prefix so `/goal 产品想法` routes to `pm_grill` (not silent `pm_kanban` skip)
+- **Meta query false triggers**: `query_exclusions` + `reserved_slugs` prevent skill-capability questions from starting Kanban
+- **Version SSOT**: `assets/pipeline-version.yaml` + `scripts/pipeline_version.py` unify version across scripts
+- **Decompose align note**: task body reflects whether `## 飞书 Grill` exists in brief (no false "preflight already done")
+- **Stage skills preload**: decompose attaches `skills` from `stage-skills.yaml` to each Kanban child task
+- **Refine CLI**: `hermes kanban refine` uses main decompose `--scenario refine` (v4 script deprecated)
+- **Profile sync**: `sync-hermes-profiles.py` v7.1 stage cards + optional `--prune-hub`
+- **v6.1.0 snapshot** moved to `archive/v6.1.0/` (not a live entry point)
+
+### Added
+
+- `scripts/pipeline_version.py`, `scripts/validate_skills.py` (repo `scripts/`)
+- `assets/trigger-routing.yaml` — `query_exclusions`, `strong_intent_markers`, `reserved_slugs`
+- `references/hermes-integration.md` v7.1 (Grill vs Kanban checkpoint distinction)
+
+### Hermes agent (not in this repo)
+
+Gateway adapter changes live in `hermes-agent/hermes_cli/pm_pipeline.py` — deploy alongside this skill release.
+
 ## [7.1.0] - 2026-06-15
 
 ### Overview

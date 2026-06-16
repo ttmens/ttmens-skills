@@ -1,13 +1,15 @@
 ---
 name: pm-idea-to-mvp
 description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code + Hermes UX (Feishu grill, trigger routing, brownfield/resume). brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro."
-version: 7.1.0
+version: 7.1.1
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
 metadata:
   hermes:
     tags: [super-developer, pipeline, kanban, loop-engineering, goal-primitives, runtime-verification, on-the-loop, github, pages, openspec, ship, ops, grow, browser-verification, rollback, brownfield-audit]
+    curator:
+      skip: true
     trigger_conditions:
       - "优化"
       - "重构"
@@ -50,7 +52,7 @@ metadata:
 
 # Super Developer Pipeline v7.1 (pm-idea-to-mvp)
 
-**唯一主流水线**（live 入口 = 本目录 `pipelines/pm-idea-to-mvp/`；**勿安装** `v6.1.0/` 快照）。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
+**唯一主流水线**（live 入口 = 本目录 `pipelines/pm-idea-to-mvp/`；历史快照见 `archive/v6.1.0/`，勿作运行入口）。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）

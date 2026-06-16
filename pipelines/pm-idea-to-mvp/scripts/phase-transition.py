@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Handle phase transitions: backtrack (mvp→spec) and inner-loop retry."""
 
 from __future__ import annotations
@@ -9,7 +9,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PIPELINE_VERSION = "6.2.0"
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_paths import resolve_pipeline_root
+
+from pipeline_version import PIPELINE_VERSION
 
 
 def load_gates(project_root: Path) -> dict:
