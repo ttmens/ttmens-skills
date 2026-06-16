@@ -227,6 +227,17 @@ echo "Profiles: $(ls $LOCAL/profiles/hermes-kanban/ | wc -l)"
 
 When evolving pipeline on `HERMES_HOME/skills/` (e.g. `D:/hermes-data/skills`), **commit changes to ttmens-skills Git first**, then sync repo → local. See [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md).
 
+## Push to GitHub (agent-autonomous)
+
+**Do not ask the user to push manually.** Token SSOT: `D:/hermes-data/.env` → `GITHUB_TOKEN`.
+
+```powershell
+cd D:/workspace/ttmens-skills
+powershell -NoProfile -File scripts/push_to_github.ps1
+```
+
+Remote must be `https://github.com/ttmens/ttmens-skills.git` (script sets this). See [`docs/GIT_WORKFLOW.md`](../../../docs/GIT_WORKFLOW.md).
+
 ## Pitfalls
 
 1. **GitHub network blocked** — `git pull` to github.com:443 often fails (connection reset/timeout). Use `api.github.com` zip download as fallback (see Network Fallback section).

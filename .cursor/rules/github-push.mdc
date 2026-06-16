@@ -1,0 +1,12 @@
+---
+description: ttmens-skills 推送到 GitHub 的凭据与脚本（自动 push，勿让用户重复提醒）
+alwaysApply: true
+---
+
+# Git push 约定
+
+- 远程：`https://github.com/ttmens/ttmens-skills.git`，分支 `main`
+- Token：从 `D:/hermes-data/.env` 的 `GITHUB_TOKEN` 读取（勿提交、勿在回复中打印）
+- 推送脚本：[`scripts/push_to_github.ps1`](../scripts/push_to_github.ps1)
+
+任务含「同步 git / push / 发布」时，Agent **必须**先尝试运行该脚本，不得默认让用户手动 push。
