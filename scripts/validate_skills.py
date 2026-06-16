@@ -72,7 +72,7 @@ UI_ACCEPTANCE_GENERIC = (
 # Pipeline scripts that may share a name with scripts/ (delegate only)
 DUPLICATE_SCRIPT_ALLOWLIST = {"feishu_notify.py"}
 
-ENTRY_DOC_VERSION = "7.1.0"
+ENTRY_DOC_VERSION = "7.1.1"
 
 LEGACY_ROOT_DIRS = [
     "skills",

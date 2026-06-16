@@ -1,4 +1,4 @@
-# Agent Entry — ttmens-skills v7.1.0
+# Agent Entry — ttmens-skills v7.1.1
 
 > 设计思想与能力全景：[README.md](README.md)  
 > **首次使用 / 安装 / 分平台自检**：[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)
@@ -12,7 +12,7 @@
 
 ## 1. 默认行为
 
-- **加载流水线**：`pm-idea-to-mvp` v7.1.0（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
+- **加载流水线**：`pm-idea-to-mvp` v7.1.1（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
 - **唯一 live 入口**：`pipelines/pm-idea-to-mvp/`（勿使用 `v6.1.0/` 快照目录）
 - **触发语**：从想法做到上线 · 继续 pm-{slug} · 优化现有产品 · 进入 {stage} 阶段
 - **路径变量**：`{PROJECT_ROOT}` = pm-{slug} 仓库根；`{SKILLS_ROOT}` = 技能库根（**勿硬编码绝对路径**）

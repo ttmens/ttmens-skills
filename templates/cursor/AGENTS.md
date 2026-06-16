@@ -1,4 +1,4 @@
-# pm-idea-to-mvp v7.1.0 — Cursor Agent
+# pm-idea-to-mvp v7.1.1 — Cursor Agent
 
 ## 技能从哪来
 
@@ -17,7 +17,7 @@ git submodule update --init --recursive
 
 ## 运行时（强制）
 
-- 默认流水线：`pm-idea-to-mvp` v7.1.0 → 读 `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md`
+- 默认流水线：`pm-idea-to-mvp` v7.1.1 → 读 `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md`
 - 触发语：**从想法做到上线** · 继续 pm-{slug} · 进入 {stage} 阶段
 - 每 stage 结束：
 
