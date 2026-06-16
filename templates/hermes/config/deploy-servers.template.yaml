@@ -1,0 +1,31 @@
+# PM pipeline deploy server registry (non-secret template).
+# Copy to HERMES_HOME/config/deploy-servers.yaml and fill host/user.
+# Passwords ONLY in HERMES_HOME/.env as SSH_PASSWORD_<SERVER_ID>.
+version: "1.0"
+default_server: example-primary
+
+servers:
+  example-primary:
+    label: Primary deploy target
+    host: "203.0.113.10"
+    port: 22
+    user: deploy
+    password_env: SSH_PASSWORD_EXAMPLE_PRIMARY
+    region: cn-example
+    notes: "Replace with your VPS; use per-project deploy.yaml server: field"
+
+  example-us:
+    label: US region example
+    host: "203.0.113.11"
+    port: 22
+    user: root
+    password_env: SSH_PASSWORD_EXAMPLE_US
+    region: us-east
+
+  example-apac:
+    label: APAC region example
+    host: "203.0.113.12"
+    port: 22
+    user: ubuntu
+    password_env: SSH_PASSWORD_EXAMPLE_APAC
+    region: ap-singapore

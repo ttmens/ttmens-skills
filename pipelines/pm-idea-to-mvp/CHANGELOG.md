@@ -2,6 +2,36 @@
 
 All notable changes to pm-idea-to-mvp pipeline will be documented in this file.
 
+## [7.2.0] - 2026-06-16
+
+### Overview
+
+E2E architecture release: local Hermes + OpenCode as sole orchestrator; pipeline/deploy/notify decoupling; align+ship dual HITL.
+
+### Added
+
+- `docs/ARCHITECTURE.md` — system design, implementation, effects
+- `scripts/pipeline_notify.py` — Feishu/Kanban notification SSOT (Pages deep links + manifest checklist)
+- `scripts/deploy_servers.py`, `ssh_preflight.py`, `apply-deploy-servers.py` — deploy registry + paramiko preflight
+- `scripts/pm-e2e-smoke.py` — pipeline self-check
+- `scripts/pipeline_observability.py`, `batch-init-projects.py`
+- `assets/deploy.template.yaml`, `assets/artifacts.manifest.template.yaml`
+- `templates/hermes/config/deploy-servers.template.yaml` — non-secret server registry template
+
+### Changed
+
+- **Dual HITL**: human checkpoints **align + ship only** (spec G2 remains script-gated)
+- `stage-complete.py`: order build-run-report → git_push → feishu_notify
+- `build-run-report.py`: stable tab anchors for Pages deep links
+- `validate-gates.py`: ship deploy gate + opencode evidence
+- `feishu_notify.py`: Open API + delegates to `pipeline_notify`
+- `init-project.py`: deploy/artifacts templates per slug
+- Remote VPS: runtime-only (no Hermes Gateway orchestration)
+
+### Hermes agent (not in this repo)
+
+Companion: `pm_pipeline.build_kanban_notify_message()`, `feishu_pipeline_cards.py` — deploy with this release.
+
 ## [7.1.1] - 2026-06-16
 
 ### Fixed

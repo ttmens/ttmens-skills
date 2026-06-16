@@ -1,7 +1,7 @@
 # pm-idea-to-mvp Hermes trigger routing — single source of truth (v6.1.0)
 # Consumed by hermes_cli/pm_pipeline.py
 
-version: "7.1.1"
+version: "7.2.0"
 
 # Meta questions ABOUT the skill — do NOT start Kanban (route to Ralph chat)
 query_exclusions:
@@ -60,6 +60,8 @@ goal_prefixes:
   - "产品想法:"
   - "idea:"
   - "idea："
+  - "/pipeline"
+  - "pipeline:"
 
 resume_patterns:
   - pattern: '继续\s*pm[-\s]?([\w-]+)'

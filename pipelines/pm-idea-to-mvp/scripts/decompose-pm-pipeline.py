@@ -35,7 +35,7 @@ if str(HERMES_AGENT) not in sys.path:
 
 from hermes_cli import kanban_db as kb  # noqa: E402
 
-DEFAULT_HUMAN_CHECKPOINTS = ["align", "spec", "ship"]
+DEFAULT_HUMAN_CHECKPOINTS = ["align", "ship"]
 
 CHECKPOINT_ALIGN = """HUMAN CHECKPOINT (two-phase):
   FIRST RUN: stage-complete --stage align --project-root <proj> --task-id <id> --runtime
@@ -79,7 +79,6 @@ decisions:
 
 human_checkpoints:
   - align
-  - spec
   - ship
 
 inner_loop:
@@ -310,7 +309,8 @@ def build_children_greenfield(slug: str, title: str) -> list[dict]:
              "Outputs: 02-analysis.md, architecture/c4-*.md, openspec/proposal.md.")},
         {"title": f"原型+PRD+OpenSpec — {slug}", "assignee": "pm-planner", "parents": [2],
          "body": task_body("spec", slug, title,
-             "Outputs: 03b-user-journey.md, 02b-prototype/, 03-prd.md, openspec/tasks.md.\n" + CHECKPOINT_SPEC)},
+             "Outputs: 03b-user-journey.md, 02b-prototype/, 03-prd.md, openspec/tasks.md.\n"
+             "Auto-advance after gates pass (no human checkpoint at spec).")},
         {"title": f"MVP Plan — {slug}", "assignee": "pm-builder", "parents": [3],
          "body": task_body("mvp-plan", slug, title,
              "Inner loop step 1: writing-plans + 04-mvp/DESIGN.md via ui-ux-pro-max.")},
@@ -371,7 +371,8 @@ def build_children_refine(slug: str, title: str) -> list[dict]:
          "body": task_body("research", slug, title, "Output: 01b-benchmark.md (≥3 case studies).")},
         {"title": f"Refine UX/旅程 — {slug}", "assignee": "pm-planner", "parents": [0],
          "body": task_body("spec", slug, title,
-             "Update 03b-user-journey.md + 02b-prototype/.\n" + CHECKPOINT_SPEC)},
+             "Update 03b-user-journey.md + 02b-prototype/.\n"
+             "Auto-advance after gates pass (no human checkpoint at spec).")},
         {"title": f"Refine MVP iter — {slug}", "assignee": "pm-builder", "parents": [1],
          "body": task_body("mvp-iter1", slug, title, "Implement UX fixes. stage-complete --stage mvp --runtime.")},
     ]
@@ -410,6 +411,52 @@ def setup_project(project_root: Path, slug: str, title: str, body: str) -> dict:
     }
 
 
+def subscribe_pipeline_notifications(
+    conn,
+    *,
+    root_task_id: str,
+    child_ids: list[str],
+    children: list[dict],
+) -> list[str]:
+    """Register Feishu/gateway notify subs for root + human-checkpoint child tasks."""
+    platform = os.environ.get("PM_NOTIFY_PLATFORM", "").strip().lower()
+    chat_id = os.environ.get("PM_NOTIFY_CHAT_ID", "").strip()
+    thread_id = os.environ.get("PM_NOTIFY_THREAD_ID", "").strip() or None
+    user_id = os.environ.get("PM_NOTIFY_USER_ID", "").strip() or None
+    if not platform or not chat_id:
+        home = os.environ.get("FEISHU_HOME_CHANNEL", "").strip()
+        if home:
+            platform = platform or "feishu"
+            chat_id = chat_id or home
+            thread_id = thread_id or os.environ.get("FEISHU_HOME_CHANNEL_THREAD_ID", "").strip() or None
+    if not platform or not chat_id:
+        return []
+
+    subscribed: list[str] = []
+    targets = [root_task_id]
+    for child_id, child in zip(child_ids, children):
+        body = child.get("body") or ""
+        if "HUMAN CHECKPOINT" in body or child.get("assignee") in ("pm-aligner", "pm-shipper"):
+            if "CHECKPOINT" in body or child.get("assignee") == "pm-shipper":
+                targets.append(child_id)
+    seen: set[str] = set()
+    for tid in targets:
+        if tid in seen:
+            continue
+        seen.add(tid)
+        kb.add_notify_sub(
+            conn,
+            task_id=tid,
+            platform=platform,
+            chat_id=chat_id,
+            thread_id=thread_id,
+            user_id=user_id,
+            notifier_profile="pm-orchestrator",
+        )
+        subscribed.append(tid)
+    return subscribed
+
+
 def decompose_gateway(
     task_id: str,
     slug: str | None,
@@ -437,6 +484,12 @@ def decompose_gateway(
             }
 
         setup = setup_project(proj, resolved_slug, title, body)
+        init_script = SCRIPT_DIR / "init-project.py"
+        if init_script.exists():
+            subprocess.run(
+                [sys.executable, str(init_script), "--project-root", str(proj), "--slug", resolved_slug],
+                capture_output=True, text=True, timeout=60,
+            )
         publish_err = publish_project_repo(proj, resolved_slug, title)
         child_titles = [c["title"] for c in children]
         write_run_manifest(proj, resolved_slug, title, child_titles, scenario)
@@ -449,6 +502,13 @@ def decompose_gateway(
         )
         if not child_ids:
             raise SystemExit("decompose_triage_task failed")
+
+        notify_subs = subscribe_pipeline_notifications(
+            conn,
+            root_task_id=task_id,
+            child_ids=child_ids,
+            children=children,
+        )
 
         kb.add_comment(
             conn, task_id, "decompose-pm-pipeline",
@@ -467,6 +527,7 @@ def decompose_gateway(
         "setup": setup,
         "publish_error": publish_err,
         "assignees": [c["assignee"] for c in children],
+        "notify_subs": notify_subs,
     }
 
 

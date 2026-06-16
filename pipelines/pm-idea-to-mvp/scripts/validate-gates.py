@@ -13,6 +13,7 @@ Exit 0 if all checks pass, 1 otherwise. Outputs JSON report.
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -573,6 +574,77 @@ def run_goal_checks(stage: str, project_root: Path) -> dict:
         return {"error": str(e), "pass": False}
 
 
+def validate_pipeline_evidence(stage: str, project_root: Path) -> list[dict[str, Any]]:
+    """v7.1 gates: opencode log (mvp), ui acceptance (ship), rollback section (ship)."""
+    checks: list[dict[str, Any]] = []
+    runs = project_root / "runs"
+    norm_stage = stage
+    if stage.startswith("mvp"):
+        norm_stage = "mvp"
+        logs: list[Path] = []
+        if runs.exists():
+            logs = list(runs.glob("**/opencode/session.log")) + list(runs.glob("**/opencode/*.log"))
+        checks.append({
+            "check": "opencode_evidence",
+            "pass": len(logs) > 0 or os.environ.get("SKIP_OPENCODE_GATE") == "1",
+            "detail": f"opencode logs found: {len(logs)} (set SKIP_OPENCODE_GATE=1 to waive)",
+        })
+    if norm_stage == "ship":
+        pngs = list(runs.glob("**/ui-acceptance/*.png")) if runs.exists() else []
+        ui_report = project_root / "docs/ui-acceptance-report.md"
+        checks.append({
+            "check": "ui_acceptance_evidence",
+            "pass": len(pngs) > 0 or ui_report.exists(),
+            "detail": f"screenshots={len(pngs)} report={ui_report.exists()}",
+        })
+        runbook = project_root / "RUNBOOK.md"
+        if runbook.exists():
+            text = runbook.read_text(encoding="utf-8", errors="replace").lower()
+            has_rollback = "rollback" in text or "回退" in text or "回滚" in text
+            checks.append({
+                "check": "runbook_rollback",
+                "pass": has_rollback,
+                "detail": "RUNBOOK must include rollback/回退 section",
+            })
+        checks.extend(_validate_deploy_config(project_root))
+    return checks
+
+
+def _validate_deploy_config(project_root: Path) -> list[dict[str, Any]]:
+    """Ship gate: deploy.yaml must resolve to host, user, and health_urls (or server id)."""
+    deploy_path = project_root / "deploy.yaml"
+    if not deploy_path.exists():
+        return [{
+            "check": "deploy_yaml",
+            "pass": False,
+            "detail": "deploy.yaml missing — run init-project.py",
+        }]
+    try:
+        import yaml
+        raw = yaml.safe_load(deploy_path.read_text(encoding="utf-8")) or {}
+    except Exception as exc:
+        return [{"check": "deploy_yaml", "pass": False, "detail": str(exc)}]
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from deploy_servers import resolve_deploy
+        deploy = resolve_deploy(raw)
+    except Exception:
+        deploy = raw
+    host = (deploy.get("host") or "").strip()
+    user = (deploy.get("user") or "").strip()
+    health = deploy.get("health_urls") or []
+    server = (deploy.get("server") or "").strip()
+    ok = bool(host and user and (health or server))
+    return [{
+        "check": "deploy_yaml",
+        "pass": ok,
+        "detail": (
+            f"server={server or '-'} host={'set' if host else 'empty'} "
+            f"user={'set' if user else 'empty'} health_urls={len(health)}"
+        ),
+    }]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validate pipeline stage gates (v6.2.0)"
@@ -608,6 +680,10 @@ def main():
     parser.add_argument(
         "--quiet", action="store_true",
         help="Suppress stdout, only write to gates.json"
+    )
+    parser.add_argument(
+        "--evidence-dir", default="",
+        help="Optional evidence output directory (defaults to project runs/)"
     )
 
     args = parser.parse_args()
@@ -677,6 +753,7 @@ def main():
                 "pass": False,
                 "detail": "harness-rules.yaml not found in project root",
             })
+        report["checks"].extend(validate_pipeline_evidence(stage, project_root))
 
     # Mode 3: Goal checks
     if args.goal:

@@ -103,7 +103,7 @@ def format_text(report: dict) -> str:
         lines.append("⏸ 等待 unblock:")
         for b in blocked:
             lines.append(f"  • {b['id']} [{b['assignee']}] {b['title'][:60]}")
-            lines.append(f"    → hermes kanban unblock {b['id']}")
+            lines.append(f"    → 飞书回复: 确认 {b['id']}")
     active = report.get("active") or []
     if active:
         lines.append("")
@@ -121,9 +121,11 @@ def main() -> None:
     parser.add_argument("--slug", default="")
     parser.add_argument("--task-id", default="")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--feishu-notify", action="store_true", help="Push alert to Feishu when blocked/ready thresholds exceeded")
     args = parser.parse_args()
 
     slug = args.slug.removeprefix("pm-") if args.slug else ""
+    proj = None
     with kb.connect_closing() as conn:
         root_id = args.task_id or None
         if not root_id and slug:
@@ -137,7 +139,30 @@ def main() -> None:
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        print(format_text(report))
+        text = format_text(report)
+        print(text)
+
+    if args.feishu_notify:
+        blocked = report.get("blocked") or []
+        ready_count = (report.get("counts") or {}).get("ready", 0)
+        if blocked or ready_count > 5:
+            skills_root = HERMES_HOME / "skills"
+            notify = skills_root / "scripts" / "feishu_notify.py"
+            if notify.exists():
+                import subprocess
+
+                extra = text if not args.json else format_text(report)
+                subprocess.run(
+                    [
+                        sys.executable,
+                        str(notify),
+                        "--stage", "kanban",
+                        "--status", "ALERT",
+                        "--project-root", str(proj or PROJECTS_ROOT),
+                        "--extra", extra[:1500],
+                    ],
+                    timeout=30,
+                )
 
 
 if __name__ == "__main__":

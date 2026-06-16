@@ -1,0 +1,22 @@
+version: "7.2.0"
+pipeline: pm-idea-to-mvp
+stages:
+  align:
+    deliverables:
+      - path: CONTEXT.md
+        gate: G1
+        min_lines: 50
+  spec:
+    deliverables:
+      - path: 03-prd.md
+      - path: design-system.yaml
+  mvp:
+    deliverables:
+      - path: 04-mvp/
+      - path: 04-mvp/DESIGN.md
+  ship:
+    deliverables:
+      - path: RUNBOOK.md
+      - path: docs/ui-acceptance-report.md
+rollback:
+  required_sections: ["回退", "rollback"]

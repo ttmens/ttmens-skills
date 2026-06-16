@@ -1,0 +1,13 @@
+version: "1.0"
+name: pm-{slug}
+colors:
+  primary: "#2563eb"
+  secondary: "#64748b"
+  background: "#ffffff"
+  text: "#0f172a"
+typography:
+  font_family: "system-ui, sans-serif"
+  scale: [12, 14, 16, 20, 24, 32]
+spacing:
+  unit: 4
+  scale: [4, 8, 12, 16, 24, 32, 48]

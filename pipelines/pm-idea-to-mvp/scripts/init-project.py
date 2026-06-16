@@ -27,6 +27,32 @@ from pipeline_paths import resolve_pipeline_root
 from pipeline_version import PIPELINE_VERSION
 
 
+def init_templates(project_root: Path, slug: str, pipeline_root: Path) -> list[str]:
+    """Copy SSOT templates: deploy.yaml, artifacts.manifest.yaml, design-system.yaml."""
+    created: list[str] = []
+    assets = pipeline_root / "assets"
+    mappings = [
+        ("deploy.template.yaml", "deploy.yaml", {"{slug}": slug}),
+        ("artifacts.manifest.template.yaml", "artifacts.manifest.yaml", {}),
+        ("design-system.template.yaml", "design-system.yaml", {"{slug}": slug}),
+    ]
+    for tpl_name, dest_name, repl in mappings:
+        tpl = assets / tpl_name
+        dest = project_root / dest_name
+        if not tpl.exists() or dest.exists():
+            continue
+        text = tpl.read_text(encoding="utf-8")
+        for k, v in repl.items():
+            text = text.replace(k, v)
+        dest.write_text(text, encoding="utf-8")
+        created.append(dest_name)
+    runs_dir = project_root / "runs"
+    if not runs_dir.exists():
+        runs_dir.mkdir(parents=True)
+        created.append("runs/")
+    return created
+
+
 def init_governance(project_root: Path, slug: str) -> list[str]:
     """Initialize all governance artifacts. Returns list of created files."""
     created = []
@@ -77,7 +103,7 @@ def init_governance(project_root: Path, slug: str) -> list[str]:
             "version": PIPELINE_VERSION,
             "mode": "loop",
             "stages": {
-                s: {"status": "pending", "checkpoint": "human" if s == "ship" else "auto"}
+                s: {"status": "pending", "checkpoint": "human" if s in ("align", "ship") else "auto"}
                 for s in ["brief", "align", "research", "analysis", "spec", "mvp", "ship", "operate", "grow", "retro"]
             }
         }
@@ -100,6 +126,7 @@ def init_governance(project_root: Path, slug: str) -> list[str]:
             f"  health_url: ''\n"
             f"  workdir: '.'\n"
             f"human_checkpoints:\n"
+            f"  - align\n"
             f"  - ship\n"
             f"inner_loop:\n"
             f"  max_iterations: 3\n",
@@ -193,6 +220,8 @@ def main() -> int:
     project_root.mkdir(parents=True, exist_ok=True)
 
     created = init_governance(project_root, args.slug)
+    pipeline_root = resolve_pipeline_root()
+    created.extend(init_templates(project_root, args.slug, pipeline_root))
 
     skills_root = args.skills_root
     if skills_root is None:

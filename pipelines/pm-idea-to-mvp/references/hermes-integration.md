@@ -1,8 +1,9 @@
-# Hermes Integration — pm-idea-to-mvp (v7.1.1)
+# Hermes Integration — pm-idea-to-mvp (v7.2.0)
 
 > **契约源头**：飞书/gateway 如何触发本技能、与 Ralph `/goal` 的边界、续跑与场景路由。
 > **实现层**：`hermes-agent/hermes_cli/pm_pipeline.py`（适配层，非独立技能）。
 > **版本 SSOT**：`assets/pipeline-version.yaml`（与 `stage-skills.yaml` 同步）。
+> **架构总览**：[`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md)
 
 ## 路由决策
 
@@ -41,12 +42,23 @@ Greenfield `/goal 产品想法` **不立即 decompose**。流程见 `references/
 - Triage root assignee：`pm-orchestrator`
 - Decompose：`scripts/decompose-pm-pipeline.py --task-id … --scenario {greenfield|brownfield|optimize|refine}`
 - 子任务 **skills 预加载**：`stage-skills.yaml` → `pm-idea-to-mvp` + 阶段 native/borrowed
-- 进度通知：`stage-complete.py` → `skills/scripts/feishu_notify.py`
+- **人工卡点（v7.2）**：仅 **align** + **ship**；spec G2 由 `goal-check.py` 脚本 gate
+- 进度通知：`stage-complete.py` → `build-run-report` → `git_push` → `feishu_notify.py`
+- 通知 SSOT：`scripts/pipeline_notify.py`（Gateway notifier 共用同一 builder）
+- 飞书解卡：`确认 t_xxx`（`feishu_pipeline_cards.py`）或 `hermes kanban unblock t_xxx`
 - 状态报告：`scripts/kanban-status-report.py`
+
+## Deploy（ship 阶段，与流水线解耦）
+
+- 每项目 `deploy.yaml`：`server: <id>` → `HERMES_HOME/config/deploy-servers.yaml`
+- 密码：`HERMES_HOME/.env` 的 `SSH_PASSWORD_*`（不进 Git）
+- 模板：[`templates/hermes/config/deploy-servers.template.yaml`](../../../templates/hermes/config/deploy-servers.template.yaml)
+- 预检：`ssh_preflight.py --project-root …`
+- 远端 VPS：**runtime only**，不跑独立 Hermes Gateway
 
 ## 路径与环境
 
-| 变量 | 默认（本机） |
+| 变量 | 默认（本机示例） |
 |------|-------------|
 | `HERMES_HOME` | `D:/hermes-data` |
 | `SKILLS_ROOT` | `{HERMES_HOME}/skills` |
@@ -60,11 +72,22 @@ Greenfield `/goal 产品想法` **不立即 decompose**。流程见 `references/
 HERMES_HOME=D:/hermes-data python skills/pipelines/pm-idea-to-mvp/scripts/sync-hermes-profiles.py --prune-hub
 ```
 
-写入 9 个 `profiles/pm-*/skills/pm-idea-to-mvp/SKILL.md` stage cards（v7.1）。
+写入 9 个 `profiles/pm-*/skills/pm-idea-to-mvp/SKILL.md` stage cards（v7.2）。
+
+## Companion Gateway 最低要求
+
+| 模块 | 能力 |
+|------|------|
+| `pm_pipeline.py` | Grill/resume routing; `build_kanban_notify_message()` |
+| `feishu_pipeline_cards.py` | Parse `确认 t_xxx` → unblock |
+| `gateway/run.py` | Embedded Kanban dispatcher; notifier uses pipeline_notify |
+
+Hermes Agent ≥ v0.16 recommended (local orchestration SSOT).
 
 ## 验证
 
 ```bash
 python skills/scripts/validate_skills.py
-python skills/scripts/validate_skills.py --fix-nested --dry-run
+python pipelines/pm-idea-to-mvp/scripts/pm-e2e-smoke.py
+python scripts/check_docs_ssot.py
 ```

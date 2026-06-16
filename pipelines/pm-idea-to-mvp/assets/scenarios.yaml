@@ -1,7 +1,7 @@
-# pm-idea-to-mvp decompose scenarios (v7.1.1)
+# pm-idea-to-mvp decompose scenarios (v7.1.0)
 # Used by decompose-pm-pipeline.py --scenario
 
-version: "7.1.1"
+version: "7.1.0"
 
 scenarios:
   greenfield:

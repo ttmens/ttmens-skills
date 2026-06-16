@@ -22,7 +22,7 @@ from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 from pipeline_version import PIPELINE_VERSION
 
 # Default human checkpoints (overridable via harness-rules.yaml)
-DEFAULT_HUMAN_CHECKPOINT_STAGES = ["align", "spec", "ship"]
+DEFAULT_HUMAN_CHECKPOINT_STAGES = ["align", "ship"]
 
 # Stages that MANDATE runtime verification (cannot be skipped)
 # Based on pm-knowledge-platform post-mortem: tasks were marked complete without
@@ -254,13 +254,9 @@ def run_feishu_notify(
     ]
 
     if needs_checkpoint and passed:
-        status_text = "CHECKPOINT ⏸ — awaiting unblock"
+        status_text = "CHECKPOINT ⏸ — awaiting confirm"
     else:
         status_text = "PASS ✅" if passed else "FAIL ❌"
-
-    extra = ""
-    if needs_checkpoint and passed and task_id:
-        extra = f"确认产物后: hermes kanban unblock {task_id}"
 
     for notify_script in notify_scripts:
         if notify_script.exists():
@@ -271,8 +267,8 @@ def run_feishu_notify(
             ]
             if task_id:
                 args.extend(["--task-id", task_id])
-            if extra:
-                args.extend(["--extra", extra])
+            if needs_checkpoint and passed:
+                args.append("--human-checkpoint")
 
             return run_script("feishu_notify.py", args, project_root, timeout=30)
 
@@ -340,21 +336,23 @@ def run_git_push(project_root: Path) -> dict:
 def build_run_report(stage: str, project_root: Path) -> dict:
     """Build a run report for the stage completion."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    skills_root = resolve_skills_root()
-    pub = skills_root / "scripts" / "publish_repo.py"
+    script_dir = Path(__file__).resolve().parent
+    build_script = script_dir / "build-run-report.py"
     pages = None
-    if pub.exists():
+    if build_script.exists():
         r = subprocess.run(
-            [sys.executable, str(pub), "--project-root", str(project_root)],
+            [sys.executable, str(build_script), "--run", str(project_root)],
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=120,
         )
         if r.returncode == 0:
             try:
                 pages = json.loads(r.stdout)
             except json.JSONDecodeError:
-                pages = {"raw": r.stdout[:200]}
+                pages = {"raw": (r.stdout or "")[:500]}
+        else:
+            pages = {"error": (r.stderr or r.stdout or "")[:300]}
     return {
         "pipeline_version": PIPELINE_VERSION,
         "stage": stage,
@@ -543,15 +541,7 @@ def main():
     run_report["checks_passed"] = all_checks_passed
     report["steps"].append({"step": "build_run_report", "report": run_report})
 
-    # Step 6: Feishu notification
-    if not args.skip_notify:
-        notify_result = run_feishu_notify(
-            stage, project_root, all_checks_passed, args.task_id,
-            needs_checkpoint=needs_checkpoint,
-        )
-        report["steps"].append({"step": "feishu_notify", **notify_result})
-
-    # Step 7: Git push (only if checks passed or forced)
+    # Step 6: Git push before notify so Pages link reflects latest report
     if not args.skip_git and all_checks_passed:
         git_result = run_git_push(project_root)
         report["steps"].append({"step": "git_push", **git_result})
@@ -561,6 +551,14 @@ def main():
             "status": "skipped",
             "detail": "Checks failed, skipping git push",
         })
+
+    # Step 7: Feishu notification (after push when checks passed)
+    if not args.skip_notify:
+        notify_result = run_feishu_notify(
+            stage, project_root, all_checks_passed, args.task_id,
+            needs_checkpoint=needs_checkpoint,
+        )
+        report["steps"].append({"step": "feishu_notify", **notify_result})
 
     # Final status
     # Final status + platform actions

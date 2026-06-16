@@ -10,6 +10,7 @@ runtime:
   health_url: ''
   workdir: '.'
 human_checkpoints:
+  - align
   - ship
 inner_loop:
   max_iterations: 3

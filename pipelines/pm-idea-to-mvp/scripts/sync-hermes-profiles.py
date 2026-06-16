@@ -24,7 +24,7 @@ PROFILES_ROOT = HERMES_HOME / "profiles"
 AGENT_ROOT = HERMES_HOME / "hermes-agent"
 SCRIPTS_DIR = PIPELINE_ROOT / "scripts"
 STAGE_CARDS = PIPELINE_ROOT / "references" / "hermes-stage-cards"
-RUNTIME_DOC = PIPELINE_ROOT / "references" / "runtime-kanban-v6.0.md"
+RUNTIME_DOC = PIPELINE_ROOT / "references" / "runtime-kanban-v7.1.md"
 
 STAGE_COMPLETE = SCRIPTS_DIR / "stage-complete.py"
 

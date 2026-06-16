@@ -1,11 +1,7 @@
-> **DEPRECATED** — 历史文档。Live SSOT：[`runtime-kanban-v7.1.md`](runtime-kanban-v7.1.md) + [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md)（v7.2 align+ship 双卡点）。
+# Runtime Kanban v7.2 — 运行时详解
 
-# Runtime Kanban v6.0 / v6.1 — 运行时详解
-
-> pm-idea-to-mvp v6.1 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、status-report。
-> Kanban 图仍为 v6.0 十二步 + MVP inner loop（见 §1）。
-
-**v6.1 适配层**：`hermes_cli/pm_pipeline.py` + `references/hermes-integration.md`
+> pm-idea-to-mvp v7.2.0 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、Feishu 确认 `确认 {task_id}`、pipeline_notify 产物清单。
+> Kanban 图仍为十二步 + MVP inner loop（见 §1）。人工卡点：**align + ship**（spec 自动推进）。
 
 ## 1. v6.0 Kanban 阶段图（含 Inner Loop）
 

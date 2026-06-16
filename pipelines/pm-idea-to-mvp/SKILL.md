@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
 description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code + Hermes UX (Feishu grill, trigger routing, brownfield/resume). brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro."
-version: 7.1.1
+version: 7.2.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -1286,7 +1286,7 @@ When resuming work on an existing pm-{slug} project or diagnosing pipeline execu
 ```
 
 Grill 完成后 gateway 调用 `decompose-pm-pipeline.py --task-id … --scenario greenfield`。
-人工卡点 align / spec / ship — `hermes kanban unblock <task-id>`。
+人工卡点 **align + ship**（v7.2 双卡点）— 飞书 `确认 <task-id>` 或 `hermes kanban unblock <task-id>`。spec G2 由脚本 gate，不人工 unblock。
 
 ## Upgrade history
 

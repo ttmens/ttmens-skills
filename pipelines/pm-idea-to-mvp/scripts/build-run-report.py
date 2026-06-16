@@ -14,6 +14,7 @@ import sys
 
 sys.path.insert(0, str(SCRIPT_DIR))
 from github_helpers import GITHUB_OWNER, pages_url, repo_url  # noqa: E402
+from pipeline_notify import artifact_tab_id  # noqa: E402
 
 ARTIFACTS = [
     ("RUN.md", "运行说明"),
@@ -165,7 +166,7 @@ def build_html(run_dir: Path, slug: str) -> str:
     tabs = []
     panels = []
     for fname, label in ARTIFACTS:
-        tid = fname.replace(".", "-")
+        tid = artifact_tab_id(fname)
         tabs.append(f'<button class="tab" data-tab="{tid}">{label}</button>')
         panels.append(f'<div class="panel" id="{tid}">{md_block(run_dir / fname)}</div>')
 
@@ -246,6 +247,8 @@ def build_html(run_dir: Path, slug: str) -> str:
       panel.insertBefore(div, pre);
     }});
     activate(tabs[0]?.dataset.tab || 'RUN-md');
+    const hashId = location.hash.replace(/^#/, '');
+    if (hashId) activate(hashId);
   </script>
 </body>
 </html>
