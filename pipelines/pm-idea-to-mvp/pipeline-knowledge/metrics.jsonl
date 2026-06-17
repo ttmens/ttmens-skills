@@ -1,3 +1,0 @@
-{"ts":"2026-06-07T00:00:00Z","slug":"feishu-pipeline-test","event":"decompose","children":6,"first_assignee":"pm-aligner","deterministic":true}
-{"ts":"2026-06-07T00:00:00Z","slug":"competitor-radar","event":"backfill","l0_pass":true,"l1_align_fail":"missing assumptions keyword","note":"historical v2.1 run"}
-{"ts":"2026-06-07T18:30:00Z","slug":"kl-management","event":"retro","stages_completed":7,"tests_passed":39,"smoke_passed":18,"tasks_completed":15,"bugs_fixed":6,"total_duration_min":70,"opencode_generations":1,"manual_patches":6,"github_pushed":true,"pages_generated":true}

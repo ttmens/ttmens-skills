@@ -1,7 +1,0 @@
-# Stage: ship
-stage: ship
-goals:
-  - id: Shi1
-    description: 'ship stage artifacts exist'
-    type: file_exists
-    target: 'TODO'
