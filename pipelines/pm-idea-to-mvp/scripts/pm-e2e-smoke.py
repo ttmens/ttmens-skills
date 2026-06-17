@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -96,6 +97,125 @@ def check_feishu_cards() -> dict:
     ])
 
 
+def check_profile_borrowed_skills() -> dict:
+    sync_script = PIPELINE_SCRIPTS / "sync-hermes-profiles.py"
+    if not sync_script.exists():
+        return {"check": "profile_borrowed_skills", "ok": False, "error": "sync script missing"}
+    cmd = [PY, str(sync_script), "--dry-run", "--sync-borrowed"]
+    r = subprocess.run(
+        cmd, capture_output=True, text=True, timeout=120,
+        encoding="utf-8", errors="replace",
+        env={**os.environ, "HERMES_HOME": str(HERMES_HOME)},
+    )
+    missing: list[str] = []
+    if r.stdout.strip():
+        try:
+            data = json.loads(r.stdout)
+            for prof in data.get("profiles") or []:
+                borrowed = prof.get("borrowed") or {}
+                for name in borrowed.get("borrowed_missing_src") or []:
+                    missing.append(f"{prof.get('profile')}:src:{name}")
+        except json.JSONDecodeError:
+            pass
+    profiles_root = HERMES_HOME / "profiles"
+    profile_stages = {
+        "pm-aligner": ["align"],
+        "pm-researcher": ["research", "import"],
+        "pm-analyst": ["analysis"],
+        "pm-planner": ["spec"],
+        "pm-builder": ["mvp", "retro", "import"],
+        "pm-shipper": ["ship"],
+        "pm-operator": ["operate"],
+        "pm-growth": ["grow"],
+    }
+    import yaml
+
+    stage_cfg_path = SKILLS / "pipelines/pm-idea-to-mvp/stage-skills.yaml"
+    stage_cfg = yaml.safe_load(stage_cfg_path.read_text(encoding="utf-8")) if stage_cfg_path.exists() else {}
+    stages = stage_cfg.get("stages") or {}
+    for profile, stage_keys in profile_stages.items():
+        for stage_key in stage_keys:
+            for name in stages.get(stage_key, {}).get("borrowed") or []:
+                dest = profiles_root / profile / "skills" / "borrowed" / name / "SKILL.md"
+                if not dest.exists():
+                    missing.append(f"{profile}:{name}")
+    return {
+        "check": "profile_borrowed_skills",
+        "ok": not missing,
+        "missing": missing[:20],
+        "missing_count": len(missing),
+    }
+
+
+def check_pm_routing_smoke() -> dict:
+    if not HERMES_AGENT.exists():
+        return {"check": "pm_routing_smoke", "ok": True, "skipped": "hermes-agent not found"}
+    agent_path = str(HERMES_AGENT).replace("\\", "\\\\")
+    sample = (
+        "使用想法到产品 新开一个项目 [amnRideAI/demo-repository] "
+        "clone整个代码仓 深入优化"
+    )
+    cmd = [
+        PY, "-c",
+        f"import sys; sys.path.insert(0, r'{agent_path}'); "
+        "from hermes_cli import pm_pipeline as p; "
+        f"t={sample!r}; "
+        "assert p.detect_scenario(t)=='import_repo', p.detect_scenario(t); "
+        "assert p.extract_slug('', t)=='demo-repository', p.extract_slug('', t); "
+        "assert p.classify_route('/goal '+t)=='pm_kanban'",
+    ]
+    return run(cmd)
+
+
+def check_pm_kanban_guard() -> dict:
+    if not HERMES_AGENT.exists():
+        return {"check": "pm_kanban_guard", "ok": True, "skipped": "hermes-agent not found"}
+    agent_path = str(HERMES_AGENT).replace("\\", "\\\\")
+    cmd = [
+        PY, "-c",
+        f"import sys; sys.path.insert(0, r'{agent_path}'); "
+        "from hermes_cli.pm_kanban_guard import pm_pipeline_completion_blocked; "
+        "import sqlite3; c=sqlite3.connect(':memory:'); "
+        "body='stage: mvp-iter1\\nSlug: demo\\nProject root: D:/workspace/projects/pm-demo'; "
+        "msg=pm_pipeline_completion_blocked(c,'t_x',assignee='pm-builder',body=body,title='MVP',status='ready'); "
+        "assert msg and 'gates not pass' in msg",
+    ]
+    return run(cmd)
+
+
+def check_worker_skill_preload() -> dict:
+    if not HERMES_AGENT.exists():
+        return {"check": "worker_skill_preload", "ok": True, "skipped": "hermes-agent not found"}
+    agent_path = str(HERMES_AGENT).replace("\\", "\\\\")
+    profile_home = str(HERMES_HOME / "profiles" / "pm-builder").replace("\\", "/")
+    cmd = [
+        PY, "-c",
+        f"import os; os.environ['HERMES_HOME']=r'{profile_home}'; "
+        f"import sys; sys.path.insert(0, r'{agent_path}'); "
+        "from agent.skill_commands import build_preloaded_skills_prompt; "
+        "_, loaded, missing = build_preloaded_skills_prompt(['kw-testing-strategy']); "
+        "assert not missing, missing; assert 'testing-strategy' in loaded",
+    ]
+    return run(cmd)
+    if not HERMES_AGENT.exists():
+        return {"check": "pm_routing_smoke", "ok": True, "skipped": "hermes-agent not found"}
+    agent_path = str(HERMES_AGENT).replace("\\", "\\\\")
+    sample = (
+        "使用想法到产品 新开一个项目 [amnRideAI/demo-repository] "
+        "clone整个代码仓 深入优化"
+    )
+    cmd = [
+        PY, "-c",
+        f"import sys; sys.path.insert(0, r'{agent_path}'); "
+        "from hermes_cli import pm_pipeline as p; "
+        f"t={sample!r}; "
+        "assert p.detect_scenario(t)=='import_repo', p.detect_scenario(t); "
+        "assert p.extract_slug('', t)=='demo-repository', p.extract_slug('', t); "
+        "assert p.classify_route('/goal '+t)=='pm_kanban'",
+    ]
+    return run(cmd)
+
+
 def main() -> int:
     checks = []
     checks.append(run([PY, str(SKILLS / "scripts" / "validate_skills.py")]))
@@ -106,6 +226,10 @@ def main() -> int:
     checks.append({"check": "feishu_notify_exists", "ok": notify.exists()})
     checks.append(check_pipeline_notify_message())
     checks.append(check_kanban_notify_bridge())
+    checks.append(check_profile_borrowed_skills())
+    checks.append(check_pm_routing_smoke())
+    checks.append(check_pm_kanban_guard())
+    checks.append(check_worker_skill_preload())
     checks.append(run([
         PY, "-c",
         f"import sys; sys.path.insert(0, r'{PIPELINE_SCRIPTS}'); "

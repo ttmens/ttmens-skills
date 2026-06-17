@@ -1,7 +1,12 @@
-# pm-idea-to-mvp Hermes trigger routing — single source of truth (v6.1.0)
+# pm-idea-to-mvp Hermes trigger routing — single source of truth (v8.0.0)
 # Consumed by hermes_cli/pm_pipeline.py
+#
+# v8.0 change: scenario_keywords narrowed drastically. The Agent (qwen3.7-plus)
+# now handles intent classification in-session via the intent-analysis protocol
+# in SKILL.md. This file only provides "strong signal" keywords to help pre-filter
+# obviously-non-PM messages (query_exclusions) and clearly PM intentions (markers).
 
-version: "7.2.0"
+version: "8.0.0"
 
 # Meta questions ABOUT the skill — do NOT start Kanban (route to Ralph chat)
 query_exclusions:
@@ -16,6 +21,10 @@ query_exclusions:
   - pattern: '完整能力'
     flags: i
   - pattern: '当前.{0,8}(能力|版本|状态)'
+    flags: i
+  - pattern: '^(你好|hi|hello|hey)[\s!！。.]*$'
+    flags: i
+  - pattern: '^(谢谢|thanks|thank|ok|好的|收到|明白了)[\s!！。.]*$'
     flags: i
 
 # Strong execution intent — overrides query_exclusions
@@ -73,34 +82,33 @@ resume_patterns:
   - pattern: '继续.*(?:当前|这个|已有).*(?:工程|项目|流水线|技能)'
     flags: i
 
+# v8.0: scenario_keywords narrowed to only "strong product intent" keywords.
+# Agent handles intent classification in-session per SKILL.md intent-analysis protocol.
 scenario_keywords:
+  import_repo:
+    - "基于.*仓库.*开发"
+    - "基于.*代码.*构建"
+    - "从.*仓库.*开始"
+    - "导入仓库.*开发"
+    - "导入代码.*开发"
+    - "用这个仓库做产品"
   brownfield:
-    - 优化
-    - 重构
-    - 棕地
-    - brownfield
-    - 存量
-    - 已有项目
-    - 继续优化
-    - 产品知识库
-    - 赛博取名
+    - "继续优化"
+    - "重构"
+    - "棕地"
+    - "brownfield"
+    - "已有项目"
   optimize:
-    - 部署
-    - 修 bug
-    - 修复
-    - 生产
-    - hotfix
+    - "部署"
+    - "hotfix"
   refine:
-    - 复审
-    - refine
-    - ux
-    - ui/ux
-    - 旅程
+    - "复审"
+    - "refine"
   greenfield:
-    - 产品想法
-    - 新产品
-    - 从零
-    - greenfield
+    - "产品想法"
+    - "新产品"
+    - "从零"
+    - "greenfield"
 
 slug_keywords:
   产品知识库: product-knowledge
@@ -114,10 +122,22 @@ reserved_slugs:
   - pm-idea-to-mvp
 
 grill:
-  max_rounds: 2
+  max_rounds: 3
   skip_if_brief_enriched: true
   questions:
     - id: success_metric
-      prompt: "【Grill 1/2】这个产品/优化的**成功标准**是什么？怎样算做完？（1-3 句）"
+      prompt: "【Grill 1/3】这个产品/优化的**成功标准**是什么？怎样算做完？（1-3 句）"
+    - id: clone_intent
+      prompt: "【Grill 2/3】是否要把外部 GitHub 仓库 **clone 到本地 04-mvp/** 作为实现基础？（是/否 + 仓库 URL）"
     - id: non_goals
-      prompt: "【Grill 2/2】本次**明确不做**的范围是什么？（非目标、边界、约束）"
+      prompt: "【Grill 3/3】本次**明确不做**的范围是什么？（非目标、边界、约束）"
+
+# Lights-out by default: /goal text is the contract; gates-only gating (no 确认 t_xxx loop).
+execution:
+  auto_hitl: true
+  skip_grill_scenarios:
+    - import_repo
+    - brownfield
+    - optimize
+    - refine
+  human_checkpoints: []

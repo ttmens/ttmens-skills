@@ -13,6 +13,7 @@
 | `总结一下 pm-idea-to-mvp 能力` | `ralph` | **咨询对话**，不启动 Kanban（`query_exclusions`） |
 | `/goal 继续优化产品知识库` | `pm_resume` / `brownfield` | 检测 slug + `project_exists` → 棕地分解或状态报告 |
 | `/goal 继续 pm-product-knowledge` | `pm_resume` | 续跑已有 slug 的 Kanban |
+| `/goal …新开项目 [owner/repo]…clone…` | `pm_kanban` / `import_repo` | GitHub 导入场景：align → clone → 全链路 |
 | `按 pm-idea-to-mvp 优化 xxx 项目` | `pm_kanban` / `brownfield` | 强执行意图 → Kanban decompose |
 | `/goal 帮我写周报` | `ralph` | **不**进 pm-idea-to-mvp；GoalManager 会话循环 |
 
@@ -40,12 +41,13 @@ Greenfield `/goal 产品想法` **不立即 decompose**。流程见 `references/
 ## Kanban 集成
 
 - Triage root assignee：`pm-orchestrator`
-- Decompose：`scripts/decompose-pm-pipeline.py --task-id … --scenario {greenfield|brownfield|optimize|refine}`
+- Decompose：`scripts/decompose-pm-pipeline.py --task-id … --scenario {greenfield|import_repo|brownfield|optimize|refine}`
 - 子任务 **skills 预加载**：`stage-skills.yaml` → `pm-idea-to-mvp` + 阶段 native/borrowed
 - **人工卡点（v7.2）**：仅 **align** + **ship**；spec G2 由 `goal-check.py` 脚本 gate
 - 进度通知：`stage-complete.py` → `build-run-report` → `git_push` → `feishu_notify.py`
 - 通知 SSOT：`scripts/pipeline_notify.py`（Gateway notifier 共用同一 builder）
 - 飞书解卡：`确认 t_xxx`（`feishu_pipeline_cards.py`）或 `hermes kanban unblock t_xxx`
+- **PM complete guard（v7.2）**：`pm_kanban_guard.py` 阻止未过 gates 的 `hermes kanban complete`（含 `/steer` bulk complete）
 - 状态报告：`scripts/kanban-status-report.py`
 
 ## Deploy（ship 阶段，与流水线解耦）
@@ -69,10 +71,10 @@ Greenfield `/goal 产品想法` **不立即 decompose**。流程见 `references/
 ## Profile 同步
 
 ```bash
-HERMES_HOME=D:/hermes-data python skills/pipelines/pm-idea-to-mvp/scripts/sync-hermes-profiles.py --prune-hub
+HERMES_HOME=D:/hermes-data python skills/pipelines/pm-idea-to-mvp/scripts/sync-hermes-profiles.py --prune-hub --sync-borrowed
 ```
 
-写入 9 个 `profiles/pm-*/skills/pm-idea-to-mvp/SKILL.md` stage cards（v7.2）。
+写入 9 个 `profiles/pm-*/skills/pm-idea-to-mvp/SKILL.md` stage cards（v7.2），并将 `stage-skills.yaml` 中的 borrowed 技能同步到各 profile 的 `skills/borrowed/`。
 
 ## Companion Gateway 最低要求
 

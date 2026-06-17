@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 """
-feishu-grill-preflight.py — Feishu 1-2 round grill before Kanban decompose (v6.1.0).
+feishu-grill-preflight.py — Feishu 1-2 round grill before Kanban decompose (v8.0.0).
 
 Subcommands:
   start   --session-key KEY --text "产品想法：..." --slug SLUG

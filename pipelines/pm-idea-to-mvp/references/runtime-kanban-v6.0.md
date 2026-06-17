@@ -1,5 +1,3 @@
-> **DEPRECATED** — 历史文档。Live SSOT：[`runtime-kanban-v7.1.md`](runtime-kanban-v7.1.md) + [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md)（v7.2 align+ship 双卡点）。
-
 # Runtime Kanban v6.0 / v6.1 — 运行时详解
 
 > pm-idea-to-mvp v6.1 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、status-report。

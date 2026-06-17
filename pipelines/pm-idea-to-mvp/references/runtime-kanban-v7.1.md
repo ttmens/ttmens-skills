@@ -1,6 +1,6 @@
-# Runtime Kanban v7.2 — 运行时详解
+# Runtime Kanban v7.1.1 — 运行时详解
 
-> pm-idea-to-mvp v7.2.0 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、Feishu 确认 `确认 {task_id}`、pipeline_notify 产物清单。
+> pm-idea-to-mvp v7.1.1 Hermes UX：飞书 grill 前置、trigger-routing、brownfield/resume、Feishu 确认 `确认 {task_id}`。
 > Kanban 图仍为十二步 + MVP inner loop（见 §1）。人工卡点：**align + ship**（spec 自动推进）。
 
 ## 1. v6.0 Kanban 阶段图（含 Inner Loop）

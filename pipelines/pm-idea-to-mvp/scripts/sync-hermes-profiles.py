@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sync pm-idea-to-mvp v7.1 into 9 Hermes pm-* profiles."""
+"""Sync pm-idea-to-mvp v7.2 into 9 Hermes pm-* profiles (+ optional borrowed skills)."""
 
 from __future__ import annotations
 
@@ -86,6 +86,22 @@ SOUL_EXIT: dict[str, str] = {
     "pm-operator": _stage_exit_cmd("operate"),
     "pm-growth": _stage_exit_cmd("grow"),
 }
+
+# Profile → pipeline stages whose borrowed skills must be present under profile/skills/borrowed/
+PROFILE_STAGES: dict[str, list[str]] = {
+    "pm-aligner": ["align"],
+    "pm-researcher": ["research", "import"],
+    "pm-analyst": ["analysis"],
+    "pm-planner": ["spec"],
+    "pm-builder": ["mvp", "retro", "import"],
+    "pm-shipper": ["ship"],
+    "pm-operator": ["operate"],
+    "pm-growth": ["grow"],
+    "pm-orchestrator": [],
+}
+
+BORROWED_ROOT = SKILLS_ROOT / "borrowed"
+STAGE_SKILLS_PATH = PIPELINE_ROOT / "stage-skills.yaml"
 
 
 def read_version_from_pm_pipeline() -> str | None:
@@ -226,6 +242,68 @@ def report_hub_noise() -> dict:
     return stats
 
 
+def load_stage_skills_config() -> dict:
+    import yaml
+
+    if not STAGE_SKILLS_PATH.exists():
+        return {}
+    return yaml.safe_load(STAGE_SKILLS_PATH.read_text(encoding="utf-8")) or {}
+
+
+def borrowed_skills_for_stages(stage_keys: list[str]) -> list[str]:
+    cfg = load_stage_skills_config()
+    stages = cfg.get("stages") or {}
+    seen: set[str] = set()
+    out: list[str] = []
+    for key in stage_keys:
+        for name in stages.get(key, {}).get("borrowed") or []:
+            if name and name not in seen:
+                seen.add(name)
+                out.append(name)
+    return out
+
+
+def sync_borrowed_for_profile(profile: str, dry_run: bool = False) -> dict:
+    """Copy stage-skills borrowed dirs into profile/skills/borrowed/{install_as}."""
+    stage_keys = PROFILE_STAGES.get(profile, [])
+    skill_names = borrowed_skills_for_stages(stage_keys)
+    dest_root = PROFILES_ROOT / profile / "skills" / "borrowed"
+    copied: list[str] = []
+    missing: list[str] = []
+
+    for name in skill_names:
+        src = BORROWED_ROOT / name
+        dest = dest_root / name
+        if not src.is_dir() or not (src / "SKILL.md").exists():
+            missing.append(name)
+            continue
+        if dry_run:
+            copied.append(name)
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(src, dest)
+        copied.append(name)
+
+    return {
+        "profile": profile,
+        "borrowed_expected": skill_names,
+        "borrowed_copied": copied,
+        "borrowed_missing_src": missing,
+    }
+
+
+def audit_profile_borrowed(profile: str) -> list[str]:
+    """Return list of missing borrowed skill dirs for a profile."""
+    issues: list[str] = []
+    for name in borrowed_skills_for_stages(PROFILE_STAGES.get(profile, [])):
+        dest = PROFILES_ROOT / profile / "skills" / "borrowed" / name / "SKILL.md"
+        if not dest.exists():
+            issues.append(f"{profile}: missing borrowed skill `{name}` at {dest.parent}")
+    return issues
+
+
 def sync_profile(profile: str, dry_run: bool = False) -> dict:
     cards = PROFILE_CARDS[profile]
     prof_dir = PROFILES_ROOT / profile
@@ -273,7 +351,19 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--profile", default="", help="Single profile to sync")
     parser.add_argument("--prune-hub", action="store_true", help="Trim .bundled_manifest to pipeline allowlist")
+    parser.add_argument(
+        "--sync-borrowed",
+        action="store_true",
+        help="Sync stage-skills borrowed dirs into each pm-* profile (default when not --dry-run)",
+    )
+    parser.add_argument(
+        "--no-sync-borrowed",
+        action="store_true",
+        help="Skip borrowed skill sync even on a normal run",
+    )
     args = parser.parse_args()
+
+    do_sync_borrowed = args.sync_borrowed or (not args.dry_run and not args.no_sync_borrowed)
 
     report: dict = {"pipeline_version": PIPELINE_VERSION, "critical": [], "warnings": [], "profiles": []}
     report["critical"].extend(audit_scripts())
@@ -284,7 +374,12 @@ def main() -> None:
         if prof not in PROFILE_CARDS:
             report["warnings"].append(f"Unknown profile: {prof}")
             continue
-        report["profiles"].append(sync_profile(prof, dry_run=args.dry_run))
+        prof_report = sync_profile(prof, dry_run=args.dry_run)
+        if do_sync_borrowed:
+            prof_report["borrowed"] = sync_borrowed_for_profile(prof, dry_run=args.dry_run)
+            if not args.dry_run:
+                report["critical"].extend(audit_profile_borrowed(prof))
+        report["profiles"].append(prof_report)
         if args.prune_hub:
             report.setdefault("hub_prune", []).append(prune_hub_manifest(prof, dry_run=args.dry_run))
 

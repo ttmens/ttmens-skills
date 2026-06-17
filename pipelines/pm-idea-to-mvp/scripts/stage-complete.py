@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-stage-complete.py — Orchestrate stage completion (v6.0.0).
+stage-complete.py — Orchestrate stage completion (v8.0.0).
 
 Flow: progress-tracker update → validate-gates → eval-stage → goal-check (optional)
       → build-run-report → feishu_notify → git push
@@ -18,11 +18,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from execution_mode import human_checkpoint_stages
 from pipeline_paths import resolve_pipeline_root, resolve_skills_root
 from pipeline_version import PIPELINE_VERSION
 
-# Default human checkpoints (overridable via harness-rules.yaml)
-DEFAULT_HUMAN_CHECKPOINT_STAGES = ["align", "ship"]
+# Default human checkpoints (overridable via harness-rules.yaml; empty when auto_hitl)
+DEFAULT_HUMAN_CHECKPOINT_STAGES: list[str] = []
 
 # Stages that MANDATE runtime verification (cannot be skipped)
 # Based on pm-knowledge-platform post-mortem: tasks were marked complete without
@@ -167,21 +168,8 @@ def load_harness_rules(project_root: Path) -> dict:
 
 
 def get_human_checkpoint_stages(project_root: Path) -> list[str]:
-    """
-    Determine which stages require human checkpoint.
-    Reads harness-rules.yaml human_checkpoints list.
-    Falls back to DEFAULT_HUMAN_CHECKPOINT_STAGES.
-    """
-    harness = load_harness_rules(project_root)
-    checkpoints = harness.get("human_checkpoints", None)
-
-    if checkpoints is not None:
-        if isinstance(checkpoints, list):
-            return checkpoints
-        if isinstance(checkpoints, str):
-            return [s.strip() for s in checkpoints.split(",")]
-
-    return DEFAULT_HUMAN_CHECKPOINT_STAGES
+    """Human checkpoint stages; empty when auto_hitl (lights-out mode)."""
+    return human_checkpoint_stages(project_root)
 
 
 def run_script(script_name: str, args: list[str], project_root: Path, timeout: int = 300) -> dict:

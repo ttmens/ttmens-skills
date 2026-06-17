@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared PM pipeline Feishu / Kanban notification message builder (SSOT)."""
+"""PM Pipeline v8.0 structured plain-text notification builder (SSOT)."""
 from __future__ import annotations
 
 import os
@@ -17,24 +17,42 @@ from pipeline_version import PIPELINE_VERSION  # noqa: E402
 GITHUB_OWNER = os.environ.get("PM_GITHUB_OWNER", "ttmens")
 PIPELINE_INDEX_URL = f"https://{GITHUB_OWNER}.github.io/pm-pipeline-index/"
 
+# v8.0 merged stage labels
+STAGE_LABEL = {
+    "align": "需求对齐",
+    "discover": "调研与论证",
+    "design": "原型与规格",
+    "mvp": "MVP 构建",
+    "ship": "部署发布",
+    "retro": "复盘进化",
+    "import": "导入仓库",
+    "research": "调研",
+    "analysis": "论证",
+    "spec": "规格",
+    "operate": "运维",
+    "grow": "增长",
+}
+
 STAGE_FROM_TITLE = {
     "grill": "align",
     "对齐": "align",
     "align": "align",
-    "调研": "research",
-    "research": "research",
-    "论证": "analysis",
-    "analysis": "analysis",
-    "prd": "spec",
-    "spec": "spec",
-    "原型": "spec",
+    "调研": "discover",
+    "research": "discover",
+    "论证": "discover",
+    "analysis": "discover",
+    "discover": "discover",
+    "prd": "design",
+    "spec": "design",
+    "design": "design",
+    "原型": "design",
     "mvp": "mvp",
     "ship": "ship",
     "部署": "ship",
-    "operate": "operate",
-    "运维": "operate",
-    "grow": "grow",
-    "增长": "grow",
+    "operate": "retro",
+    "运维": "retro",
+    "grow": "retro",
+    "增长": "retro",
     "retro": "retro",
     "进化": "retro",
     "棕地": "align",
@@ -209,10 +227,56 @@ def format_checkpoint_section(task_id: str) -> str:
         return ""
     return "\n".join([
         "",
-        "⏸ 人工卡点 — 请确认产物后继续",
+        "需确认 — 请核实产物后继续",
         f"飞书回复: 确认 {task_id}",
-        f"或发送: /kanban unblock {task_id}",
+        f"或发送: 跳过 {task_id}",
     ])
+
+
+def build_pipeline_progress_table(
+    slug: str,
+    stages: list[dict],
+) -> str:
+    """v8.0: Build structured plain-text pipeline progress table."""
+    lines = [
+        f"── PM Pipeline: {slug} ──",
+    ]
+    for st in stages:
+        name = st.get("stage", "?")
+        label = STAGE_LABEL.get(name, name)
+        status = st.get("status", "todo")
+        marker = {"done": "✅", "running": "↔ ", "blocked": "⏸", "todo": "⏳"}.get(status, "  ")
+        inline = f" {marker} {label}"
+        if status == "blocked":
+            reason = st.get("reason", "")
+            inline += f" (需确认: {reason[:40]})" if reason else " (需确认)"
+        if status == "done" and st.get("completed_at"):
+            inline += f"  {st['completed_at'][:16]}"
+        lines.append(inline)
+    lines.append("──")
+    return "\n".join(lines)
+
+
+def build_deploy_checkpoint_msg(slug: str, pages_url_val: str, lighthouse_url: str = "") -> str:
+    """v8.0: Build deploy checkpoint notification for Feishu."""
+    s = slug.removeprefix("pm-")
+    lines = [
+        f"── 检查点: 部署确认 — {s} ──",
+        f"RUNBOOK.md 已生成并通过验证。",
+    ]
+    if pages_url_val:
+        lines.append(f"GitHub Pages: {pages_url_val}")
+    if lighthouse_url:
+        lines.append(f"Lighthouse: {lighthouse_url}")
+    lines.extend([
+        "",
+        "回复:",
+        "  '确认部署' → 执行部署",
+        "  '拒绝: 原因' → 暂停并记录原因",
+        "  '查看 RUNBOOK' → 发送 RUNBOOK 内容",
+        "──",
+    ])
+    return "\n".join(lines)
 
 
 def build_stage_message(
@@ -224,11 +288,13 @@ def build_stage_message(
     *,
     human_checkpoint: bool = False,
 ) -> str:
+    """v8.0: Clean stage completion notification."""
     root = Path(project_root).resolve()
     slug = root.name.removeprefix("pm-")
+    label = STAGE_LABEL.get(stage, stage)
     lines = [
-        f"[pm-idea-to-mvp v{PIPELINE_VERSION}]",
-        f"阶段: {stage}",
+        f"PM Pipeline v{PIPELINE_VERSION}",
+        f"阶段: {label} ({stage})",
         f"状态: {status}",
         f"项目: pm-{slug}",
     ]
@@ -258,6 +324,7 @@ def build_kanban_event_message(
     stage: str = "",
     assignee_prefix: str = "",
 ) -> str:
+    """v8.0: Build structured Kanban event notification."""
     if not slug and (title or body or reason):
         slug, project_root, stage = resolve_task_context(title, body or reason)
     if project_root is None and slug:
@@ -266,25 +333,25 @@ def build_kanban_event_message(
 
     prefix = assignee_prefix or ""
     if kind == "completed":
-        head = f"{prefix}✔ Kanban {task_id} done — {title[:120]}"
+        head = f"{prefix}已完成 {task_id} — {title[:120]}"
         if handoff:
             head += handoff if handoff.startswith("\n") else f"\n{handoff[:200]}"
     elif kind == "blocked":
-        head = f"{prefix}⏸ Kanban {task_id} blocked"
+        head = f"{prefix}已暂停 {task_id}"
         if reason:
             head += f": {reason[:160]}"
         if title:
             head += f"\n{title[:120]}"
     elif kind == "gave_up":
-        head = f"{prefix}✖ Kanban {task_id} gave up after repeated spawn failures"
+        head = f"{prefix}放弃 {task_id} (多次失败)"
         if reason:
             head += f"\n{reason[:200]}"
     elif kind == "crashed":
-        head = f"{prefix}✖ Kanban {task_id} worker crashed (pid gone); dispatcher will retry"
+        head = f"{prefix}{task_id} worker 崩溃, 调度器将重试"
     elif kind == "timed_out":
-        head = f"{prefix}⏱ Kanban {task_id} timed out; will retry"
+        head = f"{prefix}{task_id} 超时, 将重试"
     else:
-        head = f"{prefix}Kanban {task_id} — {kind}"
+        head = f"{prefix}{task_id} — {kind}"
 
     parts = [head]
 

@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 """
-kanban-status-report.py — Human-readable Kanban status for pm-idea-to-mvp (v6.1.0).
+kanban-status-report.py — Human-readable Kanban status for pm-idea-to-mvp (v8.0.0).
 
 Usage:
   python kanban-status-report.py --slug product-knowledge
@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -31,6 +32,21 @@ if str(HERMES_AGENT) not in sys.path:
 from hermes_cli import kanban_db as kb  # noqa: E402
 
 
+def _list_recent_tasks(conn, *, slug: str | None = None) -> list[kb.Task]:
+    """Load enough tasks for status reports (default list_tasks limit truncates new runs)."""
+    if slug:
+        s = slug.removeprefix("pm-")
+        like = f"%{s}%"
+        rows = conn.execute(
+            "SELECT * FROM tasks WHERE status != 'archived' AND (title LIKE ? OR body LIKE ?) "
+            "ORDER BY created_at DESC",
+            (like, like),
+        ).fetchall()
+        if rows:
+            return [kb.Task.from_row(r) for r in rows]
+    return kb.list_tasks(conn, order_by="created-desc", limit=2000)
+
+
 def project_root_for_slug(slug: str) -> Path:
     s = slug.removeprefix("pm-")
     return PROJECTS_ROOT / f"pm-{s}"
@@ -39,24 +55,68 @@ def project_root_for_slug(slug: str) -> Path:
 def find_root_task_for_slug(conn, slug: str) -> str | None:
     s = slug.removeprefix("pm-")
     needle = f"pm-{s}"
-    tasks = kb.list_tasks(conn, limit=500)
+    tasks = _list_recent_tasks(conn, slug=slug)
+    orchestrator_id: str | None = None
+    first_stage_id: str | None = None
     for t in tasks:
+        if t.status == "archived":
+            continue
         body = (t.body or "") + (t.title or "")
-        if needle in body or s in (t.title or ""):
-            if t.assignee == "pm-orchestrator" or "pm-pipeline" in (t.created_by or ""):
-                return t.id
-    return None
+        if needle not in body and s not in (t.title or ""):
+            continue
+        if t.assignee == "pm-orchestrator" or "pm-pipeline" in (t.created_by or ""):
+            orchestrator_id = t.id
+        elif not first_stage_id and t.assignee and t.assignee.startswith("pm-"):
+            first_stage_id = t.id
+    return orchestrator_id or first_stage_id
+
+
+def _collect_descendants(conn, root_id: str, tasks_by_id: dict[str, kb.Task]) -> list[kb.Task]:
+    """Walk task_links from root_id; Task rows have no parent_id column."""
+    seen: set[str] = {root_id}
+    queue = [root_id]
+    collected: list[kb.Task] = []
+    while queue:
+        parent = queue.pop(0)
+        for child_id in kb.child_ids(conn, parent):
+            if child_id in seen:
+                continue
+            seen.add(child_id)
+            child = tasks_by_id.get(child_id) or kb.get_task(conn, child_id)
+            if child:
+                collected.append(child)
+                tasks_by_id[child_id] = child
+            queue.append(child_id)
+    return collected
 
 
 def summarize_tasks(conn, slug: str | None, root_id: str | None) -> dict:
-    tasks = kb.list_tasks(conn, limit=500)
+    tasks = _list_recent_tasks(conn, slug=slug)
+    tasks_by_id = {t.id: t for t in tasks}
     relevant = []
     if root_id:
-        root = kb.get_task(conn, root_id)
+        root = kb.get_task(conn, root_id) or tasks_by_id.get(root_id)
         if root:
             relevant.append(root)
+            descendants = _collect_descendants(conn, root_id, tasks_by_id)
+            if descendants:
+                relevant.extend(descendants)
+            else:
+                slug_hint = slug or ""
+                if not slug_hint and root.body:
+                    m = re.search(r"Slug:\s*([\w-]+)", root.body)
+                    if m:
+                        slug_hint = m.group(1)
+                if slug_hint:
+                    s = slug_hint.removeprefix("pm-")
+                    for t in tasks:
+                        if t.id == root_id or t.status == "archived":
+                            continue
+                        blob = f"{t.title or ''}\n{t.body or ''}"
+                        if s in blob or f"pm-{s}" in blob or f"Slug: {s}" in blob:
+                            relevant.append(t)
             for t in tasks:
-                if t.parent_id == root_id or (root_id in (t.body or "")):
+                if t.id not in {r.id for r in relevant} and root_id in (t.body or ""):
                     relevant.append(t)
     elif slug:
         needle = slug.removeprefix("pm-")

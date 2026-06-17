@@ -191,7 +191,7 @@ def escalate_to_harness(project_root: Path, reason: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MVP inner loop driver (v6.2)")
+    parser = argparse.ArgumentParser(description="MVP inner loop driver (v8.0.0)")
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--iteration", type=int, default=0, help="0 = auto increment")
     parser.add_argument("--dry-run", action="store_true")

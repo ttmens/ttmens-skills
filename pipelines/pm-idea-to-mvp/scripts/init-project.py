@@ -2,7 +2,7 @@
 """
 init-project.py — Initialize all governance artifacts for a new pm-{slug} project.
 
-v6.2: Creates the complete set of governance files that were previously missing
+v7.2: Creates the complete set of governance files that were previously missing
 when decompose-pm-pipeline.py was not used. Ensures debates/, feedback.jsonl,
 gates.json, and all goals/*.yaml files exist from day one.
 
@@ -114,7 +114,7 @@ def init_governance(project_root: Path, slug: str) -> list[str]:
     harness_path = project_root / "harness-rules.yaml"
     if not harness_path.exists():
         harness_path.write_text(
-            f"# Harness Rules v6.2\n"
+            f"# Harness Rules v7.2\n"
             f"version: '{PIPELINE_VERSION}'\n"
             f"project:\n"
             f"  slug: '{slug}'\n"
@@ -201,7 +201,7 @@ def init_playwright_e2e(project_root: Path, skills_root: Path) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Initialize governance artifacts for pm-{slug} project (v6.2)"
+        description="Initialize governance artifacts for pm-{slug} project (v7.2)"
     )
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--slug", required=True, help="Project slug (e.g., knowledge-platform)")

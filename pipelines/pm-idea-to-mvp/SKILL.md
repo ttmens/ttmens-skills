@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
-description: "Super-dev pipeline v7.1: Loop Engineering + enforced governance + agent behavior code + Hermes UX (Feishu grill, trigger routing, brownfield/resume). brief → align → research → analysis → spec → mvp(inner-loop) → ship → operate → grow → retro."
-version: 7.2.0
+description: "Super-dev pipeline v8.0: Hermes-native deep integration — Agent-driven intent routing, dynamic decomposition (5-6 goal_mode tasks), structured plain-text notifications, memory/session/hooks integration. brief → align → discover → design → mvp → ship → retro."
+version: 8.0.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -50,9 +50,9 @@ metadata:
       - requesting-code-review
 ---
 
-# Super Developer Pipeline v7.1 (pm-idea-to-mvp)
+# Super Developer Pipeline v8.0 (pm-idea-to-mvp)
 
-**唯一主流水线**（live 入口 = 本目录 `pipelines/pm-idea-to-mvp/`；历史快照见 `archive/v6.1.0/`，勿作运行入口）。覆盖 PM、工程、运维、运营全链路。v7.1 融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
+**唯一主流水线**（live 入口 = 本目录 `pipelines/pm-idea-to-mvp/`；历史快照见 `archive/v6.1.0/`，勿作运行入口）。覆盖 PM、工程、运维、运营全链路。融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系：6 条不可协商准则 + 每阶段反合理化表格 + 5 轴 Code Review + 浏览器端到端验证 + 回退决策树。
 
 > **设计哲学**：采用 Martin Fowler 的 **双循环框架**（Dual-Loop Framework）——
 > - **Why Loop**（战略循环）：持续验证产品方向是否正确（align → research → analysis → retro 反馈）
@@ -60,20 +60,116 @@ metadata:
 >
 > 两个循环通过 `feedback.jsonl` 与 `evolution-notes.md` 互相驱动，形成自进化闭环。
 
+## 技能加载后的第一步：意图分析（v8.0 新增，必须执行）
+
+当本技能被加载时，Agent **必须首先分析用户消息的真实意图**，再决定下一步行动。**禁止**在意图不明确时直接进入 decompose、创建 Kanban 任务或调用 pipeline 脚本。
+
+### 意图分析清单
+
+Agent 必须自问以下问题并形成明确判断：
+
+**1. 用户提到 GitHub URL 了吗？他们想做什么？**
+
+   - **A) 只是克隆下来看看代码**（→ 行为 A：直接执行）
+     - 信号：消息中只有 `clone`、`下载`、`看看`、`拉下来` + GitHub URL
+     - 没有 "做产品"、"开发"、"构建"、"实现" 等产品意图词
+     - Agent 用 `terminal` 工具执行 `git clone`，用 `file` 工具读 README，总结后返回。
+     - **不创建 Kanban 任务，不调用 decompose。**
+
+   - **B) 分析这个仓库的结构和质量**（→ 行为 B：单任务）
+     - 信号：消息包含 `分析`、`审查`、`review`、`评估`、`检查` + GitHub URL
+     - 没有多阶段产品开发意图
+     - Agent 创建 **1 个** `goal_mode=True` 的 Kanban 任务，assign 合适的 profile。
+     - 任务完成后直接通知用户结果。
+
+   - **C) 基于这个仓库进行产品开发**（→ 行为 C：完整管线）
+     - 信号：消息包含 `基于`、`从这个`、`做产品`、`开发`、`实现`、`构建`、`上线`、`发布` + GitHub URL 或项目引用
+     - Agent 启动动态按需分解，创建 5-6 个 Kanban 子任务（不是固定 10-12 个）。
+     - 分解后先推送任务预览给用户确认，确认后才 dispatch。
+
+**2. 用户表达了"做产品"的明确意图吗？**
+
+   - 关键词：`做产品`、`从零开发`、`开发一个`、`构建`、`实现` + **具体的功能描述**
+   - 如果只是模糊说一句"优化"而没有项目上下文 → 不是完整管线意图
+   - 如果提到现有 `pm-{slug}` 项目名 → 走 resume 流程
+
+**3. 用户的需求规模如何？**
+
+   - 单一操作（clone/读/查状态）→ 行为 A：直接执行
+   - 单维度任务（审查/分析/文档）→ 行为 B：单 task
+   - 多阶段产品开发（需求→设计→实现→部署）→ 行为 C：完整管线
+
+### 不确定时的行为
+
+如果 Agent 无法高置信度确定用户意图，**必须主动询问**，模板如下：
+
+```
+我看到你提到了 [GitHub 仓库 / 项目]，你是想：
+A) 直接克隆到本地看看代码结构
+B) 系统分析这个仓库（结构分析、质量评估等）
+C) 基于这个仓库进行产品开发（启动完整的 PM 管线）
+
+回复 A/B/C 即可，或直接描述你的具体需求。
+```
+
+**禁止**猜测意图后自动执行。不确定 = 询问。
+
 ## 快速判断：何时使用本技能？
 
-**强制规则**：当用户提到以下关键词时，**必须**先调用 `skill_view(name='pm-idea-to-mvp')` 加载技能。
+**强制规则**：当用户提到以下关键词时，**必须**先调用 `skill_view(name='pm-idea-to-mvp')` 加载技能。加载后执行上述意图分析。
 
-| 用户说 | 场景 | decompose | 说明 |
-|--------|------|-----------|------|
-| "做一个新产品" / `/goal 产品想法` | greenfield | `--scenario greenfield` | 飞书 grill 1–2 问 → 12 子任务 |
-| "优化现有项目" / "继续优化" | brownfield | `--scenario brownfield` | 棕地审计 + 精简子图 |
-| "部署" / "修 bug" | optimize | `--scenario optimize` | ship + operate |
-| "UX 复审" / "refine" | refine | `--scenario refine` | 深研 + spec + mvp iter |
+| 用户说 | 行为 | 说明 |
+|--------|------|------|
+| "做一个新产品" / `/goal 产品想法` | 行为 C (greenfield) | 意图明确 → 动态按需分解 |
+| "继续优化 pm-xxx" / "继续 pm-xxx" | 行为 C (brownfield) | Resume → 棕地审计 + 动态分解 |
+| "部署" + 项目名 / "/goal 部署" | 行为 C (optimize) | ship + operate |
+| "UX 复审 pm-xxx" / "refine" | 行为 C (refine) | 深研 + spec + mvp iter |
+| GitHub URL（无其他上下文） | 行为 A 或 询问 | 看 URL 外的其他信号 |
 
-**触发关键词列表**（出现在用户消息中即触发）：
-- 优化、重构、E2E、端到端、深入分析、改进、审查、审计
-- refine、brownfield、部署、上线、发布、回退、回滚
+**触发关键词列表**（出现在用户消息中即触发技能加载，但加载后仍需执行意图分析）：
+- 优化（有项目上下文时）、重构、E2E、端到端、想法到产品、产品想法、构建、开发一个、基于.*开发
+- refine、brownfield、部署（有项目上下文时）、上线、发布、回退、回滚
+
+## Pipeline Session Resume Protocol (v8.0 新增)
+
+当用户说 "继续 pm-{slug}" 或引用已有项目时：
+
+1. Agent 读取 `{PROJECT_ROOT}/PROGRESS.md`
+2. 定位最后一个状态为 "running" 或最近 "done" 的阶段
+3. 如果是 "running" → 读取该 Kanban 任务的 session_id，用 `/resume` 恢复
+4. 如果是 "done" → 判断下一个阶段，创建新的 Kanban 任务（单 goal_mode worker）
+5. 如果 Kanban 中没有对应任务 → 调用 decompose 但指定 `skip_map` 跳过已完成阶段
+
+## Delegate Task Protocol (v8.0 新增)
+
+MVP 内循环的 Code 步骤利用 Hermes 原生 `delegate_task` 并行化：
+
+```
+# pm-builder worker 内部, Code 步骤:
+if openspec/tasks.md 包含多个可并行任务:
+    delegate_task(parallel_tasks, max_workers=3)
+else:
+    直接实现
+```
+
+支持的并行场景：
+- 前端组件 + 后端 API 同时开发
+- 多页面静态 HTML 原型
+- 独立模块的测试用例编写
+
+## Memory Integration (v8.0 新增)
+
+Pipeline worker 启动时自动读取 Hermes 原生 memory：
+
+- `~/.hermes/memories/MEMORY.md` — 提取与当前项目相关的 pipeline 经验
+- `~/.hermes/memories/USER.md` — 提取用户偏好（如默认跳过某阶段）
+- Memory 写入格式约定：
+
+```
+## pipeline:pm-{project-slug} (2026-06-12)
+- 教训: npm 项目部署前必须确认 node 版本 >= 18
+- 模式: standalone 模式必须手动拷贝静态文件
+```
 
 环境变量（替代硬编码路径）：
 

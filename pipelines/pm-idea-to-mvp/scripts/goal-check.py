@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 goal-check.py — Verify goal conditions for a pipeline stage.
 
@@ -370,7 +370,7 @@ def main():
         "all_passed": False
     }
 
-    # v6.2: Filter by specific goal ID if --goal specified
+    # v8.0.0: Filter by specific goal ID if --goal specified
     goal_id_filter = getattr(args, "goal_id", None)
 
     if not goals_path.exists():

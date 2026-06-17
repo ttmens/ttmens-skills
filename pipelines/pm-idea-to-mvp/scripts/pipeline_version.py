@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Load pm-idea-to-mvp pipeline version from SSOT (assets/pipeline-version.yaml)."""
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ def load_pipeline_version() -> str:
                 return str(version).strip()
         except Exception:
             continue
-    return "7.1.0"
+    return "8.0.0"
 
 
 PIPELINE_VERSION: str = load_pipeline_version()

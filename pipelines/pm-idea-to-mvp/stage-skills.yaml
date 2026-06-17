@@ -1,6 +1,6 @@
 # Machine-readable stage → skill mapping (v7.1 SSOT).
 # validate_skills.py cross-checks this against marketplace.yaml + borrowed/manifest.yaml
-version: "7.2.0"
+version: "8.0.0"
 
 stages:
   brief:
@@ -15,10 +15,25 @@ stages:
       - pm-opportunity-solution-tree
       - pm-competitor-analysis
       - pm-market-sizing
+  import:
+    native: [pm-git-publish]
+    borrowed: []
   analysis:
     native: [c4-architecture, openspec, docs-hygiene]
     borrowed: [pm-product-strategy, kw-system-design]
   spec:
+    native: [user-journey, open-design, ui-ux-pro-max, prd-red-team-panel]
+    borrowed: [pm-create-prd, pm-user-stories]
+  # v8.0 merged stages
+  discover:
+    native: [c4-architecture, openspec, docs-hygiene]
+    borrowed:
+      - pm-opportunity-solution-tree
+      - pm-competitor-analysis
+      - pm-market-sizing
+      - pm-product-strategy
+      - kw-system-design
+  design:
     native: [user-journey, open-design, ui-ux-pro-max, prd-red-team-panel]
     borrowed: [pm-create-prd, pm-user-stories]
   mvp:

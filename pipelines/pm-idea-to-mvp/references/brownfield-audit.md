@@ -10,6 +10,18 @@ How to bring an existing pm-{slug} project into compliance with the current pipe
 - User asks to "review" or "audit" a project against the pipeline
 - **v7.1 新增**：用户说"优化"、"重构"、"E2E"、"深入分析"时，**必须**先执行棕地审计
 
+## v7.2 新增：外部仓库 Clone 意图
+
+当 `00-brief.md` 或用户消息同时包含 **GitHub URL / `[owner/repo]`** 与 **clone / 导入 / 新开项目** 时：
+
+| 禁止 | 必须 |
+|------|------|
+| ADR 写「align 阶段不 clone」 | align 只定范围；**clone 在 import/mvp 任务执行** |
+| `00-brief.md` 非目标写「不实际 clone」 | brief 非目标可写「不在 align 阶段改代码」，但 **不能否定后续 clone** |
+| 跳过 `04-mvp/` 代码分析 | clone 完成后 research/analysis 必须基于真实代码 |
+
+**反合理化**：「align 只做文档」≠「永远不碰代码」。用户明确要求 clone 时，MVP/import worker 负责 `git clone` 到 `{PROJECT_ROOT}/04-mvp/`。
+
 ## v7.1 新增：强制审计协议
 
 **触发条件**：用户消息包含以下关键词时，**必须**先执行棕地审计，再开始优化工作：

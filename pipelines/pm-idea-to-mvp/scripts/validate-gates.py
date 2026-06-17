@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 """
-validate-gates.py — Validate pipeline stage gates (v6.0.0).
+validate-gates.py — Validate pipeline stage gates (v8.0.0).
 
 Checks stage artifact files exist and meet minimum requirements.
 Supports three modes:
