@@ -212,7 +212,7 @@ echo "Borrowed: $(ls $LOCAL/borrowed/ | wc -l)"
 echo "Profiles: $(ls $LOCAL/profiles/hermes-kanban/ | wc -l)"
 ```
 
-## Expected Counts (v7.2.0)
+## Expected Counts (v9.1.0)
 
 | Component | Count |
 |-----------|-------|

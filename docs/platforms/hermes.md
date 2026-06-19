@@ -26,7 +26,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/pm-e2e-smoke.py
 
 ## Entry
 
-Default orchestration: `pm-idea-to-mvp` v7.2.0 + Kanban decompose.
+Default orchestration: `pm-idea-to-mvp` v9.1.0 (skill-driven, no Kanban decompose scripts).
 
 ```bash
 python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \

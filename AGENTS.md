@@ -1,4 +1,4 @@
-# Agent Entry — ttmens-skills v7.2.0
+# Agent Entry — ttmens-skills v9.1.0
 
 > 设计思想与能力全景：[README.md](README.md)  
 > **系统架构**：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)  
@@ -13,22 +13,16 @@
 
 ## 1. 默认行为
 
-- **加载流水线**：`pm-idea-to-mvp` v7.2.0（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
-- **唯一 live 入口**：`pipelines/pm-idea-to-mvp/`（勿使用 `v6.1.0/` 快照目录）
+- **加载流水线**：`pm-idea-to-mvp` v9.1.0（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
+- **唯一 live 入口**：`pipelines/pm-idea-to-mvp/`
 - **触发语**：从想法做到上线 · 继续 pm-{slug} · 优化现有产品 · 进入 {stage} 阶段
 - **路径变量**：`{PROJECT_ROOT}` = pm-{slug} 仓库根；`{SKILLS_ROOT}` = 技能库根（**勿硬编码绝对路径**）
 
 ## 2. 阶段协议（强制）
 
 1. 只写**当前 stage** 的产物（见 stage 表）
-2. 阶段结束前运行：
-
-```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
-  --project-root {PROJECT_ROOT} --stage <stage> --verify-goals
-```
-
-3. exit 非零 → 修复后重试，**不得**标记完成或进入下一阶段
+2. 阶段结束时验证产物路径存在（参考 SKILL.md 中的目录结构）
+3. 产物缺失 → 补充后继续，**不得**跳过阶段
 4. MVP 使用 `inner-loop-driver.py` 内循环（max 3 iter）
 
 ## 3. 质量门
@@ -41,7 +35,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
 
 ## 4. Stage → Skill 速查
 
-SSOT：[`pipelines/pm-idea-to-mvp/stage-skills.yaml`](pipelines/pm-idea-to-mvp/stage-skills.yaml)
+SSOT：[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md) 中的 Pipeline stages 表格
 
 | Stage | Native | Borrowed |
 |-------|--------|----------|
@@ -66,5 +60,4 @@ SSOT：[`pipelines/pm-idea-to-mvp/stage-skills.yaml`](pipelines/pm-idea-to-mvp/s
 - 技能全表：[docs/SKILLS_CATALOG.md](docs/SKILLS_CATALOG.md)
 - 目录布局：[docs/REPO_LAYOUT.md](docs/REPO_LAYOUT.md)
 - 行为准则：[agent-behavior-code.md](pipelines/pm-idea-to-mvp/references/agent-behavior-code.md)
-- Prompt 链：[command-recipes.md](pipelines/pm-idea-to-mvp/references/command-recipes.md)
 - 场景：[scenarios.yaml](scenarios.yaml)

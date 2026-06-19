@@ -3,7 +3,7 @@
 > 来源：融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 Non-Negotiables + 反合理化模式。
 > 所有 profile 共享此文件。每个 stage card 引用它。
 
-## 6 条不可协商行为准则
+## 7 条不可协商行为准则
 
 ### 1. 假设前置（Surface Assumptions）
 
@@ -58,6 +58,15 @@
 - 每个阶段必须以可验证的产物结束。
 
 **违反信号**：标记任务完成但没有运行验证命令、产物存在但内容为空/敷衍。
+
+### 7. 规则来自失败（Rules from Failures）
+
+- 规则应源自真实失败场景（`feedback.jsonl`），而非理论最佳实践
+- 每条规则必须关联至少 1 个具体失败记录
+- 规则更新需人工确认，不自动生效
+- "从失败中学到的规则比从教科书里抄的规则更有价值"
+
+**违反信号**：引入没有失败记录支撑的"最佳实践"规则、自动修改规则库而不经过 Retro 确认。
 
 ---
 

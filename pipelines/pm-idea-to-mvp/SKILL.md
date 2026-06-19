@@ -1,7 +1,7 @@
 ---
 name: pm-idea-to-mvp
 description: "产品开发全流程技能：brief → align → research → analysis → spec → MVP → ship → retro。双循环框架 + 内循环迭代 + 行为准则 + 浏览器验证。"
-version: 9.0.0
+version: 9.1.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
@@ -43,9 +43,10 @@ metadata:
       - test-driven-development
       - writing-plans
       - requesting-code-review
+      - web-design-guidelines
 ---
 
-# Super Developer Pipeline v9.0 (pm-idea-to-mvp)
+# Super Developer Pipeline v9.1 (pm-idea-to-mvp)
 
 覆盖 PM、工程、运维、运营全链路。融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系。
 
@@ -62,18 +63,18 @@ metadata:
 
 ## Pipeline stages
 
-| Stage | 核心产物 | 技能链 |
-|-------|---------|--------|
-| 0 brief | `00-brief.md` | — |
-| 1 align | `CONTEXT.md`, `decisions.md` | `grill-me` / `grill-with-docs` |
-| 2 research | `01-research.md` | (borrowed: pm-opportunity-solution-tree, pm-competitor-analysis) |
-| 3 analysis | `02-analysis.md`, `architecture/c4-*.md` | `c4-architecture`, `openspec`, `docs-hygiene` |
-| 4 spec | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md`, `openspec/` | `user-journey`, `open-design`, `ui-ux-pro-max`, `prd-red-team-panel` |
-| 5 mvp | `04-mvp/`, `UX-REVIEW.md` | `writing-plans` → `test-driven-development` → `subagent-driven-development` → `ui-acceptance-review` → `requesting-code-review` → `dogfood` |
-| 6 ship | `RUNBOOK.md`, 浏览器验证报告 | `ui-acceptance-review` (full), `docs-hygiene` |
-| 7 operate | ops notes | — |
-| 8 grow | `06-growth.md` | — |
-| 9 retro | `05-retro.md`, `evolution-notes.md` | `pm-git-publish` |
+| Stage | 核心产物 | 技能链 | 验收标准 |
+|-------|---------|--------|----------|
+| 0 brief | `00-brief.md` | — | 用户确认 brief 准确 |
+| 1 align | `CONTEXT.md`, `decisions.md` | `grill-me` / `grill-with-docs` | 假设风险等级标注完成 |
+| 2 research | `01-research.md` | (borrowed: pm-opportunity-solution-tree, pm-competitor-analysis) | ≥5 URLs，来源可访问 |
+| 3 analysis | `02-analysis.md`, `architecture/c4-*.md` | `c4-architecture`, `openspec`, `docs-hygiene` | ≥3 options, recommendation |
+| 4 spec | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md`, `openspec/`, `DESIGN.md` | `user-journey`, `open-design`, `ui-ux-pro-max`, `prd-red-team-panel` | ≤5 user stories, acceptance criteria |
+| 5 mvp | `04-mvp/`, `UX-REVIEW.md` | `writing-plans` → `test-driven-development` → `subagent-driven-development` → `ui-acceptance-review` → `requesting-code-review` → `dogfood` | 内循环 PASS 或 3 iter 后人工介入 |
+| 6 ship | `RUNBOOK.md`, 浏览器验证报告 | `ui-acceptance-review` (full), `docs-hygiene`, `web-design-guidelines` | 5 维度质量门全部通过 |
+| 7 operate | ops notes | — | 监控配置完成 |
+| 8 grow | `06-growth.md` | — | 北极星指标定义 |
+| 9 retro | `05-retro.md`, `evolution-notes.md` | `pm-git-publish` | feedback.jsonl 闭环 |
 
 ### 场景
 
@@ -103,7 +104,8 @@ pm-{slug}/
   02-analysis.md
   architecture/           # c4-context.md, c4-container.md, c4-component.md
   03b-user-journey.md
-  02b-prototype/          # index.html + DESIGN.md
+  02b-prototype/          # index.html + DESIGN.md (prototype-level)
+  DESIGN.md               # 设计系统文档（Spec 阶段产出）
   03-prd.md
   01b-benchmark.md        # Refine only
   openspec/
@@ -112,7 +114,6 @@ pm-{slug}/
     tasks.md
     specs/
   04-mvp/
-    DESIGN.md
     UX-REVIEW.md
     README.md
   05-retro.md
@@ -144,7 +145,7 @@ MVP 使用**递归内循环**，而非线性执行：
 | # | 检查项 | 通过标准 |
 |---|--------|---------|
 | 1 | `openspec/tasks.md` 存在 | 文件存在且 > 100 字节 |
-| 2 | `04-mvp/DESIGN.md` 存在 | 由 `ui-ux-pro-max` 生成 |
+| 2 | `DESIGN.md` 存在 | 由 `ui-ux-pro-max` 生成（Spec 阶段产出） |
 | 3 | 项目可构建 | `pnpm build` exit 0 |
 
 ### 循环步骤
@@ -196,6 +197,7 @@ MVP 使用**递归内循环**，而非线性执行：
 
 - user-journey → 03b-user-journey.md
 - open-design prototype (static HTML; optional sketch variants)
+- **DESIGN.md**：设计系统文档（颜色、字体、组件、间距），参考 `references/design-md-template.md`
 - 03-prd.md: ≤5 user stories, acceptance criteria
 - openspec/tasks.md + openspec/specs/ delta specs
 
@@ -209,11 +211,16 @@ MVP skill chain：
 writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-development → ui-acceptance-review → requesting-code-review → dogfood
 ```
 
-### Ship
+### Ship（5 维度质量门）
 
-- 生成 RUNBOOK.md：部署步骤、回滚方案、监控指标
-- `ui-acceptance-review` (full mode)：完整 UX 验收
-- `docs-hygiene`：文档一致性检查
+| 维度 | 检查项 | 技能/工具 | 通过标准 |
+|------|--------|-----------|----------|
+| 1. 视觉规范 | 设计系统一致性、品牌色、字体 | `ui-acceptance-review` | 0 critical issues |
+| 2. 组件结构 | 代码质量、lint、构建、TypeScript 类型 | 项目 lint/build 命令 | exit 0, 0 errors |
+| 3. 交互体验 | 可访问性、焦点状态、键盘导航 | `web-design-guidelines` | 0 WCAG violations |
+| 4. 移动端适配 | 响应式布局、触摸目标、viewport | browser E2E + viewport 测试 | 320px-1440px 无布局破坏 |
+| 5. 上线把关 | RUNBOOK.md、回滚方案、监控指标 | 人工确认 | 用户签字 |
+
 - **浏览器端到端验证**（不可跳过）：见 `references/browser-e2e-verification.md`
 - Deploy 为 High risk → 必须人工确认
 
@@ -249,11 +256,21 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 
 ## Self-evolution
 
-| Layer | Path |
-|-------|------|
-| Run | `05-retro.md`, `evolution-notes.md` |
-| Skills | `pm-idea-to-mvp/CHANGELOG.md` |
-| Feedback | `feedback.jsonl` |
+### 信号收集
+- `feedback.jsonl`：内循环迭代中的失败/调整记录
+- 用户纠正：Agent 行为偏离预期时的反馈
+
+### 规则转化流程
+1. **记录 Signal**：feedback.jsonl 中记录具体失败场景
+2. **抽象规则**：从 3+ 次相似失败中提取模式
+3. **规则建议**：写入 `evolution-notes.md` 的 "Proposed Rules" 章节
+4. **人工确认**：Retro 阶段与用户确认规则有效性
+5. **更新规则库**：确认后写入 `references/agent-behavior-code.md` 或 stage cards
+
+### 规则来源原则
+- 规则应来自真实失败，而非理论最佳实践
+- 每条规则必须关联至少 1 个 feedback.jsonl 记录
+- 规则更新需人工确认，不自动生效
 
 `feedback.jsonl` schema:
 
@@ -263,7 +280,7 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 
 ## 行为准则
 
-所有阶段共享 `references/agent-behavior-code.md` 中的 6 条不可协商准则：
+所有阶段共享 `references/agent-behavior-code.md` 中的 7 条不可协商准则：
 
 1. **假设前置** — 非平凡工作前列出假设
 2. **主动管理困惑** — STOP，不要猜
@@ -271,6 +288,7 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 4. **强制简洁** — ~100 行 Good / ~300 行 Acceptable / ~1000 行拆分
 5. **范围纪律** — 只触碰被要求的部分
 6. **验证而非假设** — 要求具体证据
+7. **规则来自失败** — 规则应源自真实失败场景（feedback.jsonl），而非理论最佳实践
 
 ## 回退决策
 
@@ -285,6 +303,14 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 
 ## Platform notes
 
+### Agent 编排原则
+
+- **默认单 Agent**：一个主 Agent 负责全流程执行
+- **拆子 Agent 的两种情况**：
+  1. **需要独立审查**：Code Review、安全审计等需要独立视角的任务
+  2. **互不依赖可并行**：多模块分析（Go + React + Flutter）可并行执行
+- **上下文传递**：子 Agent 通过文档（而非口头指令）接收任务，确保环节不丢上下文
+
 ### Cursor / OpenCode
 
 - 读取本 SKILL.md，按阶段表顺序执行
@@ -296,15 +322,18 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 
 - 对已有项目执行棕地审计，见 `references/brownfield-audit.md`
 - 阶段边界运行 `docs-hygiene`
+- **多模块项目**（Go + React + Flutter + Python 等）：使用 `delegate_task` 并行分析所有模块，按安全审计清单逐项检查（硬编码密钥、CORS、N+1 查询、API Key 外部化、敏感信息脱敏）。详见 `references/brownfield-audit.md` 的 "Multi-Module Deep Optimization" 章节。
 
 ## 关键参考文件
 
 | 文件 | 用途 |
 |------|------|
-| `references/agent-behavior-code.md` | 6 条行为准则 + 10 大失败模式 + 变更规模约束 |
+| `references/agent-behavior-code.md` | 7 条行为准则 + 10 大失败模式 + 变更规模约束 |
 | `references/browser-e2e-verification.md` | 浏览器端到端验证清单 |
 | `references/browser-tools-ssot.md` | 多平台浏览器工具映射 |
 | `references/brownfield-audit.md` | 棕地审计流程 |
 | `references/deployment-pitfalls.md` | 部署常见陷阱（standalone、AuthProvider、API 兼容） |
+| `references/design-md-template.md` | DESIGN.md 设计系统文档模板（Google Stitch 格式） |
+| `references/web-optimization-patterns.md` | Web 性能优化：React 代码分割、Redis Pipeline、CORS、脱敏、表单验证 |
 | `references/rollback-decision-tree.md` | 回退决策树 |
 | `references/hermes-stage-cards/*.md` | 各阶段详细卡片（含反合理化表格） |
