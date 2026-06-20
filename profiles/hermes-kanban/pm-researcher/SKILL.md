@@ -1,7 +1,7 @@
 ﻿---
 name: pm-researcher
-description: "Hermes Kanban profile for research stage. Run stage-complete at boundary."
-version: 1.0.0
+description: "Hermes Kanban profile for research stage. Artifact-driven stage boundary (v9.1)."
+version: 9.1.0
 metadata:
   hermes:
     profile: pm-researcher
@@ -14,8 +14,7 @@ metadata:
 
 ## Boundaries
 - Only write artifacts for **research** stage
-- At stage end run:
-  `python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage research --project-root {PROJECT_ROOT} --task-id {TASK_ID} --verify-goals`
+- At stage end: verify SKILL.md artifact paths for **research** exist; update PROGRESS.md
 
 ## Skills
 pm-competitor-analysis

@@ -54,7 +54,7 @@ python "{SKILLS_ROOT}/scripts/detect_agent_env.py" --json
 python "{SKILLS_ROOT}/scripts/validate_skills.py"
 ```
 
-或手动确认文件存在：`pipelines/pm-idea-to-mvp/SKILL.md`、`pipelines/pm-idea-to-mvp/scripts/stage-complete.py`。
+或手动确认文件存在：`pipelines/pm-idea-to-mvp/SKILL.md`、`pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py`。
 **`{PROJECT_ROOT}`**：当前 pm-{slug} 产品仓库根（含 `00-brief.md` 或 `gates.json` 或 `docs/workflow_state.yaml`）。  
 若用户只在 ttmens-skills 仓库里对话，则 `{PROJECT_ROOT}` ≠ `{SKILLS_ROOT}`。
 
@@ -152,22 +152,22 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/consume-feedback.py --proj
 
 ```mermaid
 flowchart LR
-  A[读取 pm-idea-to-mvp SKILL] --> B[读 stage-skills.yaml]
+  A[读取 pm-idea-to-mvp SKILL] --> B[读 SKILL.md Pipeline stages 表]
   B --> C[加载当前 stage 技能]
   C --> D[产出 artifacts]
-  D --> E[stage-complete.py]
+  D --> E[产物路径验证（v9.1）]
   E --> F{exit 0?}
   F -->|yes| G[下一阶段]
   F -->|no| D
 ```
 
 1. **始终先读** [`pipelines/pm-idea-to-mvp/SKILL.md`](../pipelines/pm-idea-to-mvp/SKILL.md)
-2. **查当前 stage 技能**：[`stage-skills.yaml`](../pipelines/pm-idea-to-mvp/stage-skills.yaml)
+2. **查当前 stage 技能**：[`SKILL.md stage 表`](../pipelines/pm-idea-to-mvp/SKILL.md stage 表)
 3. **只写当前 stage 产物**，勿越界
 4. **阶段结束**：
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py \
   --project-root {PROJECT_ROOT} --stage <stage> --verify-goals
 ```
 
@@ -194,7 +194,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py \
 ### Cursor
 
 - 项目入口：复制 [`templates/cursor/AGENTS.md`](../templates/cursor/AGENTS.md) 到 `{PROJECT_ROOT}/AGENTS.md`
-- `stage-complete` 可写 `.cursor/stage-status.json`（若装了 hooks）
+- `产物验证` 可写 `.cursor/stage-status.json`（若装了 hooks）
 - 详见 [platforms/cursor.md](platforms/cursor.md)
 
 ### Hermes
@@ -202,7 +202,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py \
 - 新想法先 **decompose**，勿依赖 LLM 随意拆任务：
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/# v9 removed: use init-project.py + SKILL.md stages \
   --project-root {PROJECT_ROOT} --scenario greenfield
 ```
 
@@ -218,7 +218,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
 opencode run "Implement per openspec/tasks.md and 04-mvp/DESIGN.md" --workdir {PROJECT_ROOT}/04-mvp
 ```
 
-- 每个 phase 结束仍须手动/脚本跑 `stage-complete.py`
+- 每个 phase 结束仍须手动/脚本跑 `产物路径验证（v9.1）`
 - 可选 `--profile hermes` 安装 `opencode` skill
 - 详见 [platforms/opencode.md](platforms/opencode.md)
 
@@ -238,10 +238,10 @@ opencode run "Implement per openspec/tasks.md and 04-mvp/DESIGN.md" --workdir {P
 
 | 现象 | 原因 | 处理 |
 |------|------|------|
-| `stage-complete` 找不到脚本 | `{SKILLS_ROOT}` 错误 | 按 §2 重算；或运行 install |
+| `产物验证` 找不到脚本 | `{SKILLS_ROOT}` 错误 | 按 §2 重算；或运行 install |
 | G2 `debate_resolved` 失败 | 未装 debate profile | `./install.sh --profile debate --all` |
 | borrowed 技能缺失 | vendor submodule 未 init | `git submodule update --init --recursive` 后重装 |
-| `validate_skills.py` 失败 | marketplace 与 stage-skills 不一致 | 拉最新 main，勿用 `deprecated/` 下技能 |
+| `validate_skills.py` 失败 | marketplace 与 SKILL.md 不一致 | 拉最新 main，勿用 `deprecated/` 下技能 |
 | Agent 加载了旧路径 | 根目录 `pm-idea-to-mvp/` 或 `v6.1.0/` 快照 | 只用 live `pipelines/pm-idea-to-mvp/` |
 
 ---

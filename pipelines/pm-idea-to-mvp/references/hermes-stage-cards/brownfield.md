@@ -8,7 +8,7 @@
 
 ## Decompose
 
-`decompose-pm-pipeline.py --scenario brownfield` → 精简子图（审计 → MVP iter → ship → retro）
+`brownfield-bootstrap skill + artifact checklist` → 精简子图（审计 → MVP iter → ship → retro）
 
 ## First task (pm-aligner)
 
@@ -16,7 +16,7 @@
 2. `check_docs_ssot.py` + 全阶段 `validate-gates.py`
 3. 补齐 governance / debates
 4. 更新 CONTEXT.md 反映现状
-5. `stage-complete --stage align --runtime` → 卡点
+5. `verify align artifacts + human checkpoint` → 卡点
 
 ## Exit
 

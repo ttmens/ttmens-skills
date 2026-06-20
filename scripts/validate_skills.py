@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Validate ttmens-skills marketplace, native paths, borrowed vendor refs, pipeline scripts."""
+"""Validate ttmens-skills marketplace, native paths, borrowed vendor refs, pipeline scripts (v9.1)."""
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -16,31 +17,17 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 ERRORS: list[str] = []
 
+# v9.1: only core pipeline scripts remain
 PIPELINE_SCRIPTS = [
-    "bootstrap_github_repo.py",
-    "build-index.py",
-    "build-run-report.py",
     "consume-feedback.py",
-    "decompose-pm-pipeline.py",
-    "decompose-refine-pipeline.py",
-    "eval-stage.py",
-    "feishu-grill-preflight.py",
-    "goal-check.py",
-    "harness-runner.py",
     "init-project.py",
     "inner-loop-driver.py",
-    "kanban-status-report.py",
-    "kanban-sync.py",
-    "merge_retro_sections.py",
-    "phase-transition.py",
     "pipeline_paths.py",
-    "pipeline_utils.py",
-    "progress-tracker.py",
-    "refine-decompose.py",
-    "stage-complete.py",
-    "sync-hermes-profiles.py",
-    "validate-gates.py",
-    "validate-profile-env.py",
+    "pipeline_version.py",
+]
+
+PIPELINE_ASSETS = [
+    "harness-rules.yaml",
 ]
 
 ROOT_SCRIPTS = [
@@ -69,10 +56,9 @@ UI_ACCEPTANCE_GENERIC = (
     ROOT / "pipelines" / "pm-idea-to-mvp" / "assets" / "ui-acceptance-profiles" / "generic.yaml"
 )
 
-# Pipeline scripts that may share a name with scripts/ (delegate only)
 DUPLICATE_SCRIPT_ALLOWLIST = {"feishu_notify.py"}
 
-ENTRY_DOC_VERSION = "7.2.0"
+ENTRY_DOC_VERSION = "9.1.0"
 
 LEGACY_ROOT_DIRS = [
     "skills",
@@ -83,9 +69,20 @@ LEGACY_ROOT_DIRS = [
     "research",
 ]
 
-# SSOT project scripts — must not be duplicated under domains/ or profiles/
 SSOT_SCRIPT_NAMES = {"check_docs_ssot.py", "ui_acceptance.py"}
 SKILL_TREE_PREFIXES = ("domains", "profiles")
+
+REQUIRED_DOCS = [
+    "docs/ARCHITECTURE.md",
+    "docs/DEPLOY_CONVENTIONS.md",
+    "docs/CODING_CONVENTIONS.md",
+    "docs/GIT_WORKFLOW.md",
+]
+
+DEPLOY_TEMPLATE_PATHS = [
+    "templates/hermes/config/deploy-servers.template.yaml",
+    "pipelines/pm-idea-to-mvp/assets/deploy.template.yaml",
+]
 
 
 def err(msg: str) -> None:
@@ -124,45 +121,7 @@ def check_skill_md(path: Path, label: str) -> None:
         err(f"{label}: frontmatter missing description")
 
 
-def check_stage_skills_ssot(marketplace: dict, manifest: dict, stage_skills: dict) -> None:
-    """Cross-check stage-skills.yaml against marketplace native ids and borrowed install_as."""
-    native_ids = {e["id"] for e in marketplace.get("skills", {}).get("native", [])}
-    borrowed_ids = {e.get("install_as", e["id"]) for e in manifest.get("skills", [])}
-    pipeline_native = set(stage_skills.get("pipeline_native", []))
-    scenario = stage_skills.get("scenario_skills") or {}
-
-    for skill_id, rel_path in scenario.items():
-        if not (ROOT / rel_path).exists():
-            err(f"scenario_skills:{skill_id}: missing path {rel_path}")
-        if skill_id in native_ids:
-            err(f"scenario_skills:{skill_id} should not be in marketplace native core")
-
-    seen_native: set[str] = set()
-    seen_borrowed: set[str] = set()
-
-    for stage, cfg in (stage_skills.get("stages") or {}).items():
-        for sid in cfg.get("native", []):
-            seen_native.add(sid)
-            if sid not in native_ids:
-                err(f"stage-skills:{stage}: native `{sid}` not in marketplace.yaml")
-        for sid in cfg.get("borrowed", []):
-            seen_borrowed.add(sid)
-            if sid not in borrowed_ids:
-                err(f"stage-skills:{stage}: borrowed `{sid}` not in borrowed/manifest.yaml")
-
-    core_native = seen_native | pipeline_native
-    missing_in_stages = native_ids - core_native
-    if missing_in_stages:
-        err(f"marketplace native not referenced in stage-skills.yaml: {sorted(missing_in_stages)}")
-
-    core_borrowed = seen_borrowed
-    missing_borrowed = borrowed_ids - core_borrowed
-    if missing_borrowed:
-        err(f"borrowed manifest skills not in stage-skills.yaml: {sorted(missing_borrowed)}")
-
-
 def check_no_duplicate_script_names() -> None:
-    """Root scripts/ and pipeline scripts/ must not share names (except allowlist)."""
     root_names = {p.name for p in (ROOT / "scripts").glob("*.py")}
     pipe_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
     if not pipe_dir.is_dir():
@@ -204,9 +163,39 @@ def check_entry_doc_versions() -> None:
             err(f"{rel} missing pipeline version {ENTRY_DOC_VERSION}")
 
 
-def pipeline_script_names() -> list[str]:
-    pipe_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
-    return sorted(p.name for p in pipe_dir.glob("*.py") if p.is_file())
+def check_pipeline_scripts_importable() -> None:
+    scripts_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
+    for name in ("inner-loop-driver.py", "init-project.py", "consume-feedback.py"):
+        r = subprocess.run(
+            [sys.executable, str(scripts_dir / name), "--help"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if r.returncode != 0:
+            err(f"{name} --help failed: {(r.stderr or r.stdout)[:200]}")
+
+
+def check_deploy_templates() -> None:
+    registry_tpl = ROOT / "templates" / "hermes" / "config" / "deploy-servers.template.yaml"
+    if registry_tpl.exists():
+        text = registry_tpl.read_text(encoding="utf-8")
+        if "key_path" not in text:
+            err("deploy-servers.template.yaml missing key_path field")
+        if "password_env" not in text:
+            err("deploy-servers.template.yaml missing password_env field")
+
+    deploy_tpl = ROOT / "pipelines" / "pm-idea-to-mvp" / "assets" / "deploy.template.yaml"
+    if deploy_tpl.exists():
+        text = deploy_tpl.read_text(encoding="utf-8")
+        if "ssh_key" not in text:
+            err("deploy.template.yaml missing secret_refs.ssh_key")
+
+
+def check_required_docs() -> None:
+    for rel in REQUIRED_DOCS:
+        if not (ROOT / rel).exists():
+            err(f"required doc missing: {rel}")
 
 
 def check_no_legacy_root_dirs() -> None:
@@ -217,7 +206,6 @@ def check_no_legacy_root_dirs() -> None:
 
 
 def check_no_duplicate_ssot_scripts() -> None:
-    """Project-level scripts must live only under scripts/."""
     for prefix in SKILL_TREE_PREFIXES:
         base = ROOT / prefix
         if not base.is_dir():
@@ -230,20 +218,33 @@ def check_no_duplicate_ssot_scripts() -> None:
                 )
 
 
+def check_no_removed_script_references() -> None:
+    """Hard dependencies on removed v9 scripts should not appear in entry docs."""
+    removed = ("stage-complete.py", "decompose-pm-pipeline.py", "goal-check.py", "validate-gates.py")
+    skip_markers = ("不靠", "不再", "removed", "已删", "v9 无", "无 stage")
+    for rel in ("AGENTS.md", "templates/cursor/AGENTS.md"):
+        doc = ROOT / rel
+        if not doc.exists():
+            continue
+        for i, line in enumerate(doc.read_text(encoding="utf-8").splitlines(), 1):
+            if any(m in line for m in skip_markers):
+                continue
+            for script in removed:
+                if script in line:
+                    err(f"{rel}:{i} still references removed script {script}")
+                    break
+
+
 def main() -> int:
     marketplace = load_yaml(ROOT / "marketplace.yaml")
     platforms = load_yaml(ROOT / "platforms.yaml")
     manifest = load_yaml(ROOT / "borrowed" / "manifest.yaml")
-    stage_skills = load_yaml(ROOT / "pipelines" / "pm-idea-to-mvp" / "stage-skills.yaml")
 
     if not platforms.get("platforms"):
         err("platforms.yaml: empty platforms")
 
     if not (ROOT / "scenarios.yaml").exists():
         err("scenarios.yaml missing")
-
-    if not stage_skills.get("stages"):
-        err("pipelines/pm-idea-to-mvp/stage-skills.yaml missing stages")
 
     for entry in marketplace.get("skills", {}).get("native", []):
         p = ROOT / entry["path"]
@@ -320,33 +321,26 @@ def main() -> int:
             warn(f"submodule not initialized: {sub} (run git submodule update --init)")
 
     scripts_dir = ROOT / "pipelines" / "pm-idea-to-mvp" / "scripts"
-    for name in pipeline_script_names():
-        if not (scripts_dir / name).exists():
-            err(f"pipeline script missing: {name}")
-
     for name in PIPELINE_SCRIPTS:
         if not (scripts_dir / name).exists():
             err(f"required pipeline script missing: {name}")
+    for name in PIPELINE_ASSETS:
+        if not (scripts_dir / name).exists():
+            err(f"required pipeline asset missing: {name}")
 
     for name in ROOT_SCRIPTS:
         if not (ROOT / "scripts" / name).exists():
             err(f"root script missing: {name}")
 
-    r = subprocess.run(
-        [sys.executable, str(scripts_dir / "eval-stage.py"), "--help"],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    if r.returncode != 0:
-        err("eval-stage.py --help failed")
-
-    check_stage_skills_ssot(marketplace, manifest, stage_skills)
+    check_required_docs()
+    check_deploy_templates()
     check_no_legacy_root_dirs()
     check_no_duplicate_ssot_scripts()
     check_no_duplicate_script_names()
     check_no_tracked_bytecode()
     check_entry_doc_versions()
+    check_no_removed_script_references()
+    check_pipeline_scripts_importable()
 
     r2 = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "detect_agent_env.py"), "--json"],
@@ -373,7 +367,7 @@ def main() -> int:
         for e in ERRORS:
             print(f"  - {e}")
         return 1
-    print(f"OK: {native_count} native + {borrowed_count} borrowed skills; pipeline scripts present")
+    print(f"OK: {native_count} native + {borrowed_count} borrowed skills; v9.1 pipeline validated")
     return 0
 
 

@@ -15,7 +15,7 @@ ttmens-skills 不是 prompt 合集，而是 **Loop Engineering 平台**：
 | ---------- | -------------------------------------------- | ----------------------------------------- |
 | **L0 脚本**  | 内循环驱动、项目初始化、反馈闭环                           | `pipelines/pm-idea-to-mvp/scripts/`       |
 | **L1 流水线** | 产物契约、阶段指导、参考文档                            | `pipelines/pm-idea-to-mvp/`               |
-| **L2 技能**  | 37 个 native + borrowed 操作手册                  | `domains/` → 安装到 category 目录              |
+| **L2 技能**  | 18 native + 20 borrowed 操作手册           | `domains/` + `devops/`                    |
 | **L3 编排**  | Hermes Gateway（通用消息路由）+ OpenCode        | `HERMES_HOME/` + `hermes-agent/`          |
 | **L4 运行时** | SSH 部署目标（PM2/Node/Docker）                    | 远端 VPS，**无 Hermes Gateway**               |
 
@@ -34,7 +34,7 @@ flowchart TB
   end
 
   subgraph skill [技能层 — ttmens-skills]
-    SKILL["pm-idea-to-mvp SKILL.md v9.0"]
+    SKILL["pm-idea-to-mvp SKILL.md v9.1"]
     InnerLoop["inner-loop-driver.py"]
     InitProj["init-project.py"]
     Feedback["consume-feedback.py"]
@@ -86,7 +86,7 @@ flowchart TB
 7. **Ship**：RUNBOOK.md + 浏览器 E2E 验证 → SSH 部署
 8. **Retro**：consume-feedback.py 闭环 → feedback.jsonl + evolution-notes.md
 
-**人工卡点**：align、spec、deploy 三处暂停等待用户确认。
+**人工卡点**：**align + ship**（2 个）。spec 的 G2 由 `prd-red-team-panel` 技能验证，不占人工 unblock。
 
 ---
 
@@ -97,17 +97,16 @@ flowchart TB
 阶段完成由产物路径证明（SKILL.md 中定义的目录结构），不靠 agent 自报。  
 理念：**Trust, but verify.**
 
-### 3.2 On-the-loop 三卡点
+### 3.2 On-the-loop 双卡点
 
 
 | 卡点        | 阶段  | 人文含义        |
 | --------- | --- | ----------- |
 | **align** | 方向  | 假设被挑战过，值得继续 |
-| **spec**  | 规格  | PRD + 原型需人确认    |
 | **ship**  | 上线  | 部署风险需人确认    |
 
 
-中间 **research → analysis → mvp** 全自动。spec 的 G2 辩论由 `prd-red-team-panel` 技能验证，**不占用人工 unblock**。
+中间 **research → analysis → spec → mvp** 全自动。spec 的 G2 辩论由 `prd-red-team-panel` 技能验证，**不占用人工 unblock**。
 
 ### 3.3 单编排大脑
 
@@ -157,7 +156,7 @@ flowchart TB
 | **remote-server-deployment 拆分** | 2,113 → 130 行核心 + 3 个参考文档                                  |
 | **Gateway 死代码清理**     | 删除 pm_pipeline.py、feishu_pipeline_cards.py、pm_kanban_guard.py |
 | **通用 Kanban 保留**       | kanban.py/kanban_db.py/kanban_decompose.py 仍可用于通用任务管理         |
-| **三卡点**               | align + spec + ship 人工确认                                         |
+| **三卡点**               | align + ship 人工确认（spec 仅 G2 技能门）                          |
 
 
 ---
@@ -191,18 +190,18 @@ HERMES_HOME/config/     ← deploy-servers.yaml（本地，不进 Git）
 
 | 主题            | 做法                                                              |
 | ------------- | --------------------------------------------------------------- |
-| **Windows**   | `terminal.backend: local`；SSH 用 paramiko（`ssh_preflight.py`）    |
+| **Windows**   | `terminal.backend: local`；SSH 从本机执行（见 DEPLOY_CONVENTIONS）    |
 | **GitHub 网络** | `git pull` 失败时用 API zip fallback（见 ttmens-skills-sync）          |
 | **远端 Hermes** | 已退役为编排层；保留 SSH + Node/PM2 作 runtime                             |
 | **密钥**        | `.env` chmod/ACL；rotate 任何进入聊天记录的凭据                             |
-| **验证**        | `validate_skills.py` + `pm-e2e-smoke.py` + `check_docs_ssot.py` |
+| **验证**        | `validate_skills.py` + `verify_hermes.py`（HERMES_HOME） + `check_docs_ssot.py` |
 
 
 ---
 
 ## 8. 预期效果
 
-- 飞书一条 `/goal` 触发完整 Kanban，中间 stage 无需逐个人工确认
+- 飞书 `/goal` 触发 Gateway + 通用 Kanban 分发；仅 align/ship 需人工确认
 - align/ship 两处 HITL 通知文案统一、可深链 Pages、可清单审阅产物
 - ship 才激活 deploy；多区域 target 按项目配置
 - 文档/脚本/版本一致，减少 agent 与运维判断漂移
@@ -212,5 +211,8 @@ HERMES_HOME/config/     ← deploy-servers.yaml（本地，不进 Git）
 ## 相关文档
 
 - [README.md](../README.md) — 设计思想与快速开始
+- [CODING_CONVENTIONS.md](CODING_CONVENTIONS.md) — 编码与 Agent 行为约定
+- [DEPLOY_CONVENTIONS.md](DEPLOY_CONVENTIONS.md) — 部署与 SSH 约定
+- [HERMES_ARCHITECTURE.md](HERMES_ARCHITECTURE.md) — Hermes Agent 运行时（companion）
 - [platforms/hermes.md](platforms/hermes.md) — Hermes 安装与配置
 

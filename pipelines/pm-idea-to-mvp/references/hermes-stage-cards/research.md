@@ -30,10 +30,7 @@
 | 3 | 来源 <5 就结束 | 置信度不足 | 最低 5 URLs |
 | 4 | 只搜不读（标题党） | 信息质量低 | 必须 web_extract 读内容 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage research --task-id <this_task_id>
-```
-
-Gate fail → `kanban_block`. Pass → `kanban_complete`.
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

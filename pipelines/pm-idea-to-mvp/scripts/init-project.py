@@ -201,7 +201,7 @@ def init_playwright_e2e(project_root: Path, skills_root: Path) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Initialize governance artifacts for pm-{slug} project (v7.2)"
+        description="Initialize governance artifacts for pm-{slug} project (v9.1.0)"
     )
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--slug", required=True, help="Project slug (e.g., knowledge-platform)")

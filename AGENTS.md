@@ -1,7 +1,7 @@
 # Agent Entry — ttmens-skills v9.1.0
 
+> **约定索引**：[docs/CODING_CONVENTIONS.md](docs/CODING_CONVENTIONS.md) · [docs/DEPLOY_CONVENTIONS.md](docs/DEPLOY_CONVENTIONS.md)  
 > 设计思想与能力全景：[README.md](README.md)  
-> **系统架构**：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)  
 > **首次使用 / 安装 / 分平台自检**：[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)
 
 ## 0. 启动检查（技能未装时先做）
@@ -24,6 +24,7 @@
 2. 阶段结束时验证产物路径存在（参考 SKILL.md 中的目录结构）
 3. 产物缺失 → 补充后继续，**不得**跳过阶段
 4. MVP 使用 `inner-loop-driver.py` 内循环（max 3 iter）
+5. **人工卡点**：仅 align + ship；spec 的 G2 不占人工 unblock
 
 ## 3. 质量门
 

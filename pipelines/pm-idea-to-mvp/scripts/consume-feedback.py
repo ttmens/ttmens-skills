@@ -144,7 +144,7 @@ def mark_consumed(project_root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Consume feedback.jsonl and generate retro summary (v6.2)"
+        description="Consume feedback.jsonl and generate retro summary (v9.1.0)"
     )
     parser.add_argument("--project-root", required=True, help="Project root directory")
     parser.add_argument("--json", action="store_true", help="Output JSON")

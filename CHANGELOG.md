@@ -35,7 +35,7 @@ All notable changes to ttmens-skills are documented in this file.
 ### Removed
 
 - **Kanban 编排系统**：删除 ~100 个编排脚本和配置文件
-  - `decompose-pm-pipeline.py`（任务分解）
+  - `# v9 removed: use init-project.py + SKILL.md stages`（任务分解）
   - `stage-complete.py`（阶段完成）
   - `validate-gates.py`（门禁验证）
   - `pipeline_notify.py`（通知系统）

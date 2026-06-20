@@ -43,7 +43,7 @@ metadata:
       - test-driven-development
       - writing-plans
       - requesting-code-review
-      - web-design-guidelines
+      - ui-acceptance-review
 ---
 
 # Super Developer Pipeline v9.1 (pm-idea-to-mvp)
@@ -71,7 +71,7 @@ metadata:
 | 3 analysis | `02-analysis.md`, `architecture/c4-*.md` | `c4-architecture`, `openspec`, `docs-hygiene` | ≥3 options, recommendation |
 | 4 spec | `03b-user-journey.md`, `02b-prototype/`, `03-prd.md`, `openspec/`, `DESIGN.md` | `user-journey`, `open-design`, `ui-ux-pro-max`, `prd-red-team-panel` | ≤5 user stories, acceptance criteria |
 | 5 mvp | `04-mvp/`, `UX-REVIEW.md` | `writing-plans` → `test-driven-development` → `subagent-driven-development` → `ui-acceptance-review` → `requesting-code-review` → `dogfood` | 内循环 PASS 或 3 iter 后人工介入 |
-| 6 ship | `RUNBOOK.md`, 浏览器验证报告 | `ui-acceptance-review` (full), `docs-hygiene`, `web-design-guidelines` | 5 维度质量门全部通过 |
+| 6 ship | `RUNBOOK.md`, 浏览器验证报告 | `ui-acceptance-review` (full), `docs-hygiene`, `remote-server-deployment` | 5 维度质量门全部通过 |
 | 7 operate | ops notes | — | 监控配置完成 |
 | 8 grow | `06-growth.md` | — | 北极星指标定义 |
 | 9 retro | `05-retro.md`, `evolution-notes.md` | `pm-git-publish` | feedback.jsonl 闭环 |
@@ -217,7 +217,7 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 |------|--------|-----------|----------|
 | 1. 视觉规范 | 设计系统一致性、品牌色、字体 | `ui-acceptance-review` | 0 critical issues |
 | 2. 组件结构 | 代码质量、lint、构建、TypeScript 类型 | 项目 lint/build 命令 | exit 0, 0 errors |
-| 3. 交互体验 | 可访问性、焦点状态、键盘导航 | `web-design-guidelines` | 0 WCAG violations |
+| 3. 交互体验 | 可访问性、焦点状态、键盘导航 | `ui-acceptance-review` | 0 WCAG violations |
 | 4. 移动端适配 | 响应式布局、触摸目标、viewport | browser E2E + viewport 测试 | 320px-1440px 无布局破坏 |
 | 5. 上线把关 | RUNBOOK.md、回滚方案、监控指标 | 人工确认 | 用户签字 |
 

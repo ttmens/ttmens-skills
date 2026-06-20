@@ -30,10 +30,7 @@
 | 3 | 无 harness 改进提案 | 流水线不进化 | harness-improvements.md 必需 |
 | 4 | 跳过 feedback.jsonl 消费 | 用户反馈丢失 | consume-feedback.py 必须运行 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage retro --task-id <this_task_id>
-```
-
-Merge retro knowledge if `merge-retro-knowledge` skill available.
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

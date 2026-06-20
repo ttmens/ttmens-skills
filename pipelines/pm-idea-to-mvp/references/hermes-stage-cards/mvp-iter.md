@@ -12,7 +12,7 @@ Workdir: `{PROJECT_ROOT}/04-mvp`
 
 加载 `references/agent-behavior-code.md` — 特别是：
 - **准则 5（范围纪律）**：只改 plan 中定义的文件，不"顺便"重构
-- **准则 6（验证）**：每个 iter 必须以 goal-check.py --runtime-only 结束
+- **准则 6（验证）**：每个 iter 必须以 inner-loop-driver.py observe (harness-rules.yaml) 结束
 
 ## 反合理化表格
 
@@ -29,14 +29,12 @@ Workdir: `{PROJECT_ROOT}/04-mvp`
 |---|---------|------|------|
 | 1 | 跳过测试直接写代码 | TDD 纪律崩溃 | test-driven-development 技能强制 |
 | 2 | 一次改太多文件 | 无法审查 + revert 困难 | ≤5 文件/iter |
-| 3 | 不运行 goal-check | 不知道 iter 是否 PASS | 自动触发 |
+| 3 | 不运行 inner-loop observe | 不知道 iter 是否 PASS | 自动触发 |
 | 4 | iter 3 还 FAIL 但不报告 | 问题被隐藏 | harness-improvements.md + 人工升级 |
 
 ## Exit (iter1/3 on final pass)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage mvp --task-id <this_task_id> --runtime --verify-goals
-```
+## Exit (mandatory)
 
-- iter1 fail → fix or dispatch iter2
-- iter3 still fail → `kanban_block` + `harness-improvements.md`
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

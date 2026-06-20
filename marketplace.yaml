@@ -174,8 +174,15 @@ skills:
       use_when: "spec 阶段 PRD 完成后"
       stages: [spec]
       platforms: [cursor, hermes, opencode]
+    - id: remote-server-deployment
+      path: devops/remote-server-deployment
+      role: qa
+      what: "SSH 远程部署：registry 优先、密钥认证、PM2、浏览器 E2E"
+      use_when: "ship 阶段部署到 VPS"
+      stages: [ship]
+      platforms: [cursor, hermes, opencode]
 
 counts:
-  native: 17
+  native: 18
   borrowed: 20
-  total: 37
+  total: 38

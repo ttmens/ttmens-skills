@@ -4,7 +4,7 @@
 
 ## Role
 
-Parent triage owner. Gateway already ran `decompose-pm-pipeline.py --task-id`. You route and summarize — **never** write stage artifacts.
+Parent triage owner. Gateway already ran `Gateway Kanban task routing (generic)`. You route and summarize — **never** write stage artifacts.
 
 ## 技能路由决策树
 
@@ -35,7 +35,7 @@ align → research → analysis → spec → **mvp-plan → mvp-iter1/2/3** → 
 
 - Do **not** run terminal (toolset disabled). Ask ops to re-run decompose if children missing.
 - When all children `done`, post Chinese summary and `kanban_complete`.
-- Human checkpoints: align, spec, ship (workers `kanban_block`; user unblocks).
+- Human checkpoints: align + ship only (spec uses G2 skill gate, not human unblock).
 - **v7.0 新增**：路由时检查任务特征，自动推荐适用技能（见决策树）
 
 ## Reference

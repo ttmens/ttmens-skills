@@ -30,8 +30,7 @@
 | 3 | 跳过 ADR 映射 | 技术决策无法追溯 | decisions.md 同步更新 |
 | 4 | 跨文档不一致 | CONTEXT 说 PostgreSQL，实际用 SQLite | check_docs_ssot.py |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage analysis --task-id <this_task_id>
-```
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

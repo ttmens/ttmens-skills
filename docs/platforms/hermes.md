@@ -29,7 +29,7 @@ python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/pm-e2e-smoke.py
 Default orchestration: `pm-idea-to-mvp` v9.1.0 (skill-driven, no Kanban decompose scripts).
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/# v9 removed: use init-project.py + SKILL.md stages \
   --project-root /path/to/pm-{slug} --scenario greenfield
 hermes kanban dispatch
 ```
@@ -52,13 +52,13 @@ SSOT: [`assets/trigger-routing.yaml`](../../pipelines/pm-idea-to-mvp/assets/trig
 | Direction | align | Feishu `确认 t_xxx` or `hermes kanban unblock t_xxx` |
 | Deploy | ship | Same |
 
-spec G2 debate is **script-gated** (`goal-check.py`), not a human unblock.
+spec G2 debate is **script-gated** (`G1/G2 产物 + 技能门`), not a human unblock.
 
 ### Feishu notifications + artifacts
 
-`stage-complete.py` order: build-run-report → git_push → `feishu_notify.py`.
+`feishu_notify.py + 产物验证` order: build-run-report → git_push → `feishu_notify.py`.
 
-Message SSOT: [`scripts/pipeline_notify.py`](../../pipelines/pm-idea-to-mvp/scripts/pipeline_notify.py) — includes:
+Message SSOT: [`scripts/feishu_notify.py`](../../pipelines/pm-idea-to-mvp/scripts/feishu_notify.py) — includes:
 
 - GitHub Pages deep link (tab anchors)
 - `artifacts.manifest.yaml` deliverable checklist
@@ -77,7 +77,7 @@ Per-project [`deploy.yaml`](../../pipelines/pm-idea-to-mvp/assets/deploy.templat
 ### Brownfield / resume
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/# v9 removed: use init-project.py + SKILL.md stages \
   --project-root /path/to/pm-{slug} --scenario brownfield
 ```
 
@@ -86,7 +86,7 @@ See [`references/brownfield-audit.md`](../../pipelines/pm-idea-to-mvp/references
 ## Kanban ↔ Runtime
 
 - MVP split: **T5a Plan → T5b Inner Loop → T5c G3 Verify**
-- `stage-complete.py` → `kanban-sync.py` block/complete
+- `feishu_notify.py + 产物验证` → `通用 Kanban CLI` block/complete
 - Refine: `refine-decompose.py --project-root ...`
 - Status: `kanban-status-report.py --slug {slug}`
 
@@ -97,15 +97,15 @@ See [`references/brownfield-audit.md`](../../pipelines/pm-idea-to-mvp/references
 | `harness-runner.py` | Risk-based decisions |
 | `inner-loop-driver.py` | MVP Plan→Test→Observe |
 | `phase-transition.py` | Backtrack mvp→spec |
-| `kanban-sync.py` | block/complete/comment |
+| `通用 Kanban CLI` | block/complete/comment |
 | `sync-hermes-profiles.py` | Re-bundle stage cards to profiles |
-| `pipeline_notify.py` | Unified Feishu/Kanban message builder |
+| `feishu_notify.py` | Unified Feishu/Kanban message builder |
 | `deploy_servers.py` | Merge deploy.yaml + server registry |
 | `ssh_preflight.py` | Paramiko SSH preflight (Windows-safe) |
 
 Install `plan` with `--profile hermes` → `.hermes/plans/`.
 
-See [runtime-kanban-v7.1.md](../../pipelines/pm-idea-to-mvp/references/runtime-kanban-v7.1.md) (v7.2 behavior: align+ship checkpoints).
+See [ARCHITECTURE.md](../../pipelines/pm-idea-to-mvp/references/ARCHITECTURE.md) (v7.2 behavior: align+ship checkpoints).
 
 Legacy: [runtime-kanban-v6.0.md](../../pipelines/pm-idea-to-mvp/references/runtime-kanban-v6.0.md) — deprecated, kept for history.
 

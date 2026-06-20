@@ -1,8 +1,11 @@
 # Hermes Agent 系统架构文档
 
-> 版本：v1.0
+> **Scope**：本文描述 **Hermes Agent 运行时**（Gateway、通用 Kanban CLI、工具链）。  
+> **PM 流水线契约**（产物、阶段、部署）→ [ARCHITECTURE.md](ARCHITECTURE.md) + [SKILL.md](../pipelines/pm-idea-to-mvp/SKILL.md)  
+> **部署约定** → [DEPLOY_CONVENTIONS.md](DEPLOY_CONVENTIONS.md)
+
+> 版本：v1.1  
 > 最后更新：2026-06-19
-> 验证状态：✅ 系统健康（HEALTHY）
 
 ---
 
@@ -30,8 +33,8 @@ Hermes Agent 是一个基于 LLM 的自主代理系统，采用**双循环架构
 
 ### 核心特性
 
-- ✅ 147 个技能（17 个原生 + 130 个借用）
-- ✅ 9 个 Kanban Profile 并行协作
+- ✅ 技能安装于 `HERMES_HOME/skills/`（38 core = 18 native + 20 borrowed）
+- ✅ 9 个 pm-* Profile（通用 Kanban 任务认领壳，非 PM 编排脚本 SSOT）
 - ✅ 20+ 消息平台集成（Telegram、Discord、飞书、钉钉等）
 - ✅ 6 种执行环境（Local、Docker、SSH、Modal、Daytona、Singularity）
 - ✅ SQLite WAL + CAS 并发控制

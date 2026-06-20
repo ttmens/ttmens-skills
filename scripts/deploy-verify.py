@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PIPELINE_VERSION = "6.1.0"
+PIPELINE_VERSION = "9.1.0"
 
 REQUIRED_SECTIONS = [
     (r"部署|deploy", "deploy"),

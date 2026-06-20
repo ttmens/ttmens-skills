@@ -16,7 +16,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 PIPELINE_REL = Path("pipelines/pm-idea-to-mvp/SKILL.md")
-STAGE_COMPLETE_REL = Path("pipelines/pm-idea-to-mvp/scripts/stage-complete.py")
+STAGE_COMPLETE_REL = Path("pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py")
 
 
 def _expand(path: str) -> Path:

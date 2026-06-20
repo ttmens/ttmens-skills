@@ -30,10 +30,9 @@
 | 3 | 跳过安全审计 | 安全漏洞上线 | security-and-hardening 技能 |
 | 4 | 部署后不验证 | 部署成功 ≠ 运行正常 | health endpoint 检查 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage ship --task-id <this_task_id> --runtime
-```
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.
 
-**First run**: `kanban_block` `等待用户确认部署范围`. **Resume**: `kanban_complete`.
+**Human checkpoint**: notify user and wait for confirmation before marking stage done.

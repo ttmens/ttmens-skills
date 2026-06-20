@@ -100,7 +100,7 @@ Run during **analysis**, after draft `02-analysis.md`, when ≥2 viable architec
 ### Gate
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage analysis --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/02-analysis.md + architecture/ exist --project-root {PROJECT_ROOT}
 ```
 
 Require ≥2 `debates/analysis-option-*.md` files + `debates/analysis-synthesis.md` before analysis complete.

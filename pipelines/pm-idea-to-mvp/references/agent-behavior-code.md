@@ -1,7 +1,7 @@
-# Agent 行为准则（v7.0 新增）
+# Agent 行为准则（v9.1）
 
-> 来源：融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 Non-Negotiables + 反合理化模式。
-> 所有 profile 共享此文件。每个 stage card 引用它。
+> 来源：融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 Non-Negotiables + 反合理化模式。  
+> 索引：[docs/CODING_CONVENTIONS.md](../../docs/CODING_CONVENTIONS.md)
 
 ## 7 条不可协商行为准则
 
@@ -113,5 +113,5 @@
 | 假设前置 | grill-me 的结构化程度 | grill-me 本身 |
 | 反谄媚 | G1/G2 辩论门禁的"质量"维度 | 辩论协议 |
 | 范围纪律 | harness-rules.yaml 风险分级 | 门禁检查 |
-| 验证 | goal-check.py + validate-gates.py | runtime 验证 |
+| 验证 | 产物路径检查 + G1/G2/G3 技能门 + inner-loop runtime | v9 不再使用 goal-check.py |
 | 强制简洁 | 最低行数检查（防止敷衍的反面） | 行数限制 |

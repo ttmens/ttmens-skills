@@ -12,8 +12,51 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pipelines" / "pm-idea-to-mvp" / "scripts"))
-from pipeline_notify import build_stage_message  # noqa: E402
 from pipeline_version import PIPELINE_VERSION  # noqa: E402
+
+STAGE_LABEL = {
+    "align": "需求对齐",
+    "research": "调研",
+    "analysis": "论证",
+    "spec": "规格",
+    "mvp": "MVP 构建",
+    "ship": "部署发布",
+    "operate": "运维",
+    "grow": "增长",
+    "retro": "复盘进化",
+}
+
+
+def build_stage_message(
+    stage: str,
+    status: str,
+    project_root: str | Path,
+    task_id: str = "",
+    extra: str = "",
+    *,
+    human_checkpoint: bool = False,
+) -> str:
+    root = Path(project_root).resolve()
+    slug = root.name.removeprefix("pm-")
+    label = STAGE_LABEL.get(stage, stage)
+    lines = [
+        f"PM Pipeline v{PIPELINE_VERSION}",
+        f"阶段: {label} ({stage})",
+        f"状态: {status}",
+        f"项目: pm-{slug}",
+        f"路径: {root}",
+    ]
+    if task_id:
+        lines.append(f"任务: {task_id}")
+    if human_checkpoint or "checkpoint" in status.lower():
+        lines.extend([
+            "",
+            "需确认 — 请核实产物后继续",
+            f"飞书回复: 确认 {task_id}" if task_id else "飞书回复: 确认",
+        ])
+    if extra:
+        lines.extend(["", extra])
+    return "\n".join(lines)
 
 HERMES_ENV = Path(os.environ.get("HERMES_HOME", r"D:\hermes-data")) / ".env"
 FEISHU_API = {

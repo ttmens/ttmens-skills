@@ -37,7 +37,7 @@ Actions, not rigid phases. Within the **spec** Kanban task you may:
 5. **Prototype** — Iterate `02b-prototype/` alongside specs
 6. **Verify** — Builder checks tasks.md before MVP; planner re-opens specs if scope shifts
 
-Run `stage-complete.py --stage spec` only when proposal + PRD + prototype + tasks are ready.
+Run `verify spec artifacts (03-prd.md, openspec/)` only when proposal + PRD + prototype + tasks are ready.
 
 ## proposal.md template
 

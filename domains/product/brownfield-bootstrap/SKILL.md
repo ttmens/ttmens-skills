@@ -29,7 +29,7 @@ existing_artifacts:
 ## Hermes
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py --project-root {PROJECT_ROOT} --scenario brownfield
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/# v9 removed: use init-project.py + SKILL.md stages --project-root {PROJECT_ROOT} --scenario brownfield
 ```
 
 ## Cursor

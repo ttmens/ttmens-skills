@@ -42,7 +42,7 @@ Enrich `00-brief.md` with sections:
 
 - If session is long or user answers are complete: **stop grilling** and write all decisions to disk.
 - Mandatory outputs before complete: enriched `00-brief.md`, `CONTEXT.md` (glossary ≥3), initial `decisions.md` if any irreversible choice.
-- Run `stage-complete.py --stage align` — do not hand off to research yourself.
+- Run `verify align artifacts (CONTEXT.md, decisions.md)` — do not hand off to research yourself.
 
 ## When to hand off
 
@@ -50,7 +50,7 @@ After align gate passes, pm-researcher takes over (via Kanban parent complete). 
 
 ## G1 Debate Protocol (Assumption Debate)
 
-Run **after** grilling completes and `CONTEXT.md` / `decisions.md` exist, **before** `stage-complete --stage align`.
+Run **after** grilling completes and `CONTEXT.md` / `decisions.md` exist, **before** human align checkpoint.
 
 Optional borrowed: `pm-identify-assumptions-new` to tabulate assumptions before debate.
 
@@ -71,10 +71,7 @@ Optional borrowed: `pm-identify-assumptions-new` to tabulate assumptions before 
 - `debates/align-synthesis.md`
 - Append summary to `decisions.md` under `## Debate Align`
 
-### Gate
+### Gate (G1)
 
-```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage align --project-root {PROJECT_ROOT}
-```
+Verify `debates/align-synthesis.md` exists under `{PROJECT_ROOT}` (no unresolved `OPEN?` / TBD).
 
-Goal `debate_resolved` must pass before `stage-complete --stage align`.

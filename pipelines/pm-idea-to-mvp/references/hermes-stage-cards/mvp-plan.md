@@ -32,10 +32,7 @@ Plan only — no full implementation. Read `openspec/tasks.md` + `03b-user-journ
 | 2 | iter 范围过大 | 300+ 行变更无法审查 | 变更规模约束 |
 | 3 | 没有测试策略 | TDD 纪律缺失 | writing-plans 含测试计划 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage mvp-plan --task-id <this_task_id>
-```
-
-Then `kanban_complete` when gates pass.
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

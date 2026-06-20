@@ -1,7 +1,7 @@
 ﻿---
 name: pm-builder
-description: "Hermes Kanban profile for mvp stage. Run stage-complete at boundary."
-version: 1.0.0
+description: "Hermes Kanban profile for mvp stage. Artifact-driven stage boundary (v9.1)."
+version: 9.1.0
 metadata:
   hermes:
     profile: pm-builder
@@ -14,8 +14,7 @@ metadata:
 
 ## Boundaries
 - Only write artifacts for **mvp** stage
-- At stage end run:
-  `python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --stage mvp --project-root {PROJECT_ROOT} --task-id {TASK_ID} --verify-goals`
+- At stage end: verify SKILL.md artifact paths for **mvp** exist; update PROGRESS.md
 
 ## Skills
 subagent-driven-development, inner-loop-driver

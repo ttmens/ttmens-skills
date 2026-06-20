@@ -1,5 +1,6 @@
 # Non-secret deploy config for pm-{slug}
-# server: pick from HERMES_HOME/config/deploy-servers.yaml (password in .env only)
+# server: pick from HERMES_HOME/config/deploy-servers.yaml (key_path + password_env)
+# See docs/DEPLOY_CONVENTIONS.md
 version: "1.0"
 server: dc1-priority
 host: ""
@@ -9,4 +10,5 @@ project_path: "~/pm-{slug}"
 processes: {}
 health_urls: []
 secret_refs:
+  ssh_key: "~/.ssh/id_ed25519_deploy"
   ssh_password: "servers/dc1-priority"

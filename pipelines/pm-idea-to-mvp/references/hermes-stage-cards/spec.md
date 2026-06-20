@@ -30,10 +30,7 @@
 | 3 | user stories >5 | 范围蔓延 | 强制 ≤5 |
 | 4 | 无验收标准 | MVP 无法判断完成 | 每条 story 必须有 AC |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage spec --task-id <this_task_id> --runtime
-```
-
-**First run**: `kanban_block` `等待用户确认 PRD/原型范围`. **Resume**: `kanban_complete`.
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

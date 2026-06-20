@@ -57,4 +57,4 @@ Use when `CONTEXT.md` exists or after first alignment pass. Ground interrogation
 
 ## G1 Debate Protocol
 
-After CONTEXT/decisions are updated, run the same **Assumption Debate** protocol as `grill-me` (see `grill-me` § G1 Debate Protocol). Required before `stage-complete --stage align`.
+After CONTEXT/decisions are updated, run the same **Assumption Debate** protocol as `grill-me` (see `grill-me` § G1 Debate Protocol). Required before human align checkpoint.

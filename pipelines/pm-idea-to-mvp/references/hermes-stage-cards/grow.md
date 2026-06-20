@@ -28,8 +28,7 @@
 | 2 | 无 NSM 定义 | 增长无方向 | pm-north-star-metric 技能 |
 | 3 | GTM 不可执行 | 纸上谈兵 | GTM 含具体渠道 + 预算 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage grow --task-id <this_task_id>
-```
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

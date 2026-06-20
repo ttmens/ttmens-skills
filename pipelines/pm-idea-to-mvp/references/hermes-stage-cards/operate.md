@@ -27,8 +27,7 @@
 | 2 | 无告警规则 | 故障发现延迟 | 告警规则必需 |
 | 3 | 无 SLA 定义 | 服务质量无标准 | SLA 必需 |
 
-## Exit
+## Exit (mandatory)
 
-```powershell
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py --project-root {PROJECT_ROOT} --stage operate --task-id <this_task_id>
-```
+Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.
+Update `PROGRESS.md` stage status.

@@ -44,5 +44,5 @@ If vendor skills are unavailable, emulate the same roles inline (do not skip the
 Must pass `debate_resolved` for `stage_prefix: spec` before G2 human/auto checkpoint.
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/goal-check.py --stage spec --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/debates/spec-synthesis.md exists (G2) --project-root {PROJECT_ROOT}
 ```

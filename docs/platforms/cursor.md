@@ -11,7 +11,7 @@
 ```
 
 Installs skills to `~/.cursor/skills/` or `<project>/.cursor/skills/`, plus project templates:
-- `AGENTS.md` (v7.1.0)
+- `AGENTS.md` (v9.1.0)
 - `.cursor/hooks.json` + `scripts/stage-gate-hook.py`
 
 ## Detect environment
@@ -23,14 +23,14 @@ python {SKILLS_ROOT}/scripts/validate_skills.py
 
 ## Entry
 
-Say **从想法做到上线**. Agent loads `pm-idea-to-mvp` v7.1.0 (Loop Engineering + behavior code).
+Say **从想法做到上线**. Agent loads `pm-idea-to-mvp` v9.1.0 (Loop Engineering + behavior code).
 
 Human checkpoints: per `harness-rules.yaml` (default: **ship** only). G1/G2 debate gates via `grill-me` (debate protocol) / `prd-red-team-panel`.
 
 ## Stage exit (required)
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/SKILL.md 产物路径验证 \
   --stage mvp --project-root . --runtime --verify-goals
 ```
 
@@ -46,4 +46,4 @@ python {SKILLS_ROOT}/scripts/deploy-verify.py --project-root {PROJECT_ROOT}
 
 ## Borrowed workflows
 
-[command-recipes.md](../../pipelines/pm-idea-to-mvp/references/command-recipes.md)
+[CODING_CONVENTIONS.md](../../pipelines/pm-idea-to-mvp/references/CODING_CONVENTIONS.md)

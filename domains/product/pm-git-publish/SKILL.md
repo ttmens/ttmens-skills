@@ -1,7 +1,7 @@
 ---
 name: pm-git-publish
 description: "Git publish for PM pipeline runs: one idea = one public GitHub repo with GitHub Pages report."
-version: 3.0.0
+version: 3.1.0
 author: PM Pipeline
 license: MIT
 platforms: [linux, macos, windows]
@@ -13,78 +13,39 @@ metadata:
 
 # PM Git Publish
 
-Each product idea is a **standalone public GitHub repo** under `ttmens/pm-{slug}` with a **GitHub Pages** static report.
+Each product idea is a **standalone public GitHub repo** under `ttmens/pm-{slug}` with **GitHub Pages** report.
 
 ## Paths
 
 | Item | Value |
 |------|-------|
-| Local repo | `{PROJECT_ROOT}/` (pm-{slug} root) |
-| Skills root | `{SKILLS_ROOT}/` (ttmens-skills or install dir) |
+| Local repo | `{PROJECT_ROOT}/` |
 | GitHub repo | `https://github.com/ttmens/pm-{slug}` |
 | Pages URL | `https://ttmens.github.io/pm-{slug}/` |
-| Index | `https://ttmens.github.io/pm-pipeline-index/` |
 
-## Orchestrator: new idea
-
-**Do NOT rely on LLM auto_decompose** for PM pipeline tasks. Use deterministic decompose:
+## New project bootstrap
 
 ```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/decompose-pm-pipeline.py \
-  --task-id {triage_task_id} --slug {slug} --project-root {PROJECT_ROOT}
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/init-project.py \
+  --project-root {PROJECT_ROOT} --slug {slug}
 ```
 
-Bootstrap repo if needed:
+Use `{SKILLS_ROOT}/scripts/publish_repo.py` to create GitHub repo when needed.
 
-```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/bootstrap_github_repo.py \
-  --dir {PROJECT_ROOT} --slug {slug} --description "PM pipeline: {title}"
-```
+## After each stage (v9.1)
 
-Kanban comment on parent:
+1. Verify stage artifacts per `pm-idea-to-mvp/SKILL.md`
+2. Commit and push to `pm-{slug}` repo
+3. Optional: `python {SKILLS_ROOT}/scripts/feishu_notify.py --stage {stage} --status done --project-root {PROJECT_ROOT}`
 
-```
-repo: https://github.com/ttmens/pm-{slug}
-pages: https://ttmens.github.io/pm-{slug}/
-```
+**No** `stage-complete.py` in v9 — artifact paths are the SSOT.
 
-## Worker: after each stage (MANDATORY)
-
-From `{PROJECT_ROOT}`:
-
-```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
-  --project-root {PROJECT_ROOT} --stage {stage} --message "stage({stage}): summary"
-```
-
-`stage-complete.py` runs `validate-gates` + `eval-stage` + `goal-check` + report build + git push. **Exit non-zero → do not mark stage complete.**
-
-### Stage names
-
-| Profile | `--stage` value | Notes |
-|---------|-----------------|-------|
-| pm-aligner | `align` | G1 debate gate |
-| pm-researcher | `research` | |
-| pm-analyst | `analysis` | C4 + PK debate |
-| pm-planner | `spec` | G2 red-team panel |
-| pm-builder | `mvp` | inner-loop |
-| pm-shipper | `ship` | human checkpoint default |
-| pm-builder | `retro` | harness evolution |
-
-## Retro (pm-builder)
+## Retro
 
 ```bash
 python {SKILLS_ROOT}/scripts/merge-retro-knowledge.py --project-root {PROJECT_ROOT}
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
-  --project-root {PROJECT_ROOT} --stage retro --message "stage(retro): pipeline complete"
+python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/consume-feedback.py \
+  --project-root {PROJECT_ROOT} --append-retro --write
 ```
 
 产物使用**简体中文**。
-
-## Feishu notification
-
-`stage-complete.py` 调用 `{SKILLS_ROOT}/scripts/feishu_notify.py` 向 `FEISHU_HOME_CHANNEL` 推送阶段摘要。
-
-## Failure handling
-
-If `stage-complete.py` fails: block with stderr summary. Do not mark complete.

@@ -19,13 +19,12 @@ git submodule update --init --recursive
 
 - 默认流水线：`pm-idea-to-mvp` v9.1.0 → 读 `{SKILLS_ROOT}/pipelines/pm-idea-to-mvp/SKILL.md`
 - 触发语：**从想法做到上线** · 继续 pm-{slug} · 进入 {stage} 阶段
-- 每 stage 结束：
-
-```bash
-python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/stage-complete.py \
-  --project-root . --stage <stage> --verify-goals
-```
-
+- 每 stage 结束：**验证 SKILL.md 产物路径存在**（不靠 stage-complete.py）
 - MVP 内循环：`python {SKILLS_ROOT}/pipelines/pm-idea-to-mvp/scripts/inner-loop-driver.py --project-root .`
 - 用户可见产物：**简体中文**
+- 约定索引：`{SKILLS_ROOT}/docs/CODING_CONVENTIONS.md`、`{SKILLS_ROOT}/docs/DEPLOY_CONVENTIONS.md`
 - 运行时规则：`{SKILLS_ROOT}/AGENTS.md`
+
+## 人工卡点
+
+仅 **align** 与 **ship** 两处暂停等待用户确认。spec 的 G2 由 `prd-red-team-panel` 技能验证，不占人工 unblock。

@@ -2,12 +2,7 @@
 """
 Drive MVP inner loop: Plan → Code → Test → Observe → Adjust (max N iterations).
 
-v6.2 enhancements:
-- Requires goals/mvp.yaml before starting
-- Logs each iteration to PROGRESS.md
-- Enforces test execution (not just build)
-- Writes iteration results to feedback.jsonl
-- Escalates to harness-improvements.md on repeated failure
+v9.1: artifact-driven; runtime checks from harness-rules.yaml (no validate-gates.py).
 """
 
 from __future__ import annotations
@@ -16,28 +11,95 @@ import argparse
 import json
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-
-import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from pipeline_paths import resolve_pipeline_root
-
-import importlib.util
-
 from pipeline_version import PIPELINE_VERSION
 
 
-def _load_harness_helpers():
-    vg_path = Path(__file__).resolve().parent / "validate-gates.py"
-    spec = importlib.util.spec_from_file_location("validate_gates", vg_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.load_harness_rules, mod.resolve_runtime_config
+def load_harness_rules(project_root: Path) -> dict:
+    rules_path = project_root / "harness-rules.yaml"
+    if not rules_path.exists():
+        return {}
+    try:
+        import yaml
+
+        with open(rules_path, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        pass
+    result: dict = {}
+    current_section: str | None = None
+    for line in rules_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line.startswith(" ") and stripped.endswith(":"):
+            current_section = stripped[:-1]
+            result[current_section] = {}
+            continue
+        if current_section and ":" in stripped:
+            key, _, val = stripped.partition(":")
+            result[current_section][key.strip()] = val.strip().strip("'\"")
+    return result
 
 
-load_harness_rules, resolve_runtime_config = _load_harness_helpers()
+def resolve_runtime_config(harness: dict, project_root: Path) -> tuple[dict, Path]:
+    runtime = harness.get("runtime", {}) or {}
+    project = harness.get("project", {}) or {}
+    merged = {
+        "test_cmd": runtime.get("test_cmd") or project.get("test_cmd", ""),
+        "build_cmd": runtime.get("build_cmd") or project.get("build_cmd", ""),
+        "lint_cmd": runtime.get("lint_cmd") or project.get("lint_cmd", ""),
+        "health_url": runtime.get("health_url") or project.get("health_url", ""),
+        "workdir": runtime.get("workdir") or project.get("workdir") or ".",
+    }
+    workdir = merged["workdir"]
+    cwd = project_root / workdir if workdir and workdir != "." else project_root
+    return merged, cwd
+
+
+def run_runtime_checks(project_root: Path, harness: dict) -> list[dict]:
+    checks: list[dict] = []
+    if not harness.get("project") and not harness.get("runtime"):
+        return [{"check": "harness_config", "pass": False, "detail": "No harness config"}]
+
+    cfg, cwd = resolve_runtime_config(harness, project_root)
+    for name, cmd, timeout in (
+        ("test_command", cfg.get("test_cmd", ""), 180),
+        ("lint_command", cfg.get("lint_cmd", ""), 120),
+        ("build_command", cfg.get("build_cmd", ""), 300),
+    ):
+        if not cmd:
+            continue
+        try:
+            result = subprocess.run(
+                cmd, shell=True, cwd=str(cwd), capture_output=True, text=True, timeout=timeout
+            )
+            checks.append({
+                "check": name,
+                "command": cmd,
+                "pass": result.returncode == 0,
+                "exit_code": result.returncode,
+                "output_snippet": (result.stdout or result.stderr or "")[:500],
+            })
+        except subprocess.TimeoutExpired:
+            checks.append({"check": name, "command": cmd, "pass": False, "detail": f"timeout {timeout}s"})
+        except Exception as exc:
+            checks.append({"check": name, "command": cmd, "pass": False, "detail": str(exc)})
+
+    health_url = cfg.get("health_url", "")
+    if health_url:
+        try:
+            with urllib.request.urlopen(health_url, timeout=15) as resp:
+                checks.append({"check": "health_url", "url": health_url, "pass": resp.status == 200})
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            checks.append({"check": "health_url", "url": health_url, "pass": False, "detail": str(exc)})
+
+    return checks or [{"check": "runtime", "pass": False, "detail": "No runtime commands configured"}]
 
 
 def load_inner_state(project_root: Path) -> dict:
@@ -89,26 +151,13 @@ def save_inner_state(project_root: Path, iteration: int, signal: str, max_iter: 
 
 
 def observe(project_root: Path, harness: dict) -> dict:
-    scripts_dir = Path(__file__).resolve().parent
-    r = subprocess.run(
-        [
-            sys.executable,
-            str(scripts_dir / "validate-gates.py"),
-            "--stage", "mvp",
-            "--run", str(project_root),
-            "--runtime",
-            "--goal",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=300,
-    )
-    try:
-        report = json.loads(r.stdout) if r.stdout.strip() else {}
-    except json.JSONDecodeError:
-        report = {"raw": r.stdout[:500]}
-    passed = r.returncode == 0
-    return {"pass": passed, "exit_code": r.returncode, "report": report}
+    checks = run_runtime_checks(project_root, harness)
+    passed = len(checks) > 0 and all(c.get("pass") for c in checks)
+    report = {
+        "summary": {"passed": sum(1 for c in checks if c.get("pass")), "total": len(checks)},
+        "checks": checks,
+    }
+    return {"pass": passed, "exit_code": 0 if passed else 1, "report": report}
 
 
 def check_prerequisites(project_root: Path) -> list[str]:
@@ -191,7 +240,7 @@ def escalate_to_harness(project_root: Path, reason: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="MVP inner loop driver (v8.0.0)")
+    parser = argparse.ArgumentParser(description="MVP inner loop driver (v9.1.0)")
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--iteration", type=int, default=0, help="0 = auto increment")
     parser.add_argument("--dry-run", action="store_true")

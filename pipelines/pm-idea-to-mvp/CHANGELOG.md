@@ -2,6 +2,19 @@
 
 All notable changes to pm-idea-to-mvp pipeline will be documented in this file.
 
+## [9.1.0] - 2026-06-19
+
+See root [CHANGELOG.md](../../CHANGELOG.md) for v9.0/v9.1 details.
+
+### Changed
+
+- Skill-driven stage completion (artifact paths); removed `stage-complete.py`, `goal-check.py`, `validate-gates.py`
+- Core scripts: `init-project.py`, `inner-loop-driver.py`, `consume-feedback.py` + `pipeline_paths.py`, `pipeline_version.py`
+- Human checkpoints: **align + ship** only (spec G2 via skills)
+- Deploy: `deploy.template.yaml` adds `secret_refs.ssh_key`; see [DEPLOY_CONVENTIONS.md](../../docs/DEPLOY_CONVENTIONS.md)
+
+---
+
 ## [7.2.0] - 2026-06-16
 
 ### Overview
