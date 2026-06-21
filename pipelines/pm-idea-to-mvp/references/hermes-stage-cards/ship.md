@@ -30,6 +30,19 @@
 | 3 | 跳过安全审计 | 安全漏洞上线 | security-and-hardening 技能 |
 | 4 | 部署后不验证 | 部署成功 ≠ 运行正常 | health endpoint 检查 |
 
+## Pre-Gates (Infrastructure Ready)
+
+Before entering Ship stage, verify infrastructure readiness:
+
+1. **SSH Connectivity**: `ssh_probe` — all target servers reachable
+2. **Git Remote**: `git_remote_check` — push reachable and token valid
+3. **Local Health**: `infra_health_check` — Gateway environment healthy (source/venv/config)
+
+If any check fails:
+- Attempt auto-fix (Level 1 issues)
+- Retry the check
+- If still failing, report to user and block Ship stage
+
 ## Exit (mandatory)
 
 Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.

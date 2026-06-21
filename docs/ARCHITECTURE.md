@@ -15,7 +15,7 @@ ttmens-skills 不是 prompt 合集，而是 **Loop Engineering 平台**：
 | ---------- | -------------------------------------------- | ----------------------------------------- |
 | **L0 脚本**  | 内循环驱动、项目初始化、反馈闭环                           | `pipelines/pm-idea-to-mvp/scripts/`       |
 | **L1 流水线** | 产物契约、阶段指导、参考文档                            | `pipelines/pm-idea-to-mvp/`               |
-| **L2 技能**  | 18 native + 20 borrowed 操作手册           | `domains/` + `devops/`                    |
+| **L2 技能**  | 19 native + 20 borrowed 操作手册           | `domains/` + `devops/` + `skills/infra-ops/` |
 | **L3 编排**  | Hermes Gateway（通用消息路由）+ OpenCode        | `HERMES_HOME/` + `hermes-agent/`          |
 | **L4 运行时** | SSH 部署目标（PM2/Node/Docker）                    | 远端 VPS，**无 Hermes Gateway**               |
 
@@ -83,8 +83,9 @@ flowchart TB
 4. **Analysis**：方案对比 + C4 架构 → 02-analysis.md + architecture/c4-*.md
 5. **Spec**：用户旅程 + 原型 + PRD + OpenSpec → 03-prd.md + openspec/
 6. **MVP**：inner-loop-driver.py 驱动 Plan→Code→Test→Observe（max 3 iter）
-7. **Ship**：RUNBOOK.md + 浏览器 E2E 验证 → SSH 部署
-8. **Retro**：consume-feedback.py 闭环 → feedback.jsonl + evolution-notes.md
+7. **Ship**：infra-ready gate 预检 → RUNBOOK.md + 浏览器 E2E 验证 → SSH 部署
+8. **Operate**：infra-patrol 持续监控（quick 15min / full 4h）
+9. **Retro**：consume-feedback.py 闭环 → feedback.jsonl + evolution-notes.md
 
 **人工卡点**：**align + ship**（2 个）。spec 的 G2 由 `prd-red-team-panel` 技能验证，不占人工 unblock。
 
@@ -131,6 +132,20 @@ flowchart TB
 - `04-mvp/` 目录：代码 + 测试 + UX-REVIEW.md
 - `feedback.jsonl`：内循环迭代记录
 - `validate_skills.py`：技能库自检
+
+### 3.7 基础设施自动化（v9.2 新增）
+
+平台级基础设施自动化层，解决 65% agent 时间花在 SSH/部署/网络/Git 的问题：
+
+| 组件 | 位置 | 功能 |
+|------|------|------|
+| `infra-ops` skill | `skills/infra-ops/SKILL.md` | 运维知识 SSOT（deploy-servers.yaml 数据流、SSH 认证、网络拓扑、Gateway 生命周期、故障排查决策树） |
+| `infra` 工具集 | `hermes-agent/tools/infra_tools.py` | 7 个工具：health_check / recover / ssh_probe / ssh_config_sync / git_remote_check / gateway_status / infra_patrol |
+| `infra-patrol` cron | `hermes-agent/cron/infra_patrol.py` | 自动巡检（quick 15min / full 4h），三级响应策略 |
+| Gateway health hook | `hermes-agent/gateway/health_hook.py` | Feishu WS 线程活性检测 + all-platforms-down 断路器 |
+| Pipeline infra-ready gate | `pipelines/pm-idea-to-mvp/assets/gates.template.json` | Ship 阶段前置基础设施预检 |
+
+预期效果：基础设施时间占比从 65% → <10%。
 
 ---
 

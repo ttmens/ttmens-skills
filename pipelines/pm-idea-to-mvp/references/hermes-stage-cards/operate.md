@@ -27,6 +27,31 @@
 | 2 | 无告警规则 | 故障发现延迟 | 告警规则必需 |
 | 3 | 无 SLA 定义 | 服务质量无标准 | SLA 必需 |
 
+## Infrastructure Patrol (Operate Stage)
+
+During the Operate stage, enable continuous infrastructure monitoring:
+
+### Quick Patrol (every 15 minutes)
+- Gateway process alive
+- Feishu WebSocket thread healthy
+
+### Full Patrol (every 4 hours)
+- Local environment health (source/venv/config)
+- SSH connectivity to all servers
+- Git remote reachability
+- Auto-fix Level 1 issues (venv rebuild, Gateway restart)
+
+### Usage
+```bash
+# Manual patrol trigger
+infra_patrol scope=quick|full
+
+# View patrol reports
+ls ~/.hermes/reports/patrol-*.json
+```
+
+Patrol reports saved to `~/.hermes/reports/patrol-{timestamp}.json`.
+
 ## Exit (mandatory)
 
 Verify artifact paths from the main pipeline SKILL exist under `{PROJECT_ROOT}`.

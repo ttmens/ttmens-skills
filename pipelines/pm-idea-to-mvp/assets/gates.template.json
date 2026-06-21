@@ -24,7 +24,8 @@
       "checkpoint": "human",
       "runtime_required": true,
       "goals_required": true,
-      "runbook_sections": ["deploy", "rollback", "monitor"]
+      "runbook_sections": ["deploy", "rollback", "monitor"],
+      "pre_gates": ["infra-ready"]
     },
     "operate": { "status": "pending", "checkpoint": "auto", "required_file": "07-ops-notes.md", "min_lines": 20 },
     "grow": { "status": "pending", "checkpoint": "auto", "min_lines": 30 },
@@ -34,6 +35,17 @@
       "goals_required": true,
       "required_sections": ["metrics", "iteration_analysis"],
       "min_lines": 50
+    }
+  },
+  "gates": {
+    "infra-ready": {
+      "description": "Infrastructure pre-flight checks before deployment",
+      "checks": [
+        {"tool": "ssh_probe", "scope": "all", "description": "All target servers SSH reachable"},
+        {"tool": "git_remote_check", "description": "Git push reachable and token valid"},
+        {"tool": "infra_health_check", "description": "Local Gateway healthy (source/venv/config)"}
+      ],
+      "on_fail": "auto-fix Level 1 -> retry -> if still fail, report to user and block ship"
     }
   },
   "v6.2_enforcements": {
