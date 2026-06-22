@@ -2,11 +2,12 @@
 """
 consume-feedback.py — Parse and summarize feedback.jsonl for retro stage.
 
+v9.2: Added pattern detection for outer loop automation.
 v6.2: Closes the feedback loop — feedback.jsonl was write-only, now consumed.
 Generates a summary report and marks entries as consumed.
 
 Usage:
-  python consume-feedback.py --project-root <path> [--json] [--write]
+  python consume-feedback.py --project-root <path> [--json] [--write] [--pattern-detection]
 """
 
 from __future__ import annotations
@@ -142,9 +143,95 @@ def mark_consumed(project_root: Path) -> None:
         f.write(json.dumps(marker, ensure_ascii=False) + "\n")
 
 
+def detect_patterns(entries: list[dict]) -> list[dict]:
+    """
+    Detect repeated failure patterns (≥3 similar failures).
+    
+    Returns list of detected patterns with:
+    - pattern: description of the pattern
+    - count: number of occurrences
+    - entries: list of matching feedback entries
+    - suggested_rule: proposed rule to add to agent-behavior-code.md
+    """
+    if not entries:
+        return []
+    
+    # Group entries by signal (failure type)
+    signal_groups = {}
+    for e in entries:
+        signal = e.get("signal", "")
+        if not signal or e.get("status") in ("resolved", "consumed"):
+            continue
+        
+        # Normalize signal for grouping (remove specific details)
+        normalized = signal.lower()
+        # Extract key pattern (first 50 chars or first sentence)
+        key = normalized[:50].split(".")[0].split(",")[0].strip()
+        
+        if key not in signal_groups:
+            signal_groups[key] = []
+        signal_groups[key].append(e)
+    
+    # Find patterns with ≥3 occurrences
+    patterns = []
+    for key, group in signal_groups.items():
+        if len(group) >= 3:
+            # Generate suggested rule
+            stages = list(set(e.get("stage", "unknown") for e in group))
+            suggested_rule = f"避免重复失败：{key}（出现 {len(group)} 次，阶段：{', '.join(stages)}）"
+            
+            patterns.append({
+                "pattern": key,
+                "count": len(group),
+                "stages": stages,
+                "entries": group,
+                "suggested_rule": suggested_rule,
+            })
+    
+    # Sort by count (descending)
+    patterns.sort(key=lambda p: p["count"], reverse=True)
+    return patterns
+
+
+def generate_patterns_report(patterns: list[dict]) -> str:
+    """Generate markdown report for auto-detected patterns."""
+    lines = [
+        "# 自动检测的失败模式\n",
+        f"**生成时间**: {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S+00:00')}\n",
+        f"**检测到的模式数**: {len(patterns)}\n",
+        "\n---\n",
+    ]
+    
+    if not patterns:
+        lines.append("\n✅ 未检测到重复失败模式（阈值：≥3 次相似失败）\n")
+        return "\n".join(lines)
+    
+    lines.append("\n## 检测到的模式\n")
+    
+    for i, pattern in enumerate(patterns, 1):
+        lines.append(f"\n### 模式 {i}: {pattern['pattern']}\n")
+        lines.append(f"- **出现次数**: {pattern['count']}")
+        lines.append(f"- **涉及阶段**: {', '.join(pattern['stages'])}")
+        lines.append(f"- **建议规则**: {pattern['suggested_rule']}")
+        
+        lines.append("\n**相关反馈记录**:\n")
+        for e in pattern["entries"][:5]:  # Show first 5 entries
+            lines.append(f"- [{e.get('ts', '')}] [{e.get('stage', '')}] {e.get('signal', '')}")
+            if e.get("proposed_delta"):
+                lines.append(f"  - 建议: {e.get('proposed_delta')}")
+    
+    lines.append("\n---\n")
+    lines.append("\n## 下一步行动\n")
+    lines.append("1. 人工确认这些模式是否有效")
+    lines.append("2. 确认后，将建议规则添加到 `references/agent-behavior-code.md`")
+    lines.append("3. 更新相关技能的 SKILL.md")
+    
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Consume feedback.jsonl and generate retro summary (v9.1.0)"
+        description="Consume feedback.jsonl and generate retro summary (v9.2.0)"
     )
     parser.add_argument("--project-root", required=True, help="Project root directory")
     parser.add_argument("--json", action="store_true", help="Output JSON")
@@ -152,6 +239,8 @@ def main() -> int:
                         help="Append consumption marker to feedback.jsonl")
     parser.add_argument("--append-retro", action="store_true",
                         help="Append summary section to 05-retro.md")
+    parser.add_argument("--pattern-detection", action="store_true",
+                        help="Detect repeated failure patterns and generate auto-detected-patterns.md")
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
@@ -163,6 +252,26 @@ def main() -> int:
         "project_root": str(project_root),
         "feedback_summary": summary,
     }
+
+    # Pattern detection (v9.2)
+    if args.pattern_detection:
+        patterns = detect_patterns(entries)
+        patterns_report = generate_patterns_report(patterns)
+        
+        # Write to auto-detected-patterns.md
+        patterns_path = project_root / "auto-detected-patterns.md"
+        with open(patterns_path, "w", encoding="utf-8") as f:
+            f.write(patterns_report)
+        
+        report["pattern_detection"] = {
+            "patterns_found": len(patterns),
+            "patterns_file": str(patterns_path),
+        }
+        
+        if not args.json:
+            print(f"\n🔍 Pattern Detection:")
+            print(f"  Detected {len(patterns)} repeated failure patterns")
+            print(f"  Report written to: {patterns_path}")
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

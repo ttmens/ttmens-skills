@@ -170,8 +170,8 @@ MVP 使用**递归内循环**，而非线性执行：
 
 #### 最优停止策略（v9.2 新增）
 
-**问题**：固定 3 次迭代，缺少成本-质量权衡  
-**方案**：动态迭代 + 成本追踪
+**问题**：固定 3 次迭代，缺少质量-效率权衡  
+**方案**：动态迭代 + 质量收敛判断
 
 **迭代次数决策树**：
 - Iteration 1: 基础功能通过 → 继续
@@ -179,32 +179,11 @@ MVP 使用**递归内循环**，而非线性执行：
 - Iteration 3: 性能优化 → 评估
 - Iteration 4+: 仍有问题 → 记录到 feedback.jsonl，人工介入
 
-**成本-质量曲线**：
-- 记录每次迭代的 token 消耗
-- 如果 Iteration N 的改进 < 10%，停止
-- 如果总 token > 预算阈值，停止
+**质量收敛判断**：
+- 如果 Iteration N 的改进 < 10%（测试通过率提升 < 10%），停止
+- 如果连续 2 次迭代无新测试通过，停止
 
-**产物**：`loop-cost-tracker.jsonl`
-
-#### Token 成本追踪（v9.2 新增）
-
-**记录格式**：
-```json
-{
-  "ts": "ISO8601",
-  "project": "pm-{slug}",
-  "stage": "mvp",
-  "iteration": 1,
-  "tokens_in": 50000,
-  "tokens_out": 10000,
-  "cost_usd": 0.15,
-  "duration_seconds": 120
-}
-```
-
-**产物**：
-- `loop-cost-tracker.jsonl`
-- `cost-summary.md`（每项目汇总）
+**产物**：`iteration-summary.md`（每次迭代的改进摘要）
 
 ### 反合理化表格
 
@@ -287,6 +266,8 @@ LLM 验证器改进草稿 → 确定性验证决定是否发货
 - 概率性验证用于改进
 - 确定性验证用于发货
 - 两者结合：LLM 改进 → 确定性决定
+- **"两个乐观主义者"陷阱**（Sonar）：如果验证来自做了工作的同一个模型（自评分），或者来自被礼貌要求"审查"的第二个模型（友善偏差），结果是**两个乐观主义者达成一致**——自信的错误答案传播到下一次迭代。永远不要让概率性检查成为最终门。
+- **斯坦福发现**：AI 准确率在中等 token 消耗时达到峰值。更多循环可能让结果更差。预算上限和重试限制是必需的。
 
 #### Meta-Verification Gate（v9.2 新增）
 
@@ -358,11 +339,11 @@ LLM 验证器改进草稿 → 确定性验证决定是否发货
 ### 外循环自动化（v9.2 新增）
 
 **问题**：feedback.jsonl 手动记录，缺少模式识别  
-**方案**：每 5 个项目自动分析
+**方案**：每个项目完成后自动分析
 
 **触发条件**：
-- 每完成 5 个项目
-- 或 feedback.jsonl 累积 20+ 条记录
+- 每个项目完成 retro 阶段后立即启动
+- 或 feedback.jsonl 新增记录时
 
 **自动化流程**：
 1. 运行 `consume-feedback.py --pattern-detection`
@@ -507,4 +488,5 @@ Loop 4 (Hill Climbing) ──更新──→ Loop 2 (Verification)
 | `references/web-optimization-patterns.md` | Web 性能优化：React 代码分割、Redis Pipeline、CORS、脱敏、表单验证 |
 | `references/rollback-decision-tree.md` | 回退决策树 |
 | `references/fullstack-debugging-nextjs-prisma.md` | Next.js+Prisma+SQLite 全栈调试：JSON字段解析、Tailwind safelist、PM2 env、Vision配置 |
+| `references/loop-engineering-research.md` | Loop Engineering 业界研究：关键引言、4层循环、双层验证、"两个乐观主义者"陷阱、斯坦福发现、Bun案例 |
 | `references/hermes-stage-cards/*.md` | 各阶段详细卡片（含反合理化表格） |
