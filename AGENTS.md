@@ -13,7 +13,7 @@
 
 ## 1. 默认行为
 
-- **加载流水线**：`pm-idea-to-mvp` v9.1.0（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
+- **加载流水线**：`pm-idea-to-mvp` v9.2.0（[`pipelines/pm-idea-to-mvp/SKILL.md`](pipelines/pm-idea-to-mvp/SKILL.md)）
 - **唯一 live 入口**：`pipelines/pm-idea-to-mvp/`
 - **触发语**：从想法做到上线 · 继续 pm-{slug} · 优化现有产品 · 进入 {stage} 阶段
 - **路径变量**：`{PROJECT_ROOT}` = pm-{slug} 仓库根；`{SKILLS_ROOT}` = 技能库根（**勿硬编码绝对路径**）

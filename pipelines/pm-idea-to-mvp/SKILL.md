@@ -1,13 +1,13 @@
 ---
 name: pm-idea-to-mvp
-description: "产品开发全流程技能：brief → align → research → analysis → spec → MVP → ship → retro。双循环框架 + 内循环迭代 + 行为准则 + 浏览器验证。"
-version: 9.1.0
+description: "产品开发全流程技能：brief → align → research → analysis → spec → MVP → ship → retro。4 层循环架构 + 双层验证 + 自进化系统。"
+version: 9.2.0
 author: ttmens
 license: MIT
 platforms: [cursor, hermes, opencode, linux, macos, windows]
 metadata:
   hermes:
-    tags: [super-developer, loop-engineering, browser-verification, openspec, ship, brownfield-audit]
+    tags: [super-developer, loop-engineering, browser-verification, openspec, ship, brownfield-audit, meta-verification, two-tier-verification]
     curator:
       skip: true
     trigger_conditions:
@@ -46,15 +46,19 @@ metadata:
       - ui-acceptance-review
 ---
 
-# Super Developer Pipeline v9.1 (pm-idea-to-mvp)
+# Super Developer Pipeline v9.2 (pm-idea-to-mvp)
 
 覆盖 PM、工程、运维、运营全链路。融合 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的行为准则体系。
 
-> **设计哲学**：Martin Fowler 的 **双循环框架**——
-> - **Why Loop**（战略循环）：持续验证方向（align → research → analysis → retro 反馈）
-> - **How Loop**（执行循环）：快速迭代实现（spec → MVP inner-loop → ship → operate 反馈）
+> **设计哲学**：基于 Loop Engineering 最佳实践的 **4 层循环架构**——
+> - **Loop 1: Agent Loop**（自动化工作）：模型重复调用工具直到任务完成
+> - **Loop 2: Verification Loop**（确保质量）：双层验证（LLM 改进 + 确定性硬停止）
+> - **Loop 3: Event-Driven Loop**（规模化集成）：事件触发代理运行（webhook、cron、新数据）
+> - **Loop 4: Hill Climbing Loop**（自动化改进）：分析生产 traces，自动重写 harness 配置
 >
-> 两个循环通过 `feedback.jsonl` 与 `evolution-notes.md` 互相驱动，形成自进化闭环。
+> 核心洞察：**验证器才是产品，其他都是管道**。输出质量受限于验证器质量，不会更高。
+>
+> 两个战略循环（Why Loop + How Loop）通过 `feedback.jsonl` 与 `evolution-notes.md` 互相驱动，形成自进化闭环。
 
 ## 语言（强制）
 
@@ -158,11 +162,49 @@ MVP 使用**递归内循环**，而非线性执行：
 | **Observe** | 收集信号：test exit code、lint warnings、build output | agent 判断 |
 | **Adjust** | 分析失败原因，调整 plan（仅 FAIL 时） | `feedback.jsonl` 记录 |
 
-### 循环终止
+### 循环终止（v9.2 增强：最优停止条件）
 
 - **PASS**：所有目标满足 → 退出循环，进入 Ship
 - **FAIL after 3 iterations**：记录失败原因到 `05-retro.md`，通知人类介入
 - **HARNESS ESCALATION**：失败原因是配置问题 → 写入 `evolution-notes.md`
+
+#### 最优停止策略（v9.2 新增）
+
+**问题**：固定 3 次迭代，缺少成本-质量权衡  
+**方案**：动态迭代 + 成本追踪
+
+**迭代次数决策树**：
+- Iteration 1: 基础功能通过 → 继续
+- Iteration 2: 边界情况覆盖 → 继续
+- Iteration 3: 性能优化 → 评估
+- Iteration 4+: 仍有问题 → 记录到 feedback.jsonl，人工介入
+
+**成本-质量曲线**：
+- 记录每次迭代的 token 消耗
+- 如果 Iteration N 的改进 < 10%，停止
+- 如果总 token > 预算阈值，停止
+
+**产物**：`loop-cost-tracker.jsonl`
+
+#### Token 成本追踪（v9.2 新增）
+
+**记录格式**：
+```json
+{
+  "ts": "ISO8601",
+  "project": "pm-{slug}",
+  "stage": "mvp",
+  "iteration": 1,
+  "tokens_in": 50000,
+  "tokens_out": 10000,
+  "cost_usd": 0.15,
+  "duration_seconds": 120
+}
+```
+
+**产物**：
+- `loop-cost-tracker.jsonl`
+- `cost-summary.md`（每项目汇总）
 
 ### 反合理化表格
 
@@ -211,18 +253,63 @@ MVP skill chain：
 writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-development → ui-acceptance-review → requesting-code-review → dogfood
 ```
 
-### Ship（5 维度质量门）
+### Ship（6 维度质量门 + 双层验证架构）
 
-| 维度 | 检查项 | 技能/工具 | 通过标准 |
-|------|--------|-----------|----------|
-| 1. 视觉规范 | 设计系统一致性、品牌色、字体 | `ui-acceptance-review` | 0 critical issues |
-| 2. 组件结构 | 代码质量、lint、构建、TypeScript 类型 | 项目 lint/build 命令 | exit 0, 0 errors |
-| 3. 交互体验 | 可访问性、焦点状态、键盘导航 | `ui-acceptance-review` | 0 WCAG violations |
-| 4. 移动端适配 | 响应式布局、触摸目标、viewport | browser E2E + viewport 测试 | 320px-1440px 无布局破坏 |
-| 5. 上线把关 | RUNBOOK.md、回滚方案、监控指标 | 人工确认 | 用户签字 |
+| 维度 | 检查项 | 技能/工具 | 通过标准 | 验证类型 |
+|------|--------|-----------|----------|---------|
+| 1. 视觉规范 | 设计系统一致性、品牌色、字体 | `ui-acceptance-review` | 0 critical issues | 概率性（LLM） |
+| 2. 组件结构 | 代码质量、lint、构建、TypeScript 类型 | 项目 lint/build 命令 | exit 0, 0 errors | **确定性（硬停止）** |
+| 3. 交互体验 | 可访问性、焦点状态、键盘导航 | `ui-acceptance-review` | 0 WCAG violations | 概率性（LLM） |
+| 4. 移动端适配 | 响应式布局、触摸目标、viewport | browser E2E + viewport 测试 | 320px-1440px 无布局破坏 | **确定性（硬停止）** |
+| 5. 上线把关 | RUNBOOK.md、回滚方案、监控指标 | 人工确认 | 用户签字 | **确定性（硬停止）** |
+| 6. 验证器健康度 | 质量门本身是否被测试过 | Meta-Verification | 0 未测试的质量门 | **确定性（硬停止）** |
+
+#### 双层验证架构（v9.2 新增）
+
+**Layer 1: LLM 验证器（改进层，概率性）**
+- 角色：改进草稿，提供语义级反馈
+- 工具：`ui-acceptance-review`（LLM 判断）、`prd-red-team-panel`、`dogfood`
+- 输出：改进建议（非硬停止）
+- 特点：可变，每次运行可能不同
+
+**Layer 2: 确定性验证（硬停止层，确定性）**
+- 角色：最终发货门
+- 工具：lint/build/test/browser-e2e/security-audit
+- 输出：PASS/FAIL（硬停止）
+- 特点：可重现，每次运行结果相同
+
+**工作流**：
+```
+LLM 验证器改进草稿 → 确定性验证决定是否发货
+```
+
+**原则**：
+- 概率性验证用于改进
+- 确定性验证用于发货
+- 两者结合：LLM 改进 → 确定性决定
+
+#### Meta-Verification Gate（v9.2 新增）
+
+**问题**：质量门本身没有自我验证机制  
+**方案**：增加第 6 维度"验证器健康度"
+
+**检查项**：
+- 质量门本身是否被测试过？
+- 是否有假阳性/假阴性案例？
+- 验证器是否随项目演进更新？
+- 通过标准：0 未测试的质量门
+
+**产物**：`verification-gate-health.md`
 
 - **浏览器端到端验证**（不可跳过）：见 `references/browser-e2e-verification.md`
 - Deploy 为 High risk → 必须人工确认
+
+**深度交互测试要求**：用户明确要求"深入点击都要检查"时，不能只验证页面加载成功。必须测试所有可交互元素：
+- 列表项 → 详情页
+- 按钮 → 模态框/表单
+- 标签页 → 内容切换
+- 编辑 → 保存 → 取消
+- 所有深层交互路径都必须验证，不能停留在"页面无报错"层面
 
 #### 性能基准（推荐）
 
@@ -254,11 +341,12 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 - 内循环迭代分析（成功/失败原因）
 - evolution-notes.md：经验教训 + 改进建议
 
-## Self-evolution
+## Self-evolution（v9.2 增强：外循环自动化）
 
 ### 信号收集
 - `feedback.jsonl`：内循环迭代中的失败/调整记录
 - 用户纠正：Agent 行为偏离预期时的反馈
+- `loop-cost-tracker.jsonl`：每次循环的 token 消耗和时长
 
 ### 规则转化流程
 1. **记录 Signal**：feedback.jsonl 中记录具体失败场景
@@ -266,6 +354,25 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 3. **规则建议**：写入 `evolution-notes.md` 的 "Proposed Rules" 章节
 4. **人工确认**：Retro 阶段与用户确认规则有效性
 5. **更新规则库**：确认后写入 `references/agent-behavior-code.md` 或 stage cards
+
+### 外循环自动化（v9.2 新增）
+
+**问题**：feedback.jsonl 手动记录，缺少模式识别  
+**方案**：每 5 个项目自动分析
+
+**触发条件**：
+- 每完成 5 个项目
+- 或 feedback.jsonl 累积 20+ 条记录
+
+**自动化流程**：
+1. 运行 `consume-feedback.py --pattern-detection`
+2. 识别重复失败模式（≥3 次相似失败）
+3. 生成新规则建议
+4. 写入 `evolution-notes.md` 的 "Auto-Detected Patterns" 章节
+5. 人工确认后，更新 `agent-behavior-code.md`
+
+**产物**：
+- `auto-detected-patterns.md`
 
 ### 规则来源原则
 - 规则应来自真实失败，而非理论最佳实践
@@ -289,6 +396,69 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 5. **范围纪律** — 只触碰被要求的部分
 6. **验证而非假设** — 要求具体证据
 7. **规则来自失败** — 规则应源自真实失败场景（feedback.jsonl），而非理论最佳实践
+
+## 4 层循环架构（v9.2 新增）
+
+基于 Loop Engineering 最佳实践，明确区分 4 种循环类型：
+
+### Loop 1: Agent Loop（自动化工作）
+- **功能**：模型重复调用工具直到任务完成
+- **实现**：MVP Inner Loop（Plan→Code→Test→Observe→Adjust）
+- **产物**：代码、测试、文档
+- **特点**：单任务级别，自动迭代
+
+### Loop 2: Verification Loop（确保质量）
+- **功能**：包装 Agent Loop，评分输出 vs 标准
+- **实现**：6 维度质量门 + 双层验证（LLM + 确定性）+ Meta-Verification
+- **产物**：验证报告、改进建议
+- **特点**：质量把关，硬停止
+
+### Loop 3: Event-Driven Loop（规模化集成）
+- **功能**：事件触发代理运行（webhook、cron、新数据）
+- **实现**：`/goal` 命令 + cron jobs + Hermes Gateway
+- **产物**：自动化工作流
+- **特点**：后台运行，事件驱动
+
+### Loop 4: Hill Climbing Loop（自动化改进）
+- **功能**：分析生产 traces，自动重写 harness 配置
+- **实现**：外循环自动化（consume-feedback.py --pattern-detection）
+- **产物**：更新的技能、规则、模板
+- **特点**：持续改进，自进化
+
+### 循环关系
+```
+Loop 4 (Hill Climbing) ──更新──→ Loop 2 (Verification)
+         ↑                              ↓
+         └──────分析 traces──────── Loop 1 (Agent)
+                                    ↓
+                              Loop 3 (Event-Driven)
+```
+
+## 验证器分类（v9.2 新增）
+
+明确区分概率性验证和确定性验证：
+
+### 概率性验证（LLM 判断，可变）
+- `ui-acceptance-review`（视觉规范）
+- `prd-red-team-panel`（需求审查）
+- `dogfood`（探索性测试）
+- **用途**：改进草稿，提供语义级反馈
+- **特点**：每次运行可能不同，不能作为硬停止
+
+### 确定性验证（硬停止，可重现）
+- lint（代码质量）
+- build（构建成功）
+- test（测试通过）
+- browser-e2e（端到端测试）
+- security-audit（安全扫描）
+- **用途**：最终发货门
+- **特点**：每次运行结果相同，是硬停止
+
+### 原则
+- 概率性验证用于改进
+- 确定性验证用于发货
+- 两者结合：LLM 改进 → 确定性决定
+- **核心洞察**：输出质量受限于验证器质量，不会更高
 
 ## 回退决策
 
@@ -336,4 +506,5 @@ writing-plans → ui-ux-pro-max → test-driven-development → subagent-driven-
 | `references/design-md-template.md` | DESIGN.md 设计系统文档模板（Google Stitch 格式） |
 | `references/web-optimization-patterns.md` | Web 性能优化：React 代码分割、Redis Pipeline、CORS、脱敏、表单验证 |
 | `references/rollback-decision-tree.md` | 回退决策树 |
+| `references/fullstack-debugging-nextjs-prisma.md` | Next.js+Prisma+SQLite 全栈调试：JSON字段解析、Tailwind safelist、PM2 env、Vision配置 |
 | `references/hermes-stage-cards/*.md` | 各阶段详细卡片（含反合理化表格） |
