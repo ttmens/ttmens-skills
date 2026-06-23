@@ -5,7 +5,7 @@
 
 Generated: 2026-06-16 01:05 UTC
 
-**Counts:** 17 native + 20 borrowed = **37** core skills
+**Counts:** 18 native + 20 borrowed = **38** core skills
 
 ## Pipeline
 
@@ -45,6 +45,7 @@ Entry: `pm-idea-to-mvp` — stages: brief, align, research, analysis, spec, mvp,
 | `dogfood` | `domains/qa/dogfood` | qa | mvp, ship | cursor, hermes, opencode | 探索式 Web QA | MVP 走查核心路径 |
 | `pm-git-publish` | `domains/product/pm-git-publish` | product | retro | cursor, hermes, opencode | GitHub Pages 阶段报告 | 每阶段结束（Hermes） |
 | `prd-red-team-panel` | `domains/product/prd-red-team-panel` | product | spec | cursor, hermes, opencode | G2 PRD 红队面板（需 --profile debate 安装 phuryn 依赖） | spec 阶段 PRD 完成后 |
+| `remote-server-deployment` | `devops/remote-server-deployment` | qa | ship | cursor, hermes, opencode | SSH 远程部署：registry 优先、密钥认证、PM2、浏览器 E2E | ship 阶段部署到 VPS |
 
 ## Borrowed skills (core)
 
@@ -173,6 +174,7 @@ Install: `./install.sh --profile {pid} --all`
 - `ui-acceptance-review` — `domains/design/ui-acceptance-review`
 - `requesting-code-review` — `domains/engineering/requesting-code-review`
 - `dogfood` — `domains/qa/dogfood`
+- `remote-server-deployment` — `devops/remote-server-deployment`
 
 ### operate
 

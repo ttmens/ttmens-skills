@@ -2,6 +2,28 @@
 
 All notable changes to ttmens-skills are documented in this file.
 
+## [v9.2.0] - 2026-06-23
+
+### Added
+
+- **4 层循环架构**：Agent Loop → Verification Loop → Event-Driven Loop → Hill Climbing Loop
+- **最优停止策略**：动态迭代 + 质量收敛判断（替代固定 3 次迭代）
+- **双层验证**：LLM 改进 + 确定性硬停止
+- **核心洞察**：验证器才是产品，其他都是管道
+
+### Changed
+
+- **pm-idea-to-mvp**：v9.1.0 → v9.2.0
+- **README.md**：全面升级设计思想章节，新增 DevOps 运维技能分类，更新架构图
+- **docs/SKILLS_CATALOG.md**：修正 native 计数 17 → 18，补充 `remote-server-deployment`
+
+### Architecture
+
+- 从「双循环方法论」升级为「4 层循环架构」——方法论不变，执行层有了明确分层
+- MVP 内循环支持动态迭代次数（质量收敛判断）
+
+---
+
 ## [v9.1.0] - 2026-06-19
 
 ### Added
